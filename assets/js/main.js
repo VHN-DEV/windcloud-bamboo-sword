@@ -619,6 +619,7 @@ const SettingsUI = {
             'cfg-sw-breath': CONFIG.SWORD.BREATH_SPEED.MIN,
             'cfg-sw-stun': CONFIG.SWORD.STUN_DURATION_MS,
             'cfg-sw-regen': CONFIG.SWORD.REGEN_INTERVAL_MS,
+            'cfg-sw-paused': CONFIG.SWORD.IS_PAUSED ? 1 : 0,
 
             'cfg-en-spawn': CONFIG.ENEMY.SPAWN_COUNT,
             'cfg-en-elite': CONFIG.ENEMY.ELITE_CHANCE,
@@ -673,6 +674,7 @@ const SettingsUI = {
             CONFIG.SWORD.DEATH_WAIT_MS = parseInt(document.getElementById('cfg-sw-death-wait').value);
             CONFIG.SWORD.STUN_DURATION_MS = parseInt(document.getElementById('cfg-sw-stun').value);
             CONFIG.SWORD.REGEN_INTERVAL_MS = parseInt(document.getElementById('cfg-sw-regen').value);
+            CONFIG.SWORD.IS_PAUSED = document.getElementById('cfg-sw-paused').checked;
 
             CONFIG.ENEMY.SPAWN_COUNT = parseInt(document.getElementById('cfg-en-spawn').value);
             CONFIG.ENEMY.ELITE_CHANCE = parseFloat(document.getElementById('cfg-en-elite').value);
