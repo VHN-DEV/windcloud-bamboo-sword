@@ -1,8 +1,4 @@
-/**
- * ====================================================================
- * SYSTEM, CAMERA & INPUT
- * ====================================================================
- */
+const random = (min, max) => Math.random() * (max - min) + min;
 const canvas = document.getElementById("c");
 const enemyIcons = {};
 const ctx = canvas.getContext("2d", { alpha: false });
@@ -61,25 +57,6 @@ function showNotify(text, color) {
         item.remove();
     }, 2500);
 }
-
-const Camera = {
-    currentZoom: 1,
-    targetZoom: 1,
-    update() {
-        this.currentZoom += (this.targetZoom - this.currentZoom) * CONFIG.ZOOM.SMOOTH;
-    },
-    adjustZoom(amount) {
-        this.targetZoom = Math.max(CONFIG.ZOOM.MIN, Math.min(CONFIG.ZOOM.MAX, this.targetZoom + amount));
-    },
-    screenToWorld(screenX, screenY) {
-        const centerX = width / 2;
-        const centerY = height / 2;
-        return {
-            x: (screenX - centerX) / this.currentZoom + centerX,
-            y: (screenY - centerY) / this.currentZoom + centerY
-        };
-    }
-};
 
 function resize() {
     width = canvas.width = window.innerWidth;
@@ -543,21 +520,6 @@ window.addEventListener('touchmove', e => {
         Input.handleMove(e);
     }
 }, { passive: false });
-
-/**
- * XỬ LÝ GIAO DIỆN (UI CONTROLS)
- */
-
-// 1. Nút Zoom
-// document.getElementById('btn-zoom-in').addEventListener('pointerdown', (e) => {
-//     e.stopPropagation();
-//     Camera.adjustZoom(CONFIG.ZOOM.STEP);
-// });
-
-// document.getElementById('btn-zoom-out').addEventListener('pointerdown', (e) => {
-//     e.stopPropagation();
-//     Camera.adjustZoom(-CONFIG.ZOOM.STEP);
-// });
 
 const SettingsUI = {
     overlay: document.getElementById('settings-popup'),

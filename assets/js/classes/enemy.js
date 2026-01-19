@@ -1,0 +1,508 @@
+class Enemy {
+    constructor() {
+        this.particles = [];
+        this.angle = Math.random() * Math.PI * 2; // Hướng di chuyển hiện tại
+        this.velocity = { x: 0, y: 0 };
+        this.floatOffset = Math.random() * 1000; // Độ lệch thời gian để các con quái không chuyển động giống hệt nhau
+        this.wanderSpeed = this.isElite ? 0.8 : 0.4; // Tinh anh di chuyển nhanh hơn
+        this.respawn();
+    }
+
+    respawn() {
+        const zoom = Camera.currentZoom;
+        const visibleWidth = window.innerWidth / zoom;
+        const visibleHeight = window.innerHeight / zoom;
+        const startX = (window.innerWidth / 2) - (visibleWidth / 2);
+        const startY = (window.innerHeight / 2) - (visibleHeight / 2);
+        const padding = CONFIG.ENEMY.SPAWN_PADDING;
+        
+        this.lastHitTime = 0;
+        this.lastNotifyTime = 0;
+        this.x = random(startX + padding, startX + visibleWidth - padding);
+        this.y = random(startY + padding, startY + visibleHeight - padding);
+        this.particles = [];
+        this.cracks = [];
+        this.shieldLevel = 0;
+
+        // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
+        const playerRank = Input.rankIndex || 0;
+        const diffLimit = CONFIG.ENEMY.DIFF_LIMIT || 3;
+
+        // Đếm xem trong mảng enemies hiện tại có bao nhiêu con quái mà người chơi đánh được
+        // Lưu ý: Loại trừ chính bản thân con quái đang respawn này ra khỏi danh sách đếm
+        const killableEnemies = enemies.filter(e => {
+            if (e === this || !e.rankData) return false;
+            const eRankIndex = CONFIG.CULTIVATION.RANKS.findIndex(r => r.id === e.rankData.id);
+            return (eRankIndex - playerRank) < diffLimit;
+        });
+
+        // Nếu số lượng quái đánh được ít hơn 2, con này BẮT BUỘC phải là quái vừa sức
+        const forceEasy = killableEnemies.length < 2;
+
+        this.isElite = Math.random() < CONFIG.ENEMY.ELITE_CHANCE;
+        let enemyRankIndex;
+
+        if (forceEasy) {
+            // 🟢 CHẾ ĐỘ CÂN BẰNG: Đảm bảo người chơi luôn có mục tiêu
+            // Chọn rank từ [Player - 1] đến [Player + DiffLimit - 1]
+            const maxOffset = diffLimit - 1;
+            const minOffset = -1;
+            const randomOffset = Math.floor(Math.random() * (maxOffset - minOffset + 1)) + minOffset;
+            
+            enemyRankIndex = Math.max(0, Math.min(CONFIG.CULTIVATION.RANKS.length - 1, playerRank + randomOffset));
+            this.isElite = false; // Quái "cứu trợ" không nên là Tinh Anh để người chơi dễ thở
+        } else if (this.isElite) {
+            // 🔴 TINH ANH
+            enemyRankIndex = Math.min(CONFIG.CULTIVATION.RANKS.length - 1, playerRank + 2);
+        } else {
+            // 🔵 NGẪU NHIÊN THEO KHU VỰC
+            const { MIN_ID, MAX_ID } = CONFIG.ENEMY.SPAWN_RANK_RANGE;
+            const rank = this.getRandomRankById(MIN_ID, MAX_ID);
+            enemyRankIndex = CONFIG.CULTIVATION.RANKS.findIndex(r => r.id === (rank ? rank.id : 1));
+            if (enemyRankIndex === -1) enemyRankIndex = 0;
+        }
+
+        // 2. CẬP NHẬT DỮ LIỆU RANK
+        this.rankData = CONFIG.CULTIVATION.RANKS[enemyRankIndex];
+        this.rankName = (this.isElite ? "★ TINH ANH ★ " : "") + this.rankData.name;
+        this.colors = [this.rankData.lightColor, this.rankData.color];
+
+        // 3. THIẾT LẬP CHỈ SỐ SINH TỒN
+        const baseRankHp = this.rankData.hp || 1000;
+        const eliteMult = this.isElite ? 4.0 : 1.0;
+        this.maxHp = Math.floor(baseRankHp * (1 + Math.random() * 0.05) * eliteMult);
+        this.hp = this.maxHp;
+
+        const eliteSizeMult = this.isElite ? 1.8 : 1.0;
+        this.r = (CONFIG.ENEMY.BASE_SIZE.MIN + Math.random() * CONFIG.ENEMY.BASE_SIZE.VAR) * eliteSizeMult;
+
+        this.hasShield = Math.random() < (CONFIG.ENEMY.SHIELD_CHANCE + (this.isElite ? 0.4 : 0));
+        if (this.hasShield) {
+            this.shieldHp = Math.floor(this.hp * (CONFIG.ENEMY.SHIELD_HP_RATIO || 0.5));
+            this.maxShieldHp = this.shieldHp;
+        }
+
+        // 4. KHỞI TẠO DI CHUYỂN
+        this.wanderSpeed = (this.isElite ? 0.8 : 0.4) * (this.rankData.speedMult || 1);
+        
+        // Cập nhật Icon
+        if (CONFIG.ENEMY.ANIMALS) {
+            const randomPath = CONFIG.ENEMY.ANIMALS[Math.floor(Math.random() * CONFIG.ENEMY.ANIMALS.length)];
+            const iconKey = randomPath.split('/').pop().split('.')[0];
+            this.icon = enemyIcons[iconKey];
+        }
+
+        this.dodgeChance = CONFIG.ENEMY.BASE_DODGE_CHANCE + (this.isElite ? CONFIG.ENEMY.ELITE_DODGE_BONUS : 0);
+        // Có thể cộng thêm tỉ lệ dựa trên chênh lệch cảnh giới nếu muốn
+    }
+
+    getRandomRankById(minId, maxId) {
+        const ranks = CONFIG.CULTIVATION.RANKS;
+
+        // Lọc các rank nằm trong khoảng id
+        const candidates = ranks.filter(
+            r => r.id >= minId && r.id <= maxId
+        );
+
+        if (candidates.length === 0) {
+            console.warn("Không tìm thấy cảnh giới trong khoảng id:", minId, maxId);
+            return null;
+        }
+
+        // Random 1 rank trong danh sách hợp lệ
+        return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    updateMovement(scaleFactor) {
+        const now = Date.now() * 0.001;
+        
+        // 1. Hiệu ứng trôi bồng bềnh (Floating)
+        // Sử dụng nhiễu lượng giác để quái vật tự di chuyển nhẹ xung quanh vị trí gốc
+        this.angle += Math.sin(now + this.floatOffset) * 0.02;
+        
+        const speed = this.wanderSpeed * scaleFactor;
+        this.velocity.x = Math.cos(this.angle) * speed;
+        this.velocity.y = Math.sin(this.angle) * speed;
+
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+
+        // 2. Giới hạn vùng di chuyển (Boundary Check)
+        // Nếu quái vật đi ra khỏi màn hình thì quay đầu lại
+        const margin = 50 * scaleFactor;
+        if (this.x < margin || this.x > window.innerWidth - margin) this.angle = Math.PI - this.angle;
+        if (this.y < margin || this.y > window.innerHeight - margin) this.angle = -this.angle;
+    }
+
+    generateCracks(level) {
+        // Đảm bảo bán kính vết nứt khớp với bán kính vòng tròn khiên sẽ vẽ
+        const shieldPadding = 12; // Tăng nhẹ padding để bao quát hơn
+        const shieldR = this.r + shieldPadding; 
+        
+        const baseAngle = Math.random() * Math.PI * 2;
+        const numRadial = 5 + level * 2;
+        const radialPoints = [];
+
+        this.cracks = []; // Đảm bảo mảng sạch
+
+        for (let i = 0; i < numRadial; i++) {
+            const angle = baseAngle + (i * Math.PI * 2) / numRadial;
+            const points = [];
+            const steps = 4;
+
+            for (let j = 0; j <= steps; j++) {
+                // Tính toán khoảng cách dựa trên shieldR đã định nghĩa
+                const dist = (shieldR * j) / steps;
+                const jitter = j === 0 ? 0 : (Math.random() - 0.5) * 0.2;
+                points.push({
+                    x: Math.cos(angle + jitter) * dist,
+                    y: Math.sin(angle + jitter) * dist
+                });
+            }
+            this.cracks.push(points);
+            radialPoints.push(points);
+        }
+
+        const numRings = 2 + level;
+        for (let r = 1; r <= numRings; r++) {
+            const ringDistIdx = Math.floor((radialPoints[0].length - 1) * (r / (numRings + 1)));
+
+            for (let i = 0; i < radialPoints.length; i++) {
+                const nextIdx = (i + 1) % radialPoints.length;
+                const p1 = radialPoints[i][ringDistIdx];
+                const p2 = radialPoints[nextIdx][ringDistIdx];
+
+                if (Math.random() > 0.2) {
+                    this.cracks.push([p1, p2]);
+                }
+            }
+        }
+    }
+
+    hit(sword) {
+        const playerRankIndex = Input.rankIndex || 0;
+        const enemyRankIndex = CONFIG.CULTIVATION.RANKS.indexOf(this.rankData);
+        const rankDiff = enemyRankIndex - playerRankIndex;
+        const now = Date.now();
+
+        // --- 1. LOGIC NÉ TRÁNH THEO % VÀ CHÊNH LỆCH CẢNH GIỚI ---
+        // Tỉ lệ cơ bản (ví dụ 10%) + Tinh anh (15%) + Mỗi cấp chênh lệch (5%)
+        let finalDodgeChance = (CONFIG.ENEMY.BASE_DODGE_CHANCE || 0.1) + (this.isElite ? (CONFIG.ENEMY.ELITE_DODGE_BONUS || 0.15) : 0);
+        
+        // Cộng thêm né tránh nếu quái vật có cảnh giới cao hơn người chơi
+        if (rankDiff > 0) {
+            finalDodgeChance += rankDiff * (CONFIG.ENEMY.DODGE_PER_RANK_DIFF || 0.05);
+        }
+
+        // Giới hạn né tránh tối đa (ví dụ 80%) để không bị bất tử hoàn toàn theo kiểu né
+        finalDodgeChance = Math.min(finalDodgeChance, 0.8);
+
+        if (Math.random() < finalDodgeChance) {
+            if (now - (this.lastNotifyTime || 0) > CONFIG.ENEMY.NOTIFY_COOLDOWN_MS) {
+                showNotify("NÉ TRÁNH: Đối phương quá linh hoạt!", "#ffffff");
+                this.lastNotifyTime = now;
+            }
+            // Hiệu ứng quái vật giật nhẹ khi né thành công
+            this.x += (Math.random() - 0.5) * 20;
+            this.y += (Math.random() - 0.5) * 20;
+            
+            return "missed"; // Trả về trạng thái hụt cho class Sword xử lý
+        }
+
+        // --- 2. TÍNH SÁT THƯƠNG CƠ BẢN (Nếu không né được) ---
+        const currentRank = CONFIG.CULTIVATION.RANKS[playerRankIndex];
+        const baseDamage = currentRank ? currentRank.damage : 1;
+        let damage = Math.ceil(baseDamage * (sword?.powerPenalty || 1));
+
+        // --- 3. ÁP DỤNG LOGIC BẤT TỬ / GIẢM SÁT THƯƠNG ---
+        if (rankDiff >= CONFIG.ENEMY.MAJOR_RANK_DIFF) {
+            damage = 0; 
+            if (now - (this.lastNotifyTime || 0) > CONFIG.ENEMY.NOTIFY_COOLDOWN_MS) {
+                showNotify("BẤT TỬ: Tu vi quá chênh lệch!", "#ff0000");
+                this.lastNotifyTime = now;
+            }
+        } else if (rankDiff >= CONFIG.ENEMY.DIFF_LIMIT) {
+            damage = 1; 
+            if (now - (this.lastNotifyTime || 0) > CONFIG.ENEMY.NOTIFY_COOLDOWN_MS) {
+                showNotify("GIẢM SÁT THƯƠNG: Cấp bậc áp chế!", "#ffcc00");
+                this.lastNotifyTime = now;
+            }
+        }
+
+        this.lastHitTime = Date.now(); 
+
+        // --- 4. XỬ LÝ KHIÊN ---
+        if (this.hasShield && this.shieldHp > 0) {
+            this.shieldHp -= damage;
+            
+            let currentLevel = Math.floor(((this.maxShieldHp - this.shieldHp) / this.maxShieldHp) * 5);
+            if (currentLevel > this.shieldLevel) {
+                this.shieldLevel = currentLevel;
+                this.cracks = []; 
+                this.generateCracks(this.shieldLevel);
+            }
+
+            if (this.shieldHp <= 0) {
+                this.hasShield = false;
+                this.createShieldDebris();
+            }
+            
+            return "shielded"; 
+        }
+
+        // --- 5. TRỪ MÁU QUÁI ---
+        this.hp -= damage;
+
+        if (this.hp <= 0) {
+            const rewardMult = this.isElite ? CONFIG.ENEMY.ELITE_MULT : 1;
+            let expGain = (this.rankData.expGive || 1) * rewardMult;
+            let manaGain = CONFIG.MANA.GAIN_KILL * rewardMult;
+
+            if (this.isElite) showNotify("DIỆT TINH ANH: THU HOẠCH LỚN!", "#ffcc00");
+
+            Input.updateExp(expGain);
+            Input.updateMana(manaGain);
+
+            // XỬ LÝ RƠI LINH ĐAN
+            const pillCfg = CONFIG.PILL;
+            const dropChance = this.isElite ? pillCfg.ELITE_CHANCE : pillCfg.CHANCE;
+
+            if (Math.random() < dropChance) {
+                const rates = this.isElite ? pillCfg.DROP_RATES.ELITE : pillCfg.DROP_RATES.NORMAL;
+                const count = this.isElite ? pillCfg.DROP_COUNT.ELITE : pillCfg.DROP_COUNT.NORMAL;
+
+                for (let i = 0; i < count; i++) {
+                    let typeKey = 'LOW';
+                    const rand = Math.random();
+                    if (rand < rates.HIGH) typeKey = 'HIGH';
+                    else if (rand < rates.HIGH + rates.MEDIUM) typeKey = 'MEDIUM';
+                    else typeKey = 'LOW';
+                    pills.push(new Pill(this.x, this.y, typeKey));
+                }
+                showNotify(this.isElite ? "Đại cơ duyên! Linh Đan xuất thế!" : "Thu hoạch Linh Đan",
+                    this.isElite ? "#ffcc00" : "#00ffcc");
+            }
+
+            this.respawn();
+            return "killed";
+        }
+
+        if (damage === 0) return "immune";
+        return "hit";
+    }
+
+    drawShield(ctx, scaleFactor) {
+        // Phải khớp hoàn toàn với số cộng thêm ở generateCracks (ví dụ +12)
+        const shieldPadding = 12; 
+        const shieldR = (this.r + shieldPadding) * scaleFactor;
+        const pulse = Math.sin(Date.now() * 0.006) * 0.05 + 1.0; // Pulse nhẹ nhàng hơn
+
+        ctx.save();
+        
+        // Vẽ quầng sáng nền cho khiên (giúp quái không bị "lòi" ra ngoài mắt thường)
+        const shieldGlow = ctx.createRadialGradient(0, 0, this.r * scaleFactor, 0, 0, shieldR);
+        shieldGlow.addColorStop(0, "rgba(140, 245, 255, 0)");
+        shieldGlow.addColorStop(1, "rgba(140, 245, 255, 0.2)");
+        ctx.fillStyle = shieldGlow;
+        ctx.beginPath();
+        ctx.arc(0, 0, shieldR * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Vẽ vòng ngoài
+        ctx.beginPath();
+        ctx.arc(0, 0, shieldR * pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(140, 245, 255, ${0.6 * (2 - pulse)})`;
+        ctx.lineWidth = 2 * scaleFactor;
+        ctx.stroke();
+
+        // Vẽ cracks
+        if (this.cracks.length > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.lineWidth = 1 * scaleFactor;
+            this.cracks.forEach(pts => {
+                if (pts.length < 2) return;
+                // Tọa độ crack đã có sẵn r, chỉ cần nhân scaleFactor
+                ctx.moveTo(pts[0].x * scaleFactor * pulse, pts[0].y * scaleFactor * pulse);
+                for (let i = 1; i < pts.length; i++) {
+                    ctx.lineTo(pts[i].x * scaleFactor * pulse, pts[i].y * scaleFactor * pulse);
+                }
+            });
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    createShieldDebris() {
+        const conf = CONFIG.ENEMY.DEBRIS;
+        for (let i = 0; i < conf.COUNT; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = random(conf.SPEED.MIN, conf.SPEED.MAX);
+
+            // Đẩy thẳng vào mảng global để class Enemy không phải xử lý drawParticles nữa
+            visualParticles.push({
+                x: this.x,
+                y: this.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: random(conf.SIZE.MIN, conf.SIZE.MAX),
+                life: 1.0,
+                color: CONFIG.COLORS.ENEMY_PARTICLE,
+                type: 'square' // Thêm flag để hàm animate biết cách vẽ hình vuông
+            });
+        }
+    }
+
+    updateShieldRecovery() {
+        if (!this.hasShield || this.shieldHp <= 0) return;
+        if (this.shieldHp >= this.maxShieldHp) return;
+
+        const now = Date.now();
+        const idleTime = now - this.lastHitTime;
+
+        if (idleTime > CONFIG.ENEMY.RECOVERY_DELAY_MS) {
+            this.shieldHp = Math.min(this.maxShieldHp, this.shieldHp + this.maxShieldHp * CONFIG.ENEMY.RECOVERY_SPEED_PER_SEC);
+
+            // Cập nhật lại vết nứt dựa trên máu khiên đã hồi phục
+            let currentLevel = Math.floor(((this.maxShieldHp - this.shieldHp) / this.maxShieldHp) * 5);
+            
+            // Nếu máu khiên hồi đủ để giảm cấp độ nứt (ví dụ từ nứt độ 4 về độ 3)
+            if (currentLevel < this.shieldLevel) {
+                this.shieldLevel = currentLevel;
+                this.cracks = [];
+                if (this.shieldLevel > 0) {
+                    this.generateCracks(this.shieldLevel);
+                }
+            }
+        }
+    }
+
+    draw(ctx, scaleFactor) {
+        // 1. CẬP NHẬT LOGIC: Chuyển động và Hồi khiên
+        this.updateMovement(scaleFactor);
+        this.updateShieldRecovery();
+        
+        // 2. TÍNH TOÁN HIỆU ỨNG SINH ĐỘNG
+        const now = Date.now();
+        // Nhịp thở: Co giãn nhẹ từ 0.95 đến 1.05
+        const breathScale = 1 + Math.sin(now * 0.002 + this.floatOffset) * 0.05;
+        const rankColor = this.rankData.color;
+
+        ctx.save();
+        
+        // Di chuyển canvas đến vị trí của quái
+        ctx.translate(this.x, this.y);
+
+        // --- PHẦN 1: VẼ THÂN QUÁI (Có hiệu ứng co giãn nhịp thở) ---
+        ctx.save();
+        ctx.scale(breathScale, breathScale);
+
+        this.drawParticles(ctx, scaleFactor);
+        if (this.hasShield) this.drawShield(ctx, scaleFactor);
+        this.drawBody(ctx, scaleFactor);
+        
+        ctx.restore(); // Kết thúc scale cho phần thân
+
+        // --- PHẦN 2: VẼ UI (Tên và Thanh máu - Không bị scale để tránh khó đọc) ---
+        
+        // 1. VẼ TÊN CẢNH GIỚI
+        ctx.fillStyle = rankColor;
+        ctx.font = `bold ${11 * scaleFactor}px "Segoe UI", Arial`;
+        ctx.textAlign = "center";
+
+        if (this.isElite) {
+            ctx.shadowColor = rankColor;
+            ctx.shadowBlur = 8 * scaleFactor;
+        }
+
+        const textY = -this.r - (this.hasShield ? 15 : 10) * scaleFactor;
+        ctx.fillText(this.rankName, 0, textY);
+        ctx.shadowBlur = 0; 
+
+        // 2. VẼ THANH MÁU
+        const barWidth = this.r * 1.5 * scaleFactor;
+        const barHeight = 4 * scaleFactor;
+        const barY = textY + 5 * scaleFactor;
+
+        // Nền thanh máu
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(-barWidth / 2, barY, barWidth, barHeight);
+
+        // Máu hiện tại
+        const hpRatio = Math.max(0, this.hp / this.maxHp);
+        ctx.fillStyle = rankColor;
+        ctx.fillRect(-barWidth / 2, barY, barWidth * hpRatio, barHeight);
+
+        // Viền thanh máu
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = 0.5 * scaleFactor;
+        ctx.strokeRect(-barWidth / 2, barY, barWidth, barHeight);
+
+        ctx.restore(); // Kết thúc toàn bộ hàm vẽ Enemy
+    }
+
+    drawParticles(ctx, scaleFactor) {
+        const decay = CONFIG.ENEMY.DEBRIS.LIFE_DECAY;
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let p = this.particles[i];
+            p.x += p.vx; p.y += p.vy; p.life -= decay;
+            if (p.life <= 0) { this.particles.splice(i, 1); continue; }
+            ctx.save();
+            ctx.translate(p.x * scaleFactor, p.y * scaleFactor);
+            ctx.rotate(p.rotation += p.spin);
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = CONFIG.COLORS.ENEMY_PARTICLE;
+            const s = p.size * scaleFactor;
+            ctx.fillRect(-s / 2, -s / 2, s, s);
+            ctx.restore();
+        }
+    }
+
+    drawBody(ctx, scaleFactor) {
+        if (!this.r || isNaN(this.r)) return; // Dòng bảo vệ: Nếu r lỗi thì không vẽ để tránh crash
+
+        ctx.save();
+
+        // --- HIỆU ỨNG PHÁT SÁNG CHO TINH ANH ---
+        if (this.isElite) {
+            ctx.shadowColor = "#ff3300";
+            ctx.shadowBlur = 20 * scaleFactor;
+            // Làm quái hơi rung rinh một chút
+            ctx.translate((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2);
+        }
+
+        // 1. Vẽ hào quang (glow) quanh quái vật (Dùng màu Cảnh giới)
+        const glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.r * 1.3);
+        glowGrad.addColorStop(0, this.colors[1] + "55"); // Màu rank mờ
+        glowGrad.addColorStop(1, "transparent");
+
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.r * 1.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Vẽ Icon SVG
+        if (this.icon && this.icon.complete && this.icon.naturalWidth > 0) {
+            const drawSize = (this.r * 1.5) * scaleFactor;
+
+            // Thêm hiệu ứng phát sáng nhẹ cho icon trắng
+            ctx.shadowColor = this.colors[1];
+            ctx.shadowBlur = 10 * scaleFactor;
+
+            ctx.drawImage(
+                this.icon,
+                -drawSize / 2,
+                -drawSize / 2,
+                drawSize,
+                drawSize
+            );
+        } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, this.r * scaleFactor, 0, Math.PI * 2);
+            ctx.fillStyle = this.colors[1];
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+}
