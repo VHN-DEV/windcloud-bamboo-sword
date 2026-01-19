@@ -17,16 +17,16 @@ const CONFIG = {
     },
     SWORD: {
         COUNT: 72,              // Tổng số lượng kiếm tối đa
-        BASE_RADIUS: 130,       // Khoảng cách từ tâm đến lớp kiếm đầu tiên
+        BASE_RADIUS: 200,       // Khoảng cách từ tâm đến lớp kiếm đầu tiên
         LAYER_SPACING: 70,      // Khoảng cách giữa các lớp kiếm (vòng trong - vòng ngoài)
-        SPIN_SPEED_BASE: 0.07,  // Tốc độ quay cơ bản của vòng kiếm
+        SPIN_SPEED_BASE: 0.05,  // Tốc độ quay cơ bản của vòng kiếm
         ATTACK_DELAY_MS: 180,   // Thời gian chờ để kích hoạt trạng thái tấn công khi nhấn giữ
         TRAIL_LENGTH: 6,        // Độ dài bóng ma (trail) của thanh kiếm
         SIZE: 70,               // Kích thước (chiều dài) hiển thị của thanh kiếm
         STUN_DURATION_MS: 1000, // Thời gian mục tiêu bị khựng khi trúng kiếm
         RESPAWN_DELAY_MS: 1500, // Thời gian hồi phục sau khi kiếm bị vỡ
         DEATH_WAIT_MS: 2000,    // Thời gian thanh kiếm nằm lại hiện trường trước khi biến mất hẳn
-        SPEED_MULT: 90,         // Hệ số nhân tốc độ quay chung toàn hệ thống
+        SPEED_MULT: 50,         // Hệ số nhân tốc độ quay chung toàn hệ thống
         IS_PAUSED: false,          // Trạng thái tạm dừng
         BREATH_SPEED: { MIN: 0.015, MAX: 0.025 }, // Tốc độ hiệu ứng "nhịp thở" (co giãn vòng kiếm)
         FLOW_OFFSET: { MIN: 40, MAX: 100 },       // Biên độ dao động xa gần của kiếm khi bay
