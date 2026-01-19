@@ -449,7 +449,7 @@ const Input = {
         }
     },
 
-    drawCangLamFlame(ctx, scaleFactor) {
+    drawFlame(ctx, scaleFactor) {
         const time = performance.now() * 0.003;
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -896,7 +896,7 @@ function renderCursor() {
     ctx.shadowBlur = 0; 
     
     // Gọi trực tiếp Băng Diễm từ Input
-    Input.drawCangLamFlame(ctx, scaleFactor);
+    Input.drawFlame(ctx, scaleFactor);
 }
 
 function animate() {
