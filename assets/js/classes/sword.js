@@ -2,7 +2,18 @@ class Sword {
     constructor(index, scaleFactor) {
         this.index = index;
         this.layer = Math.floor(index / 24);
-        this.baseAngle = (Math.PI * 2 / 24) * (index % 24);
+        // this.baseAngle = (Math.PI * 2 / 24) * (index % 24);
+        // Tính góc cơ bản của mỗi thanh trong vòng 24 thanh
+        let angleStep = (Math.PI * 2) / 24;
+        let angleInLayer = angleStep * (index % 24);
+
+        // XẾP XEN KẼ: Nếu là lớp lẻ (1, 3, 5...), cộng thêm một nửa bước góc
+        // Điều này giúp thanh kiếm lớp ngoài nằm giữa khe hở của lớp trong
+        if (this.layer % 2 !== 0) {
+            angleInLayer += angleStep / 2;
+        }
+
+        this.baseAngle = angleInLayer;
         this.spinAngle = 0;
         this.spinSpeed = (CONFIG.SWORD.SPIN_SPEED_BASE / (this.layer + 1)) * (this.layer % 2 ? -1 : 1);
         this.radius = (CONFIG.SWORD.BASE_RADIUS + this.layer * CONFIG.SWORD.LAYER_SPACING) * scaleFactor;
