@@ -71,6 +71,10 @@ const CONFIG = {
         DIFF_LIMIT: 6, // Ngưỡng chênh lệch cảnh giới để bắt đầu giảm sát thương
         MAJOR_RANK_DIFF: 9, // Ngưỡng chênh lệch cảnh giới để bắt đầu né tránh hoàn toàn
         NOTIFY_COOLDOWN_MS: 3000,    // Thời gian chờ giữa các lần thông báo né tránh
+        BASE_DODGE_CHANCE: 0.1, // 10% né tránh cơ bản cho quái thường
+        ELITE_DODGE_BONUS: 0.15, // Tinh anh né thêm 15% (tổng 25%)
+        DODGE_PER_RANK_DIFF: 0.05, // Mỗi cấp chênh lệch tăng 5% né tránh
+        MAX_DODGE_CHANCE: 0.75,    // Né tối đa 75% (để người chơi vẫn có cửa thắng)
         SPAWN_RANK_RANGE: {
             MIN_ID: 1,
             MAX_ID: 45
