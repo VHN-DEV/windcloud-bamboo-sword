@@ -42,6 +42,10 @@ class Sword {
         this.isEnlarged = false;      // Đang trong trạng thái cường hóa phóng to
         this.currentVisualScale = 1;  // Tỉ lệ hiển thị thực tế (để animation mượt)
         this.targetVisualScale = 1;   // Tỉ lệ đích muốn hướng tới
+        this.pierceCount = 0;      // Đếm số lần đâm xuyên mục tiêu
+        this.maxPierce = 3;        // Tối đa 3 lần đâm xuyên
+        this.dragonPhase = index * 0.15; // Độ lệch pha để tạo hiệu ứng uốn lượn dải lụa
+        this.isReturning = false;  // Trạng thái đang quay về sau khi đâm đủ 3 lần
     }
 
     update(guardCenter, enemies, Input, scaleFactor) {
@@ -108,112 +112,87 @@ class Sword {
     }
 
     updateGuardMode(guardCenter, r, Input, scaleFactor) {
-        // Nếu đang bay về mà vẫn to, thì thu nhỏ lại
+        // Thu nhỏ lại nếu trước đó đang phóng to
         if (this.isEnlarged) {
             this.isEnlarged = false;
             this.targetVisualScale = 1;
         }
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.1;
+
+        let tx, ty, finalAngle;
         
-        let globalRotation = 0;
-        if (!CONFIG.SWORD.IS_PAUSED) {
-            globalRotation = (performance.now() / 1000) * this.spinSpeed * (CONFIG.SWORD.SPEED_MULT || 100);
+        if (Input.isUltMode) {
+            // --- CHẾ ĐỘ VẠN KIẾM QUY TÔNG (Hợp nhất) ---
+            
+            // 1. Tất cả kiếm đều hướng về cùng 1 vị trí (tâm của guardCenter)
+            // Bạn có thể cộng thêm một khoảng offset nếu muốn thanh kiếm khổng lồ nằm trước mặt nhân vật
+            tx = guardCenter.x; 
+            ty = guardCenter.y;
+
+            // 2. Tất cả kiếm đều có cùng một góc quay (ví dụ: xoay theo thời gian hoặc hướng lên trên)
+            // Ở đây tôi để xoay vòng đều để tạo hiệu ứng thanh kiếm thần đang vận công
+            const rotationSpeed = performance.now() * 0.005;
+            finalAngle = rotationSpeed; 
+
+            // 3. (Tùy chọn) Tăng kích thước khi hợp nhất để trông quyền năng hơn
+            this.targetVisualScale = 2.5; // Phóng to thanh kiếm lên 2.5 lần
+
         } else {
-            globalRotation = 0; 
+            // --- QUỸ ĐẠO XOAY VÒNG BÌNH THƯỜNG ---
+            this.targetVisualScale = 1; // Trở về kích thước cũ
+            let globalRotation = !CONFIG.SWORD.IS_PAUSED ? 
+                (performance.now() / 1000) * this.spinSpeed * (CONFIG.SWORD.SPEED_MULT || 100) : 0;
+            
+            const a = this.baseAngle + globalRotation;
+            tx = guardCenter.x + Math.cos(a) * r;
+            ty = guardCenter.y + Math.sin(a) * r;
+            finalAngle = (Input.guardForm === 1) ? a + Math.PI / 2 : Math.atan2(ty - this.y, tx - this.x) + Math.PI / 2;
         }
 
-        const a = this.baseAngle + globalRotation;
+        // DI CHUYỂN VẬT LÝ (Dùng nội suy để mượt hơn khi nhập thể)
+        // Tăng followStiffness khi Ulti để kiếm "nhập" vào nhau nhanh hơn
+        const followStiffness = Input.isUltMode ? 0.3 : 0.15;
 
-        const tx = guardCenter.x + Math.cos(a) * r;
-        const ty = guardCenter.y + Math.sin(a) * r;
+        const dx = tx - this.x;
+        const dy = ty - this.y;
+        const distance = Math.hypot(dx, dy);
 
-        if (Input.speed > 1.5) {
-            const dx = tx - this.x;
-            const dy = ty - this.y;
-            const d = Math.hypot(dx, dy) || 1;
-
-            this.vx += (dx / d) * Math.min(d * 0.05, 4 * scaleFactor);
-            this.vy += (dy / d) * Math.min(d * 0.05, 4 * scaleFactor);
-
-            this.vx *= 0.85;
-            this.vy *= 0.85;
-
-            this.x += this.vx;
-            this.y += this.vy;
-
+        if (Input.speed > 1.5 || (distance > 100 && !Input.isUltMode)) {
+            this.vx += (dx / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor);
+            this.vy += (dy / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor);
+            this.vx *= 0.82; this.vy *= 0.82;
+            this.x += this.vx; this.y += this.vy;
             this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
         } else {
-            const dx = tx - this.x;
-            const dy = ty - this.y;
+            this.x += dx * followStiffness;
+            this.y += dy * followStiffness;
+            this.vx *= 0.5; this.vy *= 0.5;
 
-            this.x += dx * 0.12;
-            this.y += dy * 0.12;
-
-            this.vx *= 0.5;
-            this.vy *= 0.5;
-
-            if (Math.hypot(dx, dy) < 0.5) {
-                this.x = tx;
-                this.y = ty;
-            }
-
-            let targetAngle = (Input.guardForm === 1)
-                ? a + Math.PI / 2
-                : Math.atan2(ty - this.y, tx - this.x) + Math.PI / 2;
-
-            let diff = targetAngle - this.drawAngle;
+            let diff = finalAngle - this.drawAngle;
             while (diff < -Math.PI) diff += Math.PI * 2;
             while (diff > Math.PI) diff -= Math.PI * 2;
-            this.drawAngle += diff * 0.15;
+            this.drawAngle += diff * 0.2;
         }
 
-        // if (Input.speed > 1.5) {
-        //     this.flowNoise += 0.04;
-        //     const fx = Input.x + Math.cos(this.flowOffsetAngle + this.flowNoise) * this.flowOffsetRadius;
-        //     const fy = Input.y + Math.sin(this.flowOffsetAngle + this.flowNoise) * this.flowOffsetRadius;
-        //     const dx = fx - this.x;
-        //     const dy = fy - this.y;
-        //     const d = Math.hypot(dx, dy) || 1;
-        //     this.vx += (dx / d) * Math.min(d * 0.04, 3 * scaleFactor);
-        //     this.vy += (dy / d) * Math.min(d * 0.04, 3 * scaleFactor);
-        //     this.vx *= 0.9; this.vy *= 0.9;
-        //     this.x += this.vx; this.y += this.vy;
-        //     this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
-        // } else {
-        //     const dx = tx - this.x;
-        //     const dy = ty - this.y;
-        //     this.x += dx * 0.12; this.y += dy * 0.12;
-        //     this.vx *= 0.5; this.vy *= 0.5;
-        //     let targetAngle = (Input.guardForm === 1) ? a + Math.PI / 2 : Math.atan2(ty - this.y, tx - this.x) + Math.PI / 2;
-        //     let diff = targetAngle - this.drawAngle;
-        //     while (diff < -Math.PI) diff += Math.PI * 2;
-        //     while (diff > Math.PI) diff -= Math.PI * 2;
-        //     this.drawAngle += diff * 0.15;
-        // }
         this.attackFrame = 0;
-        this.trail = [];
+        this.pierceCount = 0; 
+        // Giữ trail ngắn lại một chút khi ở mode rồng để không bị rối mắt
+        if (this.trail.length > 10) this.trail.shift();
     }
 
     updateAttackMode(enemies, Input, scaleFactor) {
         this.attackFrame++;
         if (this.attackFrame < this.attackDelay) return;
 
-        // --- SỬA/THÊM: CHỈ NGẪU NHIÊN KHI BẮT ĐẦU TẤN CÔNG ---
-        // Điều kiện: Chưa phóng to + May mắn (1%) + Đủ Mana
+        // Cập nhật kích thước (Enlarge logic)
         if (!this.isEnlarged && Math.random() < 0.01 && Input.mana >= 1) {
-            Input.updateMana(-1); // Trừ 1 Mana cho một lần phóng to
+            Input.updateMana(-1);
             this.isEnlarged = true;
-            this.targetVisualScale = 2.5; // Kích thước khổng lồ
+            this.targetVisualScale = 2.5;
         }
-
-        // Hiệu ứng co giãn mượt mà (luôn chạy để update currentVisualScale)
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.1;
 
-        // --- GIẢM SÁT THƯƠNG KHI KIẾM GẦN VỠ ---
-        const durabilityRate = this.hp / this.maxHp; // 1 → mới, 0 → sắp gãy
-        this.powerPenalty = 0.6 + durabilityRate * 0.4;
-        // 100% HP → 1.0 | 0 HP → 0.6
-
+        // Tìm mục tiêu gần nhất
         let target = null, minStartDist = Infinity;
         for (const e of enemies) {
             const d = Math.hypot(e.x - Input.x, e.y - Input.y);
@@ -224,51 +203,58 @@ class Sword {
             const dx = target.x - this.x, dy = target.y - this.y;
             const d = Math.hypot(dx, dy) || 1;
 
-            this.vx += (dx / d) * 10 * scaleFactor;
-            this.vy += (dy / d) * 10 * scaleFactor;
+            // Tốc độ bay (nhanh hơn khi đang Ult)
+            const flySpeed = (Input.isUltMode ? 15 : 10) * scaleFactor;
+            this.vx += (dx / d) * flySpeed;
+            this.vy += (dy / d) * flySpeed;
             this.vx *= 0.92; this.vy *= 0.92;
             this.x += this.vx; this.y += this.vy;
+            
             this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
-            if (Math.hypot(this.x - target.x, this.y - target.y) < target.r + (target.hasShield ? 10 : 0)) {
+
+            // KIỂM TRA VA CHẠM (HIT TEST)
+            const hitDistance = target.r + (target.hasShield ? 15 : 0);
+            if (Math.hypot(this.x - target.x, this.y - target.y) < hitDistance) {
+                
+                // Tính toán sát thương và Enlarge
                 if (this.isEnlarged) {
-                    this.powerPenalty *= 1.5; // Tăng 50% sát thương cho phát chém này
-                    
-                    // Tạo hiệu ứng đặc biệt khi chém bằng kiếm to
+                    this.powerPenalty *= 1.5;
                     if (typeof Input.createLevelUpExplosion === 'function') {
                         Input.createLevelUpExplosion(target.x, target.y, "#ffcc00");
                     }
-                    
-                    // Chém xong thì thu nhỏ lại ngay
                     this.isEnlarged = false;
                     this.targetVisualScale = 1;
                 }
 
                 const result = target.hit(this);
 
-                // Reset lại powerPenalty về mức bình thường dựa trên độ bền sau khi tính hit xong
-                const durabilityRate = this.hp / this.maxHp;
-                this.powerPenalty = 0.6 + durabilityRate * 0.4;
-
-                if (result === "missed") {
-                    // Khi né tránh: Kiếm chỉ bị giảm tốc độ một chút chứ không bị Stun
-                    this.vx *= 0.5;
-                    this.vy *= 0.5;
-                    // Không trừ độ bền kiếm
-                } else if (result === "shielded") {
-                    // Khi đánh vào khiên: Bị Stun và trừ độ bền (như cũ)
+                // CƠ CHẾ ĐÂM XUYÊN (PIERCE)
+                if (result !== "missed" && result !== "shielded") {
+                    this.pierceCount = (this.pierceCount || 0) + 1;
+                    
+                    // Nếu đâm xuyên đủ 3 lần thì mới bị khựng nhẹ
+                    if (this.pierceCount >= 3) {
+                        this.isStunned = true;
+                        this.stunTimer = performance.now() + 150; // Khựng ngắn hơn bình thường
+                        this.vx *= -0.5; this.vy *= -0.5;
+                        this.pierceCount = 0;
+                    }
+                    // Nếu chưa đủ 3 lần, kiếm tiếp tục bay xuyên qua mục tiêu (không bị Stun)
+                } 
+                else if (result === "shielded") {
+                    // Đập trúng khiên thì gãy/văng ngay lập tức
                     this.hp -= target.isElite ? 3 : 1;
-
                     if (this.hp <= 0) {
                         this.breakSword(scaleFactor);
                     } else {
                         this.isStunned = true;
                         this.stunTimer = performance.now() + CONFIG.SWORD.STUN_DURATION_MS;
-                        this.vx = -this.vx * 1.5 + (Math.random() - 0.5) * 10;
-                        this.vy = -this.vy * 1.5 + (Math.random() - 0.5) * 10;
+                        this.vx = -this.vx * 1.2; this.vy = -this.vy * 1.2;
                     }
                 }
             }
 
+            // Vẽ vệt kiếm
             this.trail.push({ x: this.x, y: this.y });
             if (this.trail.length > CONFIG.SWORD.TRAIL_LENGTH) this.trail.shift();
         }

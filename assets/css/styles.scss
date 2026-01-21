@@ -7,6 +7,7 @@ $danger-color: #ff4444;
 $bg-gradient: radial-gradient(circle at center, #0a1525, #000);
 $shadow-color: rgba(0, 0, 0, 0.4);
 $ui-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+$ult-color: #ff3366;
 
 // ====================================================================
 // 2. MIXINS
@@ -285,6 +286,36 @@ canvas {
     flex-direction: column;
     align-items: center;
     gap: 20px;
+
+    .btn-ultimate {
+        width: 45px;
+        height: 45px;
+        background: rgba($ult-color, 0.2) !important;
+        border: 2px solid $ult-color !important;
+        box-shadow: 0 0 15px rgba($ult-color, 0.6) !important;
+        margin-bottom: 5px;
+        display: none;
+
+        .icon-ult {
+            filter: drop-shadow(0 0 8px $ult-color) !important;
+            width: 60%;
+            height: 60%;
+        }
+
+        &:active {
+            box-shadow: 0 0 25px $ult-color !important;
+        }
+
+        // Hiệu ứng khi sẵn sàng (Ready)
+        &.ready {
+            animation: ult-glow 1s infinite alternate;
+        }
+    }
+
+    @keyframes ult-glow {
+        from { box-shadow: 0 0 10px $ult-color; transform: scale(1); }
+        to { box-shadow: 0 0 25px $ult-color; transform: scale(1.05); }
+    }
 
     .btn-form {
         width: 30px;

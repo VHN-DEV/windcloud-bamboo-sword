@@ -89,6 +89,36 @@ const Input = {
         HIGH: 0
     },
     isReadyToBreak: false, // Thêm biến trạng thái này
+    combo: 0,
+    rage: 0,
+    maxRage: 100,
+    isUltMode: false, // Trạng thái tuyệt kỹ tối thượng
+
+    updateCombo(isReset = false) {
+        if (isReset) {
+            this.combo = 0;
+            this.rage = 0;
+        } else {
+            this.combo++;
+            // Tăng nộ: diệt càng nhanh nộ càng tăng mạnh
+            this.rage = Math.min(this.maxRage, this.rage + 2); 
+        }
+        this.renderRageUI();
+    },
+
+    renderRageUI() {
+        const ultBtn = document.getElementById('btn-ultimate');
+        if (ultBtn) {
+            if (this.rage >= this.maxRage) {
+                ultBtn.classList.add('ready', 'is-active');
+                ultBtn.style.display = 'flex'; // Hiện nút khi đầy nộ
+            } else {
+                ultBtn.classList.remove('ready');
+                // Nếu đang dùng Ult mà nộ về 0 thì tắt chế độ Ult
+                if (this.rage <= 0) this.isUltMode = false;
+            }
+        }
+    },
 
     // Hàm mới để tính tổng % tỉ lệ đột phá từ đan dược
     calculateTotalPillBoost() {
@@ -763,6 +793,17 @@ document.getElementById('btn-breakthrough').addEventListener('pointerdown', (e) 
     e.stopPropagation();
     // Gọi hàm thực hiện đột phá mà chúng ta đã viết ở bước trước
     Input.executeBreakthrough();
+});
+
+document.getElementById('btn-ultimate').addEventListener('pointerdown', (e) => {
+    if (Input.rage >= Input.maxRage) {
+        Input.isUltMode = true;
+        Input.rage = 0; // Reset nộ
+        showNotify("VẠN KIẾM QUY TÔNG!", "#00ffff");
+        
+        // Sau 10 giây hết trạng thái hóa rồng
+        setTimeout(() => { Input.isUltMode = false; }, 10000);
+    }
 });
 
 const attackBtn = document.getElementById('btn-attack');
