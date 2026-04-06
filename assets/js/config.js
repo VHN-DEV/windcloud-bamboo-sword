@@ -36,6 +36,13 @@ const CONFIG = {
             FADE_TIME: 1000     // Thời gian mờ dần trước khi mất tích
         },
     },
+    ULTIMATE: {
+        MAX_RAGE: 100,      // Giới hạn nộ đầy
+        GAIN_PER_KILL: 100,   // Lượng nộ nhận được mỗi khi hạ 1 quái
+        DURATION_MS: 10000, // Thời gian duy trì trạng thái ultimate
+        TRANSITION_MS: 1000, // Thời gian hợp kiếm hoặc tách kiếm
+        CHARGE_STEPS: 10,   // Số nấc hiển thị tiến độ nộ trên nút ultimate
+    },
     INPUT: {
         DOUBLE_TAP_DELAY: 300   // Khoảng cách tối đa giữa 2 lần chạm để tính là double tap
     },

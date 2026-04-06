@@ -195,7 +195,7 @@ class Enemy {
         }
 
         // Giới hạn né tránh tối đa (ví dụ 80%) để không bị bất tử hoàn toàn theo kiểu né
-        finalDodgeChance = Math.min(finalDodgeChance, 0.8);
+        finalDodgeChance = Math.min(finalDodgeChance, CONFIG.ENEMY.MAX_DODGE_CHANCE || 0.8);
 
         if (Math.random() < finalDodgeChance) {
             if (now - (this.lastNotifyTime || 0) > CONFIG.ENEMY.NOTIFY_COOLDOWN_MS) {
@@ -212,7 +212,8 @@ class Enemy {
         // --- 2. TÍNH SÁT THƯƠNG CƠ BẢN (Nếu không né được) ---
         const currentRank = CONFIG.CULTIVATION.RANKS[playerRankIndex];
         const baseDamage = currentRank ? currentRank.damage : 1;
-        let damage = Math.ceil(baseDamage * (sword?.powerPenalty || 1));
+        const swordMultiplier = sword?.getDamageMultiplier ? sword.getDamageMultiplier() : (sword?.powerPenalty || 1);
+        let damage = Math.ceil(baseDamage * swordMultiplier);
 
         // --- 3. ÁP DỤNG LOGIC BẤT TỬ / GIẢM SÁT THƯƠNG ---
         if (rankDiff >= CONFIG.ENEMY.MAJOR_RANK_DIFF) {
@@ -260,6 +261,7 @@ class Enemy {
 
             if (this.isElite) showNotify("DIỆT TINH ANH: THU HOẠCH LỚN!", "#ffcc00");
 
+            Input.updateCombo();
             Input.updateExp(expGain);
             Input.updateMana(manaGain);
 

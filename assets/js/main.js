@@ -91,8 +91,12 @@ const Input = {
     isReadyToBreak: false, // Thêm biến trạng thái này
     combo: 0,
     rage: 0,
-    maxRage: 100,
+    maxRage: CONFIG.ULTIMATE.MAX_RAGE || 100,
     isUltMode: false, // Trạng thái tuyệt kỹ tối thượng
+    ultTimeoutId: null,
+    ultimatePhase: 'idle',
+    ultimatePhaseStartedAt: 0,
+    ultimateCoreIndex: -1,
 
     updateCombo(isReset = false) {
         if (isReset) {
@@ -101,26 +105,139 @@ const Input = {
         } else {
             this.combo++;
             // Tăng nộ: diệt càng nhanh nộ càng tăng mạnh
-            this.rage = Math.min(this.maxRage, this.rage + 2); 
+            const rageGain = Math.max(0, parseFloat(CONFIG.ULTIMATE.GAIN_PER_KILL) || 0);
+            this.rage = Math.min(this.maxRage, this.rage + rageGain); 
         }
         this.renderRageUI();
     },
 
     renderRageUI() {
         const ultBtn = document.getElementById('btn-ultimate');
+        const isUltimateBusy = this.isUltimateBusy();
+        const isReady = this.rage >= this.maxRage && !isUltimateBusy;
+        const safeMaxRage = Math.max(1, this.maxRage || 1);
+        const percent = Math.max(0, Math.min(100, (this.rage / safeMaxRage) * 100));
+        const chargeSteps = Math.max(1, parseInt(CONFIG.ULTIMATE.CHARGE_STEPS, 10) || 1);
+        const snappedPercent = isUltimateBusy || isReady
+            ? 100
+            : Math.floor((percent / 100) * chargeSteps) * (100 / chargeSteps);
+        const chargePercent = isUltimateBusy ? 100 : snappedPercent;
+        const chargeRatio = Math.max(0, Math.min(1, chargePercent / 100));
         if (ultBtn) {
-            if (this.rage >= this.maxRage) {
-                ultBtn.classList.add('ready', 'is-active');
-                ultBtn.style.display = 'flex'; // Hiện nút khi đầy nộ
+            ultBtn.style.display = 'flex';
+            ultBtn.style.setProperty('--ult-charge', `${chargePercent}%`);
+            ultBtn.style.setProperty('--ult-charge-ratio', chargeRatio.toFixed(2));
+            ultBtn.classList.toggle('ready', isReady);
+            ultBtn.classList.toggle('is-active', isUltimateBusy);
+            ultBtn.classList.toggle('is-disabled', !isReady && !isUltimateBusy);
+        }
+
+        if (ultBtn) {
+            if (this.ultimatePhase === 'merging') {
+                ultBtn.title = 'Vạn kiếm đang hợp nhất';
+            } else if (this.ultimatePhase === 'splitting') {
+                ultBtn.title = 'Vạn kiếm đang tách trận';
+            } else if (this.isUltMode) {
+                ultBtn.title = 'Vạn kiếm hợp nhất đang kích hoạt';
+            } else if (isReady) {
+                ultBtn.title = `Nộ đầy ${Math.round(this.rage)}/${this.maxRage}`;
             } else {
-                ultBtn.classList.remove('ready');
-                // Nếu đang dùng Ult mà nộ về 0 thì tắt chế độ Ult
-                if (this.rage <= 0) this.isUltMode = false;
+                ultBtn.title = `Nộ ${Math.round(this.rage)}/${this.maxRage}`;
             }
+            ultBtn.setAttribute('aria-label', ultBtn.title);
         }
     },
 
     // Hàm mới để tính tổng % tỉ lệ đột phá từ đan dược
+    isUltimateBusy() {
+        return this.ultimatePhase !== 'idle';
+    },
+
+    getUltimateTransitionDuration() {
+        return Math.max(100, parseInt(CONFIG.ULTIMATE.TRANSITION_MS, 10) || 100);
+    },
+
+    getUltimateTransitionProgress() {
+        if (this.ultimatePhase !== 'merging' && this.ultimatePhase !== 'splitting') {
+            return this.isUltMode ? 1 : 0;
+        }
+
+        const elapsed = performance.now() - this.ultimatePhaseStartedAt;
+        return Math.max(0, Math.min(1, elapsed / this.getUltimateTransitionDuration()));
+    },
+
+    getUltimateTransitionEase() {
+        const t = this.getUltimateTransitionProgress();
+        return (t < 0.5)
+            ? 2 * t * t
+            : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    },
+
+    startUltimate() {
+        if (this.isUltimateBusy() || this.rage < this.maxRage) return false;
+
+        if (this.ultTimeoutId) {
+            clearTimeout(this.ultTimeoutId);
+            this.ultTimeoutId = null;
+        }
+
+        const coreIndex = swords.findIndex(sword => !sword.isDead);
+        if (coreIndex === -1) return false;
+
+        this.ultimateCoreIndex = coreIndex;
+        this.ultimatePhase = 'merging';
+        this.ultimatePhaseStartedAt = performance.now();
+        this.isUltMode = false;
+        this.rage = 0;
+
+        swords.forEach(sword => {
+            if (!sword.isDead) {
+                sword.isStunned = false;
+                sword.stunTimer = 0;
+                sword.trail = [];
+                sword.attackFrame = 0;
+            }
+        });
+
+        showNotify("VẠN KIẾM QUY TÔNG!", "#00ffff");
+        this.renderRageUI();
+        return true;
+    },
+
+    startUltimateSplit() {
+        if (this.ultTimeoutId) {
+            clearTimeout(this.ultTimeoutId);
+            this.ultTimeoutId = null;
+        }
+
+        this.isUltMode = false;
+        this.ultimatePhase = 'splitting';
+        this.ultimatePhaseStartedAt = performance.now();
+        this.renderRageUI();
+    },
+
+    updateUltimateState() {
+        if (this.ultimatePhase !== 'merging' && this.ultimatePhase !== 'splitting') return;
+        if (this.getUltimateTransitionProgress() < 1) return;
+
+        if (this.ultimatePhase === 'merging') {
+            this.ultimatePhase = 'active';
+            this.ultimatePhaseStartedAt = performance.now();
+            this.isUltMode = true;
+            this.renderRageUI();
+
+            this.ultTimeoutId = setTimeout(() => {
+                this.startUltimateSplit();
+            }, CONFIG.ULTIMATE.DURATION_MS || 10000);
+            return;
+        }
+
+        this.ultimatePhase = 'idle';
+        this.ultimatePhaseStartedAt = 0;
+        this.ultimateCoreIndex = -1;
+        this.renderRageUI();
+    },
+
     calculateTotalPillBoost() {
         const cfg = CONFIG.PILL.TYPES;
         // Tính tổng: (Số lượng x % cộng thêm) của từng loại
@@ -394,6 +511,8 @@ const Input = {
     },
 
     update(dt) { // Nhận thêm tham số dt
+        this.updateUltimateState();
+
         const worldPos = Camera.screenToWorld(this.screenX, this.screenY);
         this.x = worldPos.x;
         this.y = worldPos.y;
@@ -621,6 +740,10 @@ const SettingsUI = {
         if (savedData) {
             try {
                 const parsed = JSON.parse(savedData);
+                if (parsed?.SWORD?.REGEN_INTERVAL_MS !== undefined && parsed?.MANA?.REGEN_INTERVAL_MS === undefined) {
+                    parsed.MANA = parsed.MANA || {};
+                    parsed.MANA.REGEN_INTERVAL_MS = parsed.SWORD.REGEN_INTERVAL_MS;
+                }
                 // Sử dụng đệ quy nhẹ hoặc gán tay để đảm bảo không làm mất các reference gốc
                 // Ở đây gán trực tiếp các nhánh chính của CONFIG
                 if (parsed.BG) Object.assign(CONFIG.BG, parsed.BG);
@@ -630,7 +753,12 @@ const SettingsUI = {
                 if (parsed.ENEMY) Object.assign(CONFIG.ENEMY, parsed.ENEMY);
                 if (parsed.MANA) Object.assign(CONFIG.MANA, parsed.MANA);
                 if (parsed.PILL) Object.assign(CONFIG.PILL, parsed.PILL);
+                if (parsed.ULTIMATE) Object.assign(CONFIG.ULTIMATE, parsed.ULTIMATE);
                 if (parsed.CULTIVATION) Object.assign(CONFIG.CULTIVATION, parsed.CULTIVATION);
+
+                Input.maxRage = Math.max(1, parseInt(CONFIG.ULTIMATE.MAX_RAGE, 10) || 100);
+                Input.rage = Math.min(Input.rage, Input.maxRage);
+                Input.renderRageUI();
                 
                 console.log("Thiên Thư đã được phục hồi từ LocalStorage.");
             } catch (err) {
@@ -672,7 +800,6 @@ const SettingsUI = {
             'cfg-sw-death-wait': CONFIG.SWORD.DEATH_WAIT_MS,
             'cfg-sw-breath': CONFIG.SWORD.BREATH_SPEED.MIN,
             'cfg-sw-stun': CONFIG.SWORD.STUN_DURATION_MS,
-            'cfg-sw-regen': CONFIG.SWORD.REGEN_INTERVAL_MS,
             'cfg-sw-paused': CONFIG.SWORD.IS_PAUSED ? 1 : 0,
 
             'cfg-en-spawn': CONFIG.ENEMY.SPAWN_COUNT,
@@ -682,6 +809,7 @@ const SettingsUI = {
             'cfg-en-debris': CONFIG.ENEMY.DEBRIS.COUNT,
 
             'cfg-ma-regen': CONFIG.MANA.REGEN_PER_SEC,
+            'cfg-ma-interval': CONFIG.MANA.REGEN_INTERVAL_MS,
             'cfg-ma-atk': CONFIG.MANA.COST_ATTACK_PER_SEC,
             'cfg-ma-move': CONFIG.MANA.COST_MOVE_PER_SEC,
             'cfg-ma-res-cost': Math.abs(CONFIG.MANA.COST_RESPAWN),
@@ -691,6 +819,11 @@ const SettingsUI = {
             'cfg-pi-chance': CONFIG.PILL.CHANCE,
             'cfg-pi-magnet': CONFIG.PILL.MAGNET_SPEED,
             'cfg-pi-trail': CONFIG.PILL.TRAIL_LENGTH,
+            'cfg-ul-max-rage': CONFIG.ULTIMATE.MAX_RAGE,
+            'cfg-ul-gain-kill': CONFIG.ULTIMATE.GAIN_PER_KILL,
+            'cfg-ul-duration': CONFIG.ULTIMATE.DURATION_MS,
+            'cfg-ul-transition': CONFIG.ULTIMATE.TRANSITION_MS,
+            'cfg-ul-steps': CONFIG.ULTIMATE.CHARGE_STEPS,
             'cfg-cu-penalty': CONFIG.CULTIVATION.BREAKTHROUGH_PENALTY_FACTOR,
             'cfg-cu-max-chance': CONFIG.CULTIVATION.MAX_BREAKTHROUGH_CHANCE
         };
@@ -699,7 +832,11 @@ const SettingsUI = {
             let el = document.getElementById(id);
             if (el) {
                 const value = mapping[id];
-                el.value = (value !== undefined) ? value : ""; 
+                if (el.type === 'checkbox') {
+                    el.checked = Boolean(value);
+                } else {
+                    el.value = (value !== undefined) ? value : "";
+                }
             }
         }
 
@@ -727,7 +864,6 @@ const SettingsUI = {
             CONFIG.SWORD.RESPAWN_DELAY_MS = parseInt(document.getElementById('cfg-sw-respawn').value);
             CONFIG.SWORD.DEATH_WAIT_MS = parseInt(document.getElementById('cfg-sw-death-wait').value);
             CONFIG.SWORD.STUN_DURATION_MS = parseInt(document.getElementById('cfg-sw-stun').value);
-            CONFIG.SWORD.REGEN_INTERVAL_MS = parseInt(document.getElementById('cfg-sw-regen').value);
             CONFIG.SWORD.IS_PAUSED = document.getElementById('cfg-sw-paused').checked;
 
             CONFIG.ENEMY.SPAWN_COUNT = parseInt(document.getElementById('cfg-en-spawn').value);
@@ -737,6 +873,7 @@ const SettingsUI = {
             CONFIG.ENEMY.DEBRIS.COUNT = parseInt(document.getElementById('cfg-en-debris').value);
 
             CONFIG.MANA.REGEN_PER_SEC = parseFloat(document.getElementById('cfg-ma-regen').value);
+            CONFIG.MANA.REGEN_INTERVAL_MS = parseInt(document.getElementById('cfg-ma-interval').value);
             CONFIG.MANA.COST_ATTACK_PER_SEC = parseFloat(document.getElementById('cfg-ma-atk').value);
             CONFIG.MANA.COST_MOVE_PER_SEC = parseFloat(document.getElementById('cfg-ma-move').value);
             CONFIG.MANA.COST_RESPAWN = -Math.abs(parseFloat(document.getElementById('cfg-ma-res-cost').value));
@@ -746,8 +883,17 @@ const SettingsUI = {
             CONFIG.PILL.CHANCE = parseFloat(document.getElementById('cfg-pi-chance').value);
             CONFIG.PILL.MAGNET_SPEED = parseInt(document.getElementById('cfg-pi-magnet').value);
             CONFIG.PILL.TRAIL_LENGTH = parseInt(document.getElementById('cfg-pi-trail').value);
+            CONFIG.ULTIMATE.MAX_RAGE = Math.max(1, parseInt(document.getElementById('cfg-ul-max-rage').value, 10) || 1);
+            CONFIG.ULTIMATE.GAIN_PER_KILL = Math.max(0, parseFloat(document.getElementById('cfg-ul-gain-kill').value) || 0);
+            CONFIG.ULTIMATE.DURATION_MS = Math.max(100, parseInt(document.getElementById('cfg-ul-duration').value, 10) || 100);
+            CONFIG.ULTIMATE.TRANSITION_MS = Math.max(100, parseInt(document.getElementById('cfg-ul-transition').value, 10) || 100);
+            CONFIG.ULTIMATE.CHARGE_STEPS = Math.max(1, parseInt(document.getElementById('cfg-ul-steps').value, 10) || 1);
             CONFIG.CULTIVATION.BREAKTHROUGH_PENALTY_FACTOR = parseFloat(document.getElementById('cfg-cu-penalty').value);
             CONFIG.CULTIVATION.MAX_BREAKTHROUGH_CHANCE = parseFloat(document.getElementById('cfg-cu-max-chance').value);
+
+            Input.maxRage = CONFIG.ULTIMATE.MAX_RAGE;
+            Input.rage = Math.min(Input.rage, Input.maxRage);
+            Input.renderRageUI();
 
             // --- 2. Lưu vào LocalStorage để không bị mất khi load lại trang ---
             localStorage.setItem('thanh_truc_settings', JSON.stringify(CONFIG));
@@ -814,14 +960,9 @@ document.getElementById('btn-breakthrough').addEventListener('pointerdown', (e) 
 });
 
 document.getElementById('btn-ultimate').addEventListener('pointerdown', (e) => {
-    if (Input.rage >= Input.maxRage) {
-        Input.isUltMode = true;
-        Input.rage = 0; // Reset nộ
-        showNotify("VẠN KIẾM QUY TÔNG!", "#00ffff");
-        
-        // Sau 10 giây hết trạng thái hóa rồng
-        setTimeout(() => { Input.isUltMode = false; }, 10000);
-    }
+    e.stopPropagation();
+    e.preventDefault();
+    Input.startUltimate();
 });
 
 const attackBtn = document.getElementById('btn-attack');
@@ -875,8 +1016,9 @@ function init() {
 
     Input.renderManaUI();
     Input.renderExpUI();
+    Input.renderRageUI();
     SettingsUI.init();
-    starField = new StarField(250, width, height);
+    starField = new StarField(CONFIG.BG.STAR_COUNT, width, height);
     for (let i = 0; i < CONFIG.ENEMY.SPAWN_COUNT; i++) enemies.push(new Enemy());
     for (let i = 0; i < CONFIG.SWORD.COUNT; i++) swords.push(new Sword(i, scaleFactor));
 }
@@ -957,7 +1099,7 @@ function animate() {
 
     enemies.forEach(e => e.draw(ctx, scaleFactor));
     pills = pills.filter(pill => {
-        const collected = pill.update(window.innerWidth / 2, window.innerHeight / 2);
+        const collected = pill.update(guardCenter.x, guardCenter.y);
 
         if (collected) {
             // Cộng vào đúng loại đan trong Input
@@ -980,17 +1122,22 @@ function animate() {
     renderCursor();
 
     // Vẽ và cập nhật hạt hiệu ứng
-    visualParticles.forEach((p, i) => {
+    for (let i = visualParticles.length - 1; i >= 0; i--) {
+        const p = visualParticles[i];
         p.x += p.vx;
         p.y += p.vy;
         p.life -= 0.02;
         ctx.globalAlpha = p.life;
         ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
+        if (p.type === 'square') {
+            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+        } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
         if (p.life <= 0) visualParticles.splice(i, 1);
-    });
+    }
     ctx.globalAlpha = 1;
 
     ctx.restore();

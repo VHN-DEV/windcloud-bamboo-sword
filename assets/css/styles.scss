@@ -232,7 +232,7 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 14px;
 
     // Thay vì display: none trực tiếp, ta điều khiển qua độ mờ và pointer-events
     opacity: 0;
@@ -285,36 +285,130 @@ canvas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 14px;
 
     .btn-ultimate {
-        width: 45px;
-        height: 45px;
-        background: rgba($ult-color, 0.2) !important;
-        border: 2px solid $ult-color !important;
-        box-shadow: 0 0 15px rgba($ult-color, 0.6) !important;
+        --ult-charge: 0%;
+        --ult-charge-ratio: 0;
+        width: 48px;
+        height: 48px;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        background: radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.14), rgba(8, 14, 22, 0.96) 72%) !important;
+        border: 2px solid rgba($ult-color, 0.28) !important;
+        box-shadow: 0 0 10px rgba($ult-color, 0.18) !important;
         margin-bottom: 5px;
-        display: none;
+        display: flex;
+        opacity: 1;
+        transform: scale(1);
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: var(--ult-charge);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 28%),
+                repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 9px),
+                linear-gradient(0deg, rgba(0, 224, 255, 0.92) 0%, rgba(157, 255, 247, 0.78) 100%);
+            opacity: calc(0.12 + (var(--ult-charge-ratio) * 0.78));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 18px rgba($ult-color, 0.32);
+            transition: height 0.2s steps(10), opacity 0.2s ease;
+            z-index: 0;
+        }
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 46%, rgba($ult-color, 0.14) 100%);
+            opacity: calc(0.18 + (var(--ult-charge-ratio) * 0.28));
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
 
         .icon-ult {
-            filter: drop-shadow(0 0 8px $ult-color) !important;
+            position: relative;
+            z-index: 2;
             width: 60%;
             height: 60%;
+            opacity: calc(0.62 + (var(--ult-charge-ratio) * 0.38));
+            transform: scale(calc(0.92 + (var(--ult-charge-ratio) * 0.12)));
+            filter: drop-shadow(0 0 6px rgba($ult-color, 0.45)) !important;
+            transition: transform 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
         }
 
         &:active {
-            box-shadow: 0 0 25px $ult-color !important;
+            transform: scale(0.96);
+        }
+
+        &.is-disabled {
+            border-color: rgba($ult-color, 0.24) !important;
+            box-shadow: 0 0 8px rgba($ult-color, 0.14) !important;
         }
 
         // Hiệu ứng khi sẵn sàng (Ready)
         &.ready {
-            animation: ult-glow 1s infinite alternate;
+            opacity: 1;
+            border-color: #ffd36b !important;
+            box-shadow: 0 0 14px rgba(#ffd36b, 0.72), 0 0 30px rgba($ult-color, 0.42) !important;
+            animation: ult-ready-pulse 0.85s infinite alternate;
+        }
+
+        &.ready::before {
+            opacity: 1;
+        }
+
+        &.ready .icon-ult {
+            opacity: 1;
+            filter: drop-shadow(0 0 10px rgba(#ffd36b, 0.96)) drop-shadow(0 0 16px rgba($ult-color, 0.72)) !important;
+        }
+
+        &.is-active {
+            opacity: 1;
+            border-color: #fff4b7 !important;
+            box-shadow: 0 0 18px rgba(#ffd36b, 0.82), 0 0 36px rgba($ult-color, 0.58) !important;
+            animation: ult-active-pulse 0.65s infinite alternate;
+        }
+
+        &.is-active::before {
+            opacity: 1;
+        }
+
+        &.is-active .icon-ult {
+            opacity: 1;
+            transform: scale(1.08);
+            filter: drop-shadow(0 0 12px rgba(#fff4b7, 0.98)) drop-shadow(0 0 18px rgba($ult-color, 0.86)) !important;
         }
     }
 
-    @keyframes ult-glow {
-        from { box-shadow: 0 0 10px $ult-color; transform: scale(1); }
-        to { box-shadow: 0 0 25px $ult-color; transform: scale(1.05); }
+    @keyframes ult-ready-pulse {
+        from {
+            transform: scale(1);
+            box-shadow: 0 0 10px rgba(#ffd36b, 0.55), 0 0 22px rgba($ult-color, 0.28);
+        }
+
+        to {
+            transform: scale(1.08);
+            box-shadow: 0 0 18px rgba(#ffd36b, 0.9), 0 0 34px rgba($ult-color, 0.48);
+        }
+    }
+
+    @keyframes ult-active-pulse {
+        from {
+            transform: scale(1.02);
+            box-shadow: 0 0 14px rgba(#ffd36b, 0.7), 0 0 28px rgba($ult-color, 0.42);
+        }
+
+        to {
+            transform: scale(1.1);
+            box-shadow: 0 0 22px rgba(#fff4b7, 0.98), 0 0 42px rgba($ult-color, 0.68);
+        }
     }
 
     .btn-form {
@@ -355,14 +449,14 @@ canvas {
 // 6. SWORD COUNTER UI
 // ====================================================================
 #sword-counter {
-    @include abs-pos($top: 20px, $right: 45px);
+    @include abs-pos($top: 65px, $left: 20px);
     position: fixed;
     display: flex;
     align-items: center;
     background: rgba(0, 0, 0, 0.5);
-    padding: 5px;
+    padding: 2px 10px 2px 5px;
     border-radius: 20px;
-    border: 1px border rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(5px);
     pointer-events: none;
 

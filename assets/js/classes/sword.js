@@ -48,6 +48,120 @@ class Sword {
         this.isReturning = false;  // Trạng thái đang quay về sau khi đâm đủ 3 lần
     }
 
+    getUltimateCoreSword() {
+        if (typeof swords !== 'undefined' && Array.isArray(swords) && swords.length > 0) {
+            const pinnedCore = swords[Input?.ultimateCoreIndex];
+            if (pinnedCore && !pinnedCore.isDead) {
+                return pinnedCore;
+            }
+            return swords.find(s => !s.isDead && !s.isStunned) || swords.find(s => !s.isDead) || swords[0];
+        }
+
+        return this;
+    }
+
+    isUltimateCore() {
+        return this === this.getUltimateCoreSword();
+    }
+
+    getDamageMultiplier() {
+        if (Input.isUltMode && this.isUltimateCore()) {
+            return Math.max(this.powerPenalty, Math.max(12, Math.floor(CONFIG.SWORD.COUNT / 3)));
+        }
+
+        return this.powerPenalty;
+    }
+
+    getMergedGuardTarget(guardCenter, scaleFactor) {
+        return {
+            tx: guardCenter.x,
+            ty: guardCenter.y - 20 * scaleFactor,
+            finalAngle: 0
+        };
+    }
+
+    getNormalGuardTarget(guardCenter, r, Input) {
+        const globalRotation = !CONFIG.SWORD.IS_PAUSED
+            ? (performance.now() / 1000) * this.spinSpeed * (CONFIG.SWORD.SPEED_MULT || 100)
+            : 0;
+
+        const a = this.baseAngle + globalRotation;
+        const tx = guardCenter.x + Math.cos(a) * r;
+        const ty = guardCenter.y + Math.sin(a) * r;
+        const finalAngle = (Input.guardForm === 1)
+            ? a + Math.PI / 2
+            : Math.atan2(ty - this.y, tx - this.x) + Math.PI / 2;
+
+        return { tx, ty, finalAngle };
+    }
+
+    updateUltimateTransition(guardCenter, r, Input, scaleFactor) {
+        const phase = Input.ultimatePhase;
+        const eased = Input.getUltimateTransitionEase();
+        const mergedTarget = this.getMergedGuardTarget(guardCenter, scaleFactor);
+        const normalTarget = this.getNormalGuardTarget(guardCenter, r, Input);
+        const isCore = this.isUltimateCore();
+        const coreSword = this.getUltimateCoreSword();
+        const transitionOrigin = (phase === 'splitting' && coreSword)
+            ? {
+                tx: coreSword.x,
+                ty: coreSword.y,
+                finalAngle: coreSword.drawAngle
+            }
+            : mergedTarget;
+
+        const tx = (phase === 'splitting')
+            ? transitionOrigin.tx + (normalTarget.tx - transitionOrigin.tx) * eased
+            : mergedTarget.tx;
+        const ty = (phase === 'splitting')
+            ? transitionOrigin.ty + (normalTarget.ty - transitionOrigin.ty) * eased
+            : mergedTarget.ty;
+        let finalAngle = mergedTarget.finalAngle;
+        if (phase === 'splitting') {
+            let angleDiff = normalTarget.finalAngle - transitionOrigin.finalAngle;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            finalAngle = transitionOrigin.finalAngle + angleDiff * eased;
+        }
+
+        this.isStunned = false;
+        this.stunTimer = 0;
+        this.isEnlarged = false;
+        this.powerPenalty = 1;
+
+        if (phase === 'merging') {
+            this.targetVisualScale = isCore
+                ? 1 + (4.8 - 1) * eased
+                : Math.max(0.12, 1 - eased * 0.9);
+        } else {
+            this.targetVisualScale = isCore
+                ? 4.8 - (4.8 - 1) * eased
+                : Math.max(0.12, 0.12 + eased * 0.88);
+        }
+
+        this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * (phase === 'merging' ? 0.2 : 0.16);
+
+        const dx = tx - this.x;
+        const dy = ty - this.y;
+        const followStiffness = (phase === 'merging')
+            ? (isCore ? 0.24 : 0.18 + eased * 0.14)
+            : 0.12 + eased * 0.18;
+
+        this.x += dx * followStiffness;
+        this.y += dy * followStiffness;
+        this.vx *= 0.45;
+        this.vy *= 0.45;
+
+        let diff = finalAngle - this.drawAngle;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        this.drawAngle += diff * (phase === 'merging' ? 0.24 : 0.16 + eased * 0.12);
+
+        this.attackFrame = 0;
+        this.pierceCount = 0;
+        this.trail = [];
+    }
+
     update(guardCenter, enemies, Input, scaleFactor) {
         if (this.isDead) {
             const now = performance.now();
@@ -64,14 +178,38 @@ class Sword {
             return;
         }
 
+        this.breath += this.breathSpeed;
+        this.breathSpeed = random(CONFIG.SWORD.BREATH_SPEED.MIN, CONFIG.SWORD.BREATH_SPEED.MAX);
+        const currentRadius = this.radius + Math.sin(this.breath) * 8 * scaleFactor;
+
+        if (Input.ultimatePhase === 'merging' || Input.ultimatePhase === 'splitting') {
+            this.updateUltimateTransition(guardCenter, currentRadius, Input, scaleFactor);
+            return;
+        }
+
+        if (Input.isUltMode && !this.isUltimateCore()) {
+            const coreSword = this.getUltimateCoreSword();
+            const anchorX = coreSword ? coreSword.x : guardCenter.x;
+            const anchorY = coreSword ? coreSword.y : guardCenter.y - 20 * scaleFactor;
+            this.isStunned = false;
+            this.stunTimer = 0;
+            this.isEnlarged = false;
+            this.powerPenalty = 1;
+            this.targetVisualScale = 0;
+            this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.25;
+            this.x += (anchorX - this.x) * 0.24;
+            this.y += (anchorY - this.y) * 0.24;
+            this.vx *= 0.7;
+            this.vy *= 0.7;
+            this.trail = [];
+            this.attackFrame = 0;
+            return;
+        }
+
         if (this.isStunned) {
             this.handleStun(scaleFactor);
             return;
         }
-
-        this.breath += this.breathSpeed;
-        this.breathSpeed = random(CONFIG.SWORD.BREATH_SPEED.MIN, CONFIG.SWORD.BREATH_SPEED.MAX);
-        const currentRadius = this.radius + Math.sin(this.breath) * 8 * scaleFactor;
 
         if (!Input.isAttacking) {
             this.updateGuardMode(guardCenter, currentRadius, Input, scaleFactor);
@@ -107,6 +245,10 @@ class Sword {
         this.vx = 0;
         this.vy = 0;
         this.isStunned = false;
+        this.powerPenalty = 1;
+        this.isEnlarged = false;
+        this.currentVisualScale = 1;
+        this.targetVisualScale = 1;
         this.trail = [];
         this.fragments = [];
     }
@@ -117,6 +259,7 @@ class Sword {
             this.isEnlarged = false;
             this.targetVisualScale = 1;
         }
+        this.powerPenalty = 1;
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.1;
 
         let tx, ty, finalAngle;
@@ -127,15 +270,14 @@ class Sword {
             // 1. Tất cả kiếm đều hướng về cùng 1 vị trí (tâm của guardCenter)
             // Bạn có thể cộng thêm một khoảng offset nếu muốn thanh kiếm khổng lồ nằm trước mặt nhân vật
             tx = guardCenter.x; 
-            ty = guardCenter.y;
+            ty = guardCenter.y - 20 * scaleFactor;
 
             // 2. Tất cả kiếm đều có cùng một góc quay (ví dụ: xoay theo thời gian hoặc hướng lên trên)
             // Ở đây tôi để xoay vòng đều để tạo hiệu ứng thanh kiếm thần đang vận công
-            const rotationSpeed = performance.now() * 0.005;
-            finalAngle = rotationSpeed; 
+            finalAngle = 0;
 
             // 3. (Tùy chọn) Tăng kích thước khi hợp nhất để trông quyền năng hơn
-            this.targetVisualScale = 2.5; // Phóng to thanh kiếm lên 2.5 lần
+            this.targetVisualScale = 4.8; // Phóng to thanh kiếm lên khi hợp nhất
 
         } else {
             // --- QUỸ ĐẠO XOAY VÒNG BÌNH THƯỜNG ---
@@ -151,7 +293,7 @@ class Sword {
 
         // DI CHUYỂN VẬT LÝ (Dùng nội suy để mượt hơn khi nhập thể)
         // Tăng followStiffness khi Ulti để kiếm "nhập" vào nhau nhanh hơn
-        const followStiffness = Input.isUltMode ? 0.3 : 0.15;
+        const followStiffness = Input.isUltMode ? 0.3 : 0.35;
 
         const dx = tx - this.x;
         const dy = ty - this.y;
@@ -160,7 +302,8 @@ class Sword {
         if (Input.speed > 1.5 || (distance > 100 && !Input.isUltMode)) {
             this.vx += (dx / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor);
             this.vy += (dy / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor);
-            this.vx *= 0.82; this.vy *= 0.82;
+            this.vx *= 0.9; 
+            this.vy *= 0.9;
             this.x += this.vx; this.y += this.vy;
             this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
         } else {
@@ -178,17 +321,22 @@ class Sword {
         this.pierceCount = 0; 
         // Giữ trail ngắn lại một chút khi ở mode rồng để không bị rối mắt
         if (this.trail.length > 10) this.trail.shift();
+        this.trail = [];
     }
 
     updateAttackMode(enemies, Input, scaleFactor) {
         this.attackFrame++;
-        if (this.attackFrame < this.attackDelay) return;
+        const requiredAttackDelay = (Input.isUltMode && this.isUltimateCore()) ? 1 : this.attackDelay;
+        if (this.attackFrame < requiredAttackDelay) return;
 
         // Cập nhật kích thước (Enlarge logic)
-        if (!this.isEnlarged && Math.random() < 0.01 && Input.mana >= 1) {
+        if (!Input.isUltMode && !this.isEnlarged && Math.random() < 0.01 && Input.mana >= 1) {
             Input.updateMana(-1);
             this.isEnlarged = true;
             this.targetVisualScale = 2.5;
+        }
+        if (Input.isUltMode && this.isUltimateCore()) {
+            this.targetVisualScale = 4.8;
         }
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.1;
 
@@ -204,7 +352,7 @@ class Sword {
             const d = Math.hypot(dx, dy) || 1;
 
             // Tốc độ bay (nhanh hơn khi đang Ult)
-            const flySpeed = (Input.isUltMode ? 15 : 10) * scaleFactor;
+            const flySpeed = (Input.isUltMode ? 22 : 10) * scaleFactor;
             this.vx += (dx / d) * flySpeed;
             this.vy += (dy / d) * flySpeed;
             this.vx *= 0.92; this.vy *= 0.92;
@@ -213,7 +361,7 @@ class Sword {
             this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
 
             // KIỂM TRA VA CHẠM (HIT TEST)
-            const hitDistance = target.r + (target.hasShield ? 15 : 0);
+            const hitDistance = target.r + (target.hasShield ? 15 : 0) + (Input.isUltMode ? 26 * scaleFactor : 0);
             if (Math.hypot(this.x - target.x, this.y - target.y) < hitDistance) {
                 
                 // Tính toán sát thương và Enlarge
@@ -230,7 +378,10 @@ class Sword {
 
                 // CƠ CHẾ ĐÂM XUYÊN (PIERCE)
                 if (result !== "missed" && result !== "shielded") {
-                    this.pierceCount = (this.pierceCount || 0) + 1;
+                    if (Input.isUltMode && this.isUltimateCore()) {
+                        this.pierceCount = 0;
+                    } else {
+                        this.pierceCount = (this.pierceCount || 0) + 1;
                     
                     // Nếu đâm xuyên đủ 3 lần thì mới bị khựng nhẹ
                     if (this.pierceCount >= 3) {
@@ -239,17 +390,23 @@ class Sword {
                         this.vx *= -0.5; this.vy *= -0.5;
                         this.pierceCount = 0;
                     }
+                    }
                     // Nếu chưa đủ 3 lần, kiếm tiếp tục bay xuyên qua mục tiêu (không bị Stun)
                 } 
                 else if (result === "shielded") {
                     // Đập trúng khiên thì gãy/văng ngay lập tức
-                    this.hp -= target.isElite ? 3 : 1;
-                    if (this.hp <= 0) {
-                        this.breakSword(scaleFactor);
+                    if (Input.isUltMode && this.isUltimateCore()) {
+                        this.vx *= 0.45;
+                        this.vy *= 0.45;
                     } else {
-                        this.isStunned = true;
-                        this.stunTimer = performance.now() + CONFIG.SWORD.STUN_DURATION_MS;
-                        this.vx = -this.vx * 1.2; this.vy = -this.vy * 1.2;
+                        this.hp -= target.isElite ? 3 : 1;
+                        if (this.hp <= 0) {
+                            this.breakSword(scaleFactor);
+                        } else {
+                            this.isStunned = true;
+                            this.stunTimer = performance.now() + CONFIG.SWORD.STUN_DURATION_MS;
+                            this.vx = -this.vx * 1.2; this.vy = -this.vy * 1.2;
+                        }
                     }
                 }
             }
@@ -314,6 +471,10 @@ class Sword {
                 this.drawFragments(ctx, scaleFactor);
                 ctx.restore();
             }
+            return;
+        }
+
+        if (Input.isUltMode && !this.isUltimateCore()) {
             return;
         }
 
