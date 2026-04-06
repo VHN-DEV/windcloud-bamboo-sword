@@ -430,12 +430,55 @@ canvas {
     }
 
     .btn-attack {
+        --attack-stick-x: 0px;
+        --attack-stick-y: 0px;
+        --attack-drag-ratio: 0;
         width: 50px;
         height: 50px;
+        position: relative;
         border: 2px solid $primary-color;
         box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5), 0 0 20px rgba($primary-color, 0.2);
+        touch-action: none;
+        overflow: visible;
 
-        &:active {
+        &::before,
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        &::before {
+            inset: -8px;
+            border: 1px solid rgba($primary-color, 0.16);
+            opacity: calc(0.18 + (var(--attack-drag-ratio) * 0.6));
+            transform: scale(calc(1 + (var(--attack-drag-ratio) * 0.12)));
+            box-shadow: 0 0 18px rgba($primary-color, 0.18);
+        }
+
+        &::after {
+            inset: 10px;
+            border: 1px dashed rgba(255, 255, 255, 0.14);
+            opacity: calc(0.24 + (var(--attack-drag-ratio) * 0.4));
+        }
+
+        .sword-icon {
+            position: relative;
+            z-index: 2;
+            transform: translate(var(--attack-stick-x), var(--attack-stick-y)) scale(calc(1 + (var(--attack-drag-ratio) * 0.16)));
+            filter: drop-shadow(0 0 5px $primary-color) drop-shadow(0 0 10px rgba($primary-color, 0.42));
+            transition: transform 0.06s linear, filter 0.12s ease;
+        }
+
+        &.is-joystick-active {
+            background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.22), rgba(12, 28, 24, 0.96) 72%);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5), 0 0 26px rgba($primary-color, 0.34);
+        }
+
+        &:active:not(.is-joystick-active) {
             top: 5px;
             box-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 0 30px rgba($primary-color, 0.5);
             transform: scale(0.95);
@@ -1448,6 +1491,24 @@ select.shop-control-input {
     .inventory-grid {
         grid-template-columns: 1fr;
         gap: 10px;
+    }
+
+    .attack-group {
+        right: 24px;
+        bottom: 28px;
+
+        .btn-attack {
+            width: 74px;
+            height: 74px;
+
+            &::before {
+                inset: -10px;
+            }
+
+            &::after {
+                inset: 14px;
+            }
+        }
     }
 
     .shop-card,

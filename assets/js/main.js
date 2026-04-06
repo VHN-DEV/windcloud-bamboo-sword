@@ -177,6 +177,18 @@ const Input = {
     rankIndex: 0, // Vị trí hiện tại trong mảng RANKS
     inventory: {},
     spiritStones: getStartingSpiritStoneCounts(),
+    attackJoystick: {
+        active: false,
+        pointerId: null,
+        centerX: 0,
+        centerY: 0,
+        offsetX: 0,
+        offsetY: 0,
+        maxRadius: 28,
+        deadZone: 8,
+        aimDistance: 320,
+        button: null
+    },
     bonusStats: {
         attackPct: 0,
         maxManaFlat: 0,
@@ -681,6 +693,92 @@ const Input = {
     getSpeedMultiplier() {
         const active = this.getActiveEffectModifiers();
         return Math.max(0.35, 1 + this.bonusStats.speedPct + active.speedPct);
+    },
+
+    updateAttackJoystickVisual() {
+        const button = this.attackJoystick.button || document.getElementById('btn-attack');
+        if (!button) return;
+
+        const distance = Math.hypot(this.attackJoystick.offsetX, this.attackJoystick.offsetY);
+        const maxRadius = Math.max(1, this.attackJoystick.maxRadius || 1);
+        const dragRatio = Math.max(0, Math.min(1, distance / maxRadius));
+
+        button.style.setProperty('--attack-stick-x', `${this.attackJoystick.offsetX}px`);
+        button.style.setProperty('--attack-stick-y', `${this.attackJoystick.offsetY}px`);
+        button.style.setProperty('--attack-drag-ratio', dragRatio.toFixed(3));
+        button.classList.toggle('is-joystick-active', this.attackJoystick.active);
+    },
+
+    startAttackJoystick(pointerId, button, clientX, clientY) {
+        if (!this.isTouchDevice || !button) return false;
+
+        const rect = button.getBoundingClientRect();
+        this.attackJoystick.active = true;
+        this.attackJoystick.pointerId = pointerId;
+        this.attackJoystick.centerX = rect.left + (rect.width / 2);
+        this.attackJoystick.centerY = rect.top + (rect.height / 2);
+        this.attackJoystick.maxRadius = Math.max(24, rect.width * 0.42);
+        this.attackJoystick.button = button;
+        this.isAttacking = true;
+
+        this.updateAttackJoystick(clientX, clientY);
+        return true;
+    },
+
+    updateAttackJoystick(clientX, clientY) {
+        if (!this.attackJoystick.active) return;
+
+        let offsetX = clientX - this.attackJoystick.centerX;
+        let offsetY = clientY - this.attackJoystick.centerY;
+        const distance = Math.hypot(offsetX, offsetY);
+        const maxRadius = Math.max(1, this.attackJoystick.maxRadius || 1);
+
+        if (distance > maxRadius) {
+            const clampRatio = maxRadius / distance;
+            offsetX *= clampRatio;
+            offsetY *= clampRatio;
+        }
+
+        this.attackJoystick.offsetX = offsetX;
+        this.attackJoystick.offsetY = offsetY;
+        this.updateAttackJoystickVisual();
+    },
+
+    stopAttackJoystick(pointerId = null) {
+        if (!this.attackJoystick.active) return;
+        if (pointerId !== null && this.attackJoystick.pointerId !== pointerId) return;
+
+        this.attackJoystick.active = false;
+        this.attackJoystick.pointerId = null;
+        this.attackJoystick.centerX = 0;
+        this.attackJoystick.centerY = 0;
+        this.attackJoystick.offsetX = 0;
+        this.attackJoystick.offsetY = 0;
+        this.attackJoystick.button = null;
+        this.isAttacking = false;
+        this.updateAttackJoystickVisual();
+    },
+
+    getAttackJoystickTarget() {
+        if (!this.attackJoystick.active) return null;
+
+        const distance = Math.hypot(this.attackJoystick.offsetX, this.attackJoystick.offsetY);
+        const maxRadius = Math.max(1, this.attackJoystick.maxRadius || 1);
+        const deadZone = Math.max(0, this.attackJoystick.deadZone || 0);
+        const effectiveRatio = Math.max(0, Math.min(1, (distance - deadZone) / Math.max(1, maxRadius - deadZone)));
+
+        if (effectiveRatio <= 0) {
+            return { x: guardCenter.x, y: guardCenter.y };
+        }
+
+        const normX = this.attackJoystick.offsetX / distance;
+        const normY = this.attackJoystick.offsetY / distance;
+        const worldDistance = (this.attackJoystick.aimDistance * effectiveRatio) / Math.max(0.001, Camera.currentZoom || 1);
+
+        return {
+            x: guardCenter.x + (normX * worldDistance),
+            y: guardCenter.y + (normY * worldDistance)
+        };
     },
 
     getAuraPalette() {
@@ -1264,9 +1362,15 @@ const Input = {
         this.updateUltimateState();
         this.updateActiveEffects();
 
-        const worldPos = Camera.screenToWorld(this.screenX, this.screenY);
-        this.x = worldPos.x;
-        this.y = worldPos.y;
+        const joystickTarget = this.getAttackJoystickTarget();
+        if (joystickTarget) {
+            this.x = joystickTarget.x;
+            this.y = joystickTarget.y;
+        } else {
+            const worldPos = Camera.screenToWorld(this.screenX, this.screenY);
+            this.x = worldPos.x;
+            this.y = worldPos.y;
+        }
 
         // Tính tốc độ di chuyển của con trỏ/ngón tay
         this.speed = Math.hypot(this.x - this.px, this.y - this.py);
@@ -2214,10 +2318,11 @@ const startAttack = (e) => {
     if (Input.mana <= 0 && aliveSwords === 0) {
         Input.triggerManaShake();
         Input.isAttacking = false; // Không cho phép tấn công
-        return;
+        return false;
     }
 
     Input.isAttacking = true;
+    return true;
 };
 
 const stopAttack = (e) => {
@@ -2228,9 +2333,60 @@ const stopAttack = (e) => {
 };
 
 // Sử dụng pointerdown/up để nhạy nhất trên cả mobile và desktop
-attackBtn.addEventListener('pointerdown', startAttack);
-attackBtn.addEventListener('pointerup', stopAttack);
-attackBtn.addEventListener('pointerleave', stopAttack); // Khi kéo ngón tay ra khỏi nút
+attackBtn.addEventListener('pointerdown', (e) => {
+    if (Input.isTouchDevice && e.pointerType !== 'mouse') {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!startAttack(e)) return;
+
+        if (attackBtn.setPointerCapture) {
+            attackBtn.setPointerCapture(e.pointerId);
+        }
+
+        Input.startAttackJoystick(e.pointerId, attackBtn, e.clientX, e.clientY);
+        return;
+    }
+
+    startAttack(e);
+});
+
+attackBtn.addEventListener('pointermove', (e) => {
+    if (!Input.attackJoystick.active || Input.attackJoystick.pointerId !== e.pointerId) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+    Input.updateAttackJoystick(e.clientX, e.clientY);
+});
+
+const stopAttackJoystick = (e) => {
+    if (!Input.attackJoystick.active || Input.attackJoystick.pointerId !== e.pointerId) return;
+
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
+        attackBtn.releasePointerCapture(e.pointerId);
+    }
+
+    Input.stopAttackJoystick(e.pointerId);
+};
+
+attackBtn.addEventListener('pointerup', (e) => {
+    if (Input.attackJoystick.active && Input.attackJoystick.pointerId === e.pointerId) {
+        stopAttackJoystick(e);
+        return;
+    }
+
+    stopAttack(e);
+});
+
+attackBtn.addEventListener('pointercancel', stopAttackJoystick);
+attackBtn.addEventListener('lostpointercapture', (e) => Input.stopAttackJoystick(e.pointerId));
+attackBtn.addEventListener('pointerleave', (e) => {
+    if (Input.attackJoystick.active) return;
+    stopAttack(e);
+}); // Khi kéo ngón tay ra khỏi nút
 
 /**
  * ====================================================================
