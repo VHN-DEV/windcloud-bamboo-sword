@@ -584,6 +584,22 @@ const CONFIG = {
             DEATH_ON_HIT_CHANCE: 0.04,
             DEATH_ON_SHIELD_CHANCE: 0.12
         },
+        ULTIMATE: {
+            NAME: "Vạn Trùng Phệ Giới",
+            NOTIFY_COLOR: "#ff7bc3",
+            DURATION_MS: 9000,
+            HIT_INTERVAL_MS: 120,
+            TARGET_RANGE: 320,
+            DAMAGE_MULTIPLIER: 1.72,
+            STRIKES_PER_SPECIES: 2,
+            MAX_TARGETS: 7,
+            VISUAL_LIMIT: 54,
+            VISUAL_RADIUS: 118,
+            VISUAL_JITTER: 24,
+            REPRODUCE_ON_KILL_CHANCE: 0.38,
+            DEATH_ON_HIT_CHANCE: 0.01,
+            DEATH_ON_SHIELD_CHANCE: 0.04
+        },
         SPECIES: {
             KIEN_THIEN_TINH: {
                 rank: 9,

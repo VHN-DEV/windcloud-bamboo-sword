@@ -511,6 +511,14 @@ const Input = {
     ultimatePhase: 'idle',
     ultimatePhaseStartedAt: 0,
     ultimateCoreIndex: -1,
+    ultimateMode: null,
+    insectUltimate: {
+        endsAt: 0,
+        activatedAt: 0,
+        lastHitAt: 0,
+        visuals: [],
+        focusTargets: []
+    },
     lastAttackBurstAt: 0,
 
     updateCombo(isReset = false) {
@@ -530,6 +538,9 @@ const Input = {
         const ultBtn = document.getElementById('btn-ultimate');
         const isUltimateBusy = this.isUltimateBusy();
         const isReady = this.rage >= this.maxRage && !isUltimateBusy;
+        const selectedUltimateMode = this.getSelectedUltimateMode();
+        const rageLabel = this.getUltimateResourceLabel();
+        const ultimateName = this.getUltimateDisplayName(selectedUltimateMode);
         const safeMaxRage = Math.max(1, this.maxRage || 1);
         const percent = Math.max(0, Math.min(100, (this.rage / safeMaxRage) * 100));
         const chargeSteps = Math.max(1, parseInt(CONFIG.ULTIMATE.CHARGE_STEPS, 10) || 1);
@@ -545,19 +556,22 @@ const Input = {
             ultBtn.classList.toggle('ready', isReady);
             ultBtn.classList.toggle('is-active', isUltimateBusy);
             ultBtn.classList.toggle('is-disabled', !isReady && !isUltimateBusy);
+            ultBtn.classList.toggle('is-insect-ultimate', selectedUltimateMode === 'INSECT');
         }
 
         if (ultBtn) {
             if (this.ultimatePhase === 'merging') {
-                ultBtn.title = 'Vạn kiếm đang hợp nhất';
+                ultBtn.title = `${this.getUltimateDisplayName('SWORD')} đang hợp nhất`;
             } else if (this.ultimatePhase === 'splitting') {
-                ultBtn.title = 'Vạn kiếm đang tách trận';
-            } else if (this.isUltMode) {
-                ultBtn.title = 'Vạn kiếm hợp nhất đang kích hoạt';
+                ultBtn.title = `${this.getUltimateDisplayName('SWORD')} đang tách trận`;
+            } else if (this.isSwordUltimateActive()) {
+                ultBtn.title = `${this.getUltimateDisplayName('SWORD')} đang kích hoạt`;
+            } else if (this.isInsectUltimateActive()) {
+                ultBtn.title = `${this.getUltimateDisplayName('INSECT')} đang bộc phát`;
             } else if (isReady) {
-                ultBtn.title = `Nộ đầy ${Math.round(this.rage)}/${this.maxRage}`;
+                ultBtn.title = `${rageLabel} đầy ${Math.round(this.rage)}/${this.maxRage} - ${ultimateName}`;
             } else {
-                ultBtn.title = `Nộ ${Math.round(this.rage)}/${this.maxRage}`;
+                ultBtn.title = `${rageLabel} ${Math.round(this.rage)}/${this.maxRage}`;
             }
             ultBtn.setAttribute('aria-label', ultBtn.title);
         }
@@ -568,8 +582,41 @@ const Input = {
     },
 
     // Hàm mới để tính tổng % tỉ lệ đột phá từ đan dược
+    getSelectedUltimateMode() {
+        if (this.isInsectUltimateActive()) return 'INSECT';
+        return this.attackMode === 'INSECT' && this.hasKhuTrungThuatUnlocked() ? 'INSECT' : 'SWORD';
+    },
+
+    getUltimateDisplayName(mode = this.getSelectedUltimateMode()) {
+        if (mode === 'INSECT') {
+            return CONFIG.INSECT?.ULTIMATE?.NAME || 'Vạn Trùng Phệ Giới';
+        }
+
+        return 'Vạn Kiếm Quy Tông';
+    },
+
+    getUltimateResourceLabel() {
+        return this.getSelectedUltimateMode() === 'INSECT' ? 'Nộ trùng' : 'Nộ kiếm';
+    },
+
+    isSwordUltimateActive() {
+        return this.isUltMode && this.ultimateMode === 'SWORD';
+    },
+
+    isInsectUltimateActive() {
+        return this.isUltMode && this.ultimateMode === 'INSECT';
+    },
+
+    clearInsectUltimateState() {
+        this.insectUltimate.endsAt = 0;
+        this.insectUltimate.activatedAt = 0;
+        this.insectUltimate.lastHitAt = 0;
+        this.insectUltimate.visuals = [];
+        this.insectUltimate.focusTargets = [];
+    },
+
     isUltimateBusy() {
-        return this.ultimatePhase !== 'idle';
+        return this.isUltMode || this.ultimatePhase !== 'idle';
     },
 
     resetAttackState() {
@@ -665,6 +712,8 @@ const Input = {
         this.ultimatePhase = 'idle';
         this.ultimatePhaseStartedAt = 0;
         this.ultimateCoreIndex = -1;
+        this.ultimateMode = null;
+        this.clearInsectUltimateState();
         this.rage = 0;
         this.mana = 0;
         this.setSpecialAura('void');
@@ -725,12 +774,17 @@ const Input = {
 
         if (this.isUltimateBusy() || this.rage < this.maxRage) return false;
 
+        if (this.attackMode === 'INSECT' && this.canUseInsectAttackMode()) {
+            return this.startInsectUltimate();
+        }
+
         if (this.ultTimeoutId) {
             clearTimeout(this.ultTimeoutId);
             this.ultTimeoutId = null;
         }
 
         this.resetAttackState();
+        this.clearInsectUltimateState();
 
         const coreIndex = swords.findIndex(sword => !sword.isDead);
         if (coreIndex === -1) return false;
@@ -738,6 +792,7 @@ const Input = {
         this.ultimateCoreIndex = coreIndex;
         this.ultimatePhase = 'merging';
         this.ultimatePhaseStartedAt = performance.now();
+        this.ultimateMode = 'SWORD';
         this.isUltMode = false;
         this.rage = 0;
 
@@ -755,6 +810,65 @@ const Input = {
         return true;
     },
 
+    startInsectUltimate() {
+        const cfg = CONFIG.INSECT?.ULTIMATE || {};
+        const durationMs = Math.max(1200, Number(cfg.DURATION_MS) || 9000);
+        const combatSpeciesKeys = this.getCombatReadyInsectSpeciesKeys();
+
+        if (!combatSpeciesKeys.length) {
+            showNotify('Chưa có kỳ trùng xuất chiến để thi triển tuyệt kỹ.', '#ffb26b');
+            return false;
+        }
+
+        if (this.ultTimeoutId) {
+            clearTimeout(this.ultTimeoutId);
+            this.ultTimeoutId = null;
+        }
+
+        this.resetAttackState();
+        this.insectCombat.visuals = [];
+        this.insectCombat.focusTargets = [];
+        this.ultimatePhase = 'idle';
+        this.ultimatePhaseStartedAt = 0;
+        this.ultimateCoreIndex = -1;
+        this.ultimateMode = 'INSECT';
+        this.isUltMode = true;
+        this.rage = 0;
+        this.clearInsectUltimateState();
+        this.insectUltimate.activatedAt = performance.now();
+        this.insectUltimate.endsAt = this.insectUltimate.activatedAt + durationMs;
+        this.createInsectUltimateBurst?.(this.x, this.y, cfg.NOTIFY_COLOR || '#ff7bc3');
+
+        this.ultTimeoutId = setTimeout(() => {
+            this.endInsectUltimate();
+        }, durationMs);
+
+        showNotify(`${this.getUltimateDisplayName('INSECT')}!`, cfg.NOTIFY_COLOR || '#ff7bc3');
+        this.renderRageUI();
+        return true;
+    },
+
+    endInsectUltimate() {
+        if (!this.isInsectUltimateActive()) {
+            this.clearInsectUltimateState();
+            return;
+        }
+
+        if (this.ultTimeoutId) {
+            clearTimeout(this.ultTimeoutId);
+            this.ultTimeoutId = null;
+        }
+
+        this.isUltMode = false;
+        this.ultimateMode = null;
+        this.ultimatePhase = 'idle';
+        this.ultimatePhaseStartedAt = 0;
+        this.ultimateCoreIndex = -1;
+        this.clearInsectUltimateState();
+        this.ensureValidAttackMode();
+        this.renderRageUI();
+    },
+
     startUltimateSplit() {
         if (this.ultTimeoutId) {
             clearTimeout(this.ultTimeoutId);
@@ -769,6 +883,13 @@ const Input = {
     },
 
     updateUltimateState() {
+        if (this.isInsectUltimateActive()) {
+            if (!this.canUseInsectAttackMode() || performance.now() >= (this.insectUltimate?.endsAt || 0)) {
+                this.endInsectUltimate();
+            }
+            return;
+        }
+
         if (this.ultimatePhase !== 'merging' && this.ultimatePhase !== 'splitting') return;
         if (this.getUltimateTransitionProgress() < 1) return;
 
@@ -776,6 +897,7 @@ const Input = {
             this.ultimatePhase = 'active';
             this.ultimatePhaseStartedAt = performance.now();
             this.isUltMode = true;
+            this.ultimateMode = 'SWORD';
             this.renderRageUI();
 
             this.ultTimeoutId = setTimeout(() => {
@@ -787,6 +909,7 @@ const Input = {
         this.ultimatePhase = 'idle';
         this.ultimatePhaseStartedAt = 0;
         this.ultimateCoreIndex = -1;
+        this.ultimateMode = null;
         this.resetAttackState();
         this.renderRageUI();
     },
@@ -2480,7 +2603,7 @@ const Input = {
 
         const swordCounter = document.getElementById('sword-counter');
         if (swordCounter) {
-            swordCounter.classList.toggle('is-hidden', this.isInsectSwarmActive());
+            swordCounter.classList.toggle('is-hidden', this.isInsectSwarmActive() || this.isInsectUltimateActive());
         }
 
         if (SkillsUI && typeof SkillsUI.render === 'function' && SkillsUI.isOpen()) {
@@ -2500,7 +2623,7 @@ const Input = {
 
         const swordCounter = document.getElementById('sword-counter');
         if (swordCounter) {
-            swordCounter.classList.toggle('is-hidden', this.isInsectSwarmActive());
+            swordCounter.classList.toggle('is-hidden', this.isInsectSwarmActive() || this.isInsectUltimateActive());
         }
 
         if (SkillsUI && typeof SkillsUI.render === 'function' && SkillsUI.isOpen()) {
@@ -2518,6 +2641,16 @@ const Input = {
 
     setAttackMode(mode) {
         const nextMode = mode === 'INSECT' ? 'INSECT' : 'SWORD';
+
+        if (this.isUltimateBusy()) {
+            showNotify('Không thể đổi kỹ năng khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
+            return false;
+        }
+
+        if (this.isUltimateBusy()) {
+            showNotify('Không thể đổi kỹ năng khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
+            return false;
+        }
 
         if (!this.hasUnlockedAttackSkill(nextMode)) {
             showNotify('Chưa lĩnh ngộ kỹ năng này.', '#ffd36b');
@@ -2542,6 +2675,11 @@ const Input = {
 
     setAttackMode(mode) {
         const nextMode = mode === 'INSECT' ? 'INSECT' : 'SWORD';
+
+        if (this.isUltimateBusy()) {
+            showNotify('Không thể đổi kỹ năng khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
+            return false;
+        }
 
         if (!this.hasUnlockedAttackSkill(nextMode)) {
             showNotify('Chưa lĩnh ngộ kỹ năng này.', '#ffd36b');
@@ -2657,9 +2795,12 @@ const Input = {
         return chosenKey;
     },
 
-    reproduceRandomInsect(baseChance = 0) {
+    reproduceRandomInsect(baseChance = 0, speciesPool = null) {
         const chance = Math.max(0, Math.min(1, baseChance || 0));
-        const candidates = this.getActiveInsectSpeciesKeys().filter(speciesKey => this.hasInsectHabitat(speciesKey));
+        const pool = Array.isArray(speciesPool) && speciesPool.length
+            ? speciesPool
+            : this.getActiveInsectSpeciesKeys();
+        const candidates = pool.filter(speciesKey => this.hasInsectHabitat(speciesKey));
 
         if (!candidates.length || !this.hasBeastCapacity(1) || Math.random() >= chance) return null;
 
@@ -3059,7 +3200,7 @@ const Input = {
                 return `Cuồng hóa ${Math.round((qualityConfig.attackPct || 0) * 100)}% lực công kích trong ${Math.round((qualityConfig.durationMs || 0) / 1000)} giây.${sideText}`;
             }
             case 'RAGE':
-                return `Tăng ngay ${Math.round(qualityConfig.rageGain || 0)} nộ kiếm.`;
+                return `Tăng ngay ${Math.round(qualityConfig.rageGain || 0)} nộ tuyệt kỹ.`;
             case 'MANA':
                 return `Hồi ngay ${Math.round(qualityConfig.manaRestore || 0)} linh lực.`;
             case 'MAX_MANA':
@@ -3186,7 +3327,7 @@ const Input = {
                 return `Cuồng hóa ${Math.round((qualityConfig.attackPct || 0) * 100)}% lực công kích trong ${Math.round((qualityConfig.durationMs || 0) / 1000)} giây.${sideText}`;
             }
             case 'RAGE':
-                return `Tăng ngay ${Math.round(qualityConfig.rageGain || 0)} nộ kiếm.`;
+                return `Tăng ngay ${Math.round(qualityConfig.rageGain || 0)} nộ tuyệt kỹ.`;
             case 'MANA':
                 return `Hồi ngay ${Math.round(qualityConfig.manaRestore || 0)} linh lực.`;
             case 'MAX_MANA':
@@ -4288,7 +4429,7 @@ const Input = {
         };
     },
 
-    resolveInsectSpeciesStrike({ speciesKey, count, totalReadyCount, primaryTarget, candidates }) {
+    resolveInsectSpeciesStrike({ speciesKey, count, totalReadyCount, primaryTarget, candidates, damageMultiplier = 1 }) {
         const summary = { shieldHits: 0, killCount: 0, landedHits: 0 };
         if (!primaryTarget || count <= 0) return summary;
 
@@ -4305,7 +4446,7 @@ const Input = {
             return outcome;
         };
 
-        let baseFactor = this.getInsectSpeciesStrikeFactor(speciesKey, count, totalReadyCount);
+        let baseFactor = this.getInsectSpeciesStrikeFactor(speciesKey, count, totalReadyCount) * Math.max(0.1, Number(damageMultiplier) || 1);
         let primaryOutcome = null;
 
         switch (speciesKey) {
@@ -4666,6 +4807,348 @@ const Input = {
         });
 
         ctx.restore();
+    },
+
+    updateInsectUltimate(dt, enemies, scaleFactor) {
+        const cfg = CONFIG.INSECT?.ULTIMATE || {};
+
+        if (!this.isInsectUltimateActive()) {
+            this.clearInsectUltimateState();
+            return;
+        }
+
+        const combatSpeciesKeys = this.getCombatReadyInsectSpeciesKeys();
+        if (!combatSpeciesKeys.length) {
+            this.endInsectUltimate();
+            return;
+        }
+
+        const centerX = this.x;
+        const centerY = this.y;
+        const targetRange = Math.max(120, Number(cfg.TARGET_RANGE) || 320);
+        const maxTargets = Math.max(1, Math.floor(cfg.MAX_TARGETS || 7));
+        const focusTargets = this.getInsectAttackCandidates(centerX, centerY, enemies, targetRange).slice(0, maxTargets);
+        const visuals = this.insectUltimate.visuals || [];
+        const visualCount = Math.max(
+            18,
+            Math.min(
+                Math.floor(cfg.VISUAL_LIMIT || 54),
+                Math.max(18, this.getCombatReadyInsectCount() + 18)
+            )
+        );
+        const orbitRadius = Math.max(44, Number(cfg.VISUAL_RADIUS) || 118) * scaleFactor;
+        const targetRadius = Math.max(12, orbitRadius * 0.18);
+        const jitter = Math.max(6, Number(cfg.VISUAL_JITTER) || 24) * scaleFactor;
+
+        while (visuals.length < visualCount) {
+            const speciesKey = this.pickOwnedInsectSpeciesKey(combatSpeciesKeys);
+            const species = this.getInsectSpecies(speciesKey);
+            visuals.push({
+                speciesKey,
+                angle: Math.random() * Math.PI * 2,
+                radius: random(targetRadius, orbitRadius),
+                targetRadius: random(targetRadius, orbitRadius),
+                speed: random(2.8, 5.6),
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: random(1.8, 3.8),
+                size: random(2.6, 5.4) * (species?.tier === 'DE' ? 1.2 : 1),
+                targetRef: null,
+                x: centerX,
+                y: centerY
+            });
+        }
+
+        if (visuals.length > visualCount) {
+            visuals.length = visualCount;
+        }
+
+        visuals.forEach((node, index) => {
+            if (!combatSpeciesKeys.includes(node.speciesKey)) {
+                node.speciesKey = this.pickOwnedInsectSpeciesKey(combatSpeciesKeys) || node.speciesKey;
+            }
+
+            node.targetRef = focusTargets.length ? focusTargets[index % focusTargets.length] : null;
+            const profile = this.getInsectCombatProfile(node.speciesKey);
+            const latchRadius = Math.max(10, (profile.latchRadius || 16) * scaleFactor);
+            const anchorX = node.targetRef ? node.targetRef.x : centerX;
+            const anchorY = node.targetRef ? node.targetRef.y : centerY;
+            const minRadius = node.targetRef ? latchRadius * 0.55 : targetRadius;
+            const maxRadius = node.targetRef ? latchRadius * 1.45 : orbitRadius;
+            const nodeJitter = node.targetRef ? jitter * 0.42 : jitter;
+
+            node.angle += dt * node.speed * (node.targetRef ? 5.8 : 3.4);
+            node.wobble += dt * node.wobbleSpeed;
+            node.targetRadius += random(node.targetRef ? -3 : -8, node.targetRef ? 3 : 8) * dt * 10;
+            node.targetRadius = Math.max(minRadius, Math.min(maxRadius, node.targetRadius));
+            node.radius += (node.targetRadius - node.radius) * (node.targetRef ? 0.18 : 0.1);
+
+            const swirlX = Math.cos(node.angle) * node.radius;
+            const swirlY = Math.sin(node.angle * 1.35 + node.wobble) * (node.radius * (node.targetRef ? 0.48 : 0.76));
+            const chaosX = Math.cos(node.wobble * 1.8 + node.angle * 0.52) * nodeJitter;
+            const chaosY = Math.sin(node.wobble * 1.55 - node.angle * 0.46) * nodeJitter;
+
+            node.x = anchorX + swirlX + chaosX;
+            node.y = anchorY + swirlY + chaosY;
+        });
+
+        this.insectUltimate.visuals = visuals;
+        this.insectUltimate.focusTargets = focusTargets;
+
+        const now = performance.now();
+        const hitInterval = Math.max(45, Number(cfg.HIT_INTERVAL_MS) || 120);
+        if ((now - (this.insectUltimate.lastHitAt || 0)) < hitInterval) return;
+
+        this.insectUltimate.lastHitAt = now;
+        if (!focusTargets.length) return;
+
+        const candidates = this.getInsectAttackCandidates(centerX, centerY, enemies, targetRange);
+        if (!candidates.length) return;
+
+        const totalReadyCount = Math.max(1, this.getCombatReadyInsectCount());
+        const strikeSummary = { shieldHits: 0, killCount: 0, landedHits: 0 };
+        const reservedTargets = new Set();
+        const strikesPerSpecies = Math.max(1, Math.floor(cfg.STRIKES_PER_SPECIES || 2));
+        const damageMultiplier = Math.max(1.1, Number(cfg.DAMAGE_MULTIPLIER) || 1.72);
+
+        combatSpeciesKeys.forEach(speciesKey => {
+            const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+            if (count <= 0) return;
+
+            for (let volley = 0; volley < strikesPerSpecies; volley++) {
+                if (reservedTargets.size >= candidates.length) {
+                    reservedTargets.clear();
+                }
+
+                const primaryTarget = this.chooseInsectTargetForSpecies(speciesKey, candidates, centerX, centerY, reservedTargets);
+                if (!primaryTarget) break;
+
+                reservedTargets.add(primaryTarget);
+                const result = this.resolveInsectSpeciesStrike({
+                    speciesKey,
+                    count,
+                    totalReadyCount,
+                    primaryTarget,
+                    candidates,
+                    damageMultiplier: damageMultiplier * (volley === 0 ? 1 : 0.72)
+                });
+
+                strikeSummary.shieldHits += result.shieldHits;
+                strikeSummary.killCount += result.killCount;
+                strikeSummary.landedHits += result.landedHits;
+            }
+        });
+
+        const regularHits = Math.max(0, strikeSummary.landedHits - strikeSummary.shieldHits);
+        const hitLossChance = 1 - Math.pow(1 - Math.max(0, Math.min(1, cfg.DEATH_ON_HIT_CHANCE || 0)), regularHits);
+        const shieldLossChance = 1 - Math.pow(1 - Math.max(0, Math.min(1, cfg.DEATH_ON_SHIELD_CHANCE || 0)), strikeSummary.shieldHits);
+        const casualtyChance = 1 - ((1 - hitLossChance) * (1 - shieldLossChance));
+        const casualtyKey = this.loseRandomTamedInsect(casualtyChance, combatSpeciesKeys);
+
+        let shouldRefresh = false;
+
+        if (casualtyKey) {
+            const species = this.getInsectSpecies(casualtyKey);
+            showNotify(`1 ${species?.name || 'linh trùng'} tan lạc trong trùng triều`, species?.color || '#ff8a80');
+            shouldRefresh = true;
+        }
+
+        if (strikeSummary.killCount > 0) {
+            let bornCount = 0;
+            for (let i = 0; i < strikeSummary.killCount; i++) {
+                if (this.reproduceRandomInsect(cfg.REPRODUCE_ON_KILL_CHANCE || 0.38, combatSpeciesKeys)) {
+                    bornCount++;
+                }
+            }
+
+            if (bornCount > 0) {
+                showNotify(`Trùng triều sinh thêm ${formatNumber(bornCount)} linh trùng`, '#ff9fda');
+                shouldRefresh = true;
+            }
+        }
+
+        if (shouldRefresh) {
+            this.refreshResourceUI();
+        }
+    },
+
+    drawInsectUltimate(ctx, scaleFactor) {
+        if (!this.insectUltimate.visuals?.length) return;
+
+        const cfg = CONFIG.INSECT?.ULTIMATE || {};
+        const time = performance.now() * 0.0035;
+        const pulse = 1 + Math.sin(time * 2.4) * 0.08;
+        const baseRadius = Math.max(44, Number(cfg.VISUAL_RADIUS) || 118) * scaleFactor;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * 1.35);
+        halo.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+        halo.addColorStop(0.3, 'rgba(255, 123, 195, 0.18)');
+        halo.addColorStop(0.68, 'rgba(121, 255, 212, 0.12)');
+        halo.addColorStop(1, 'rgba(121, 255, 212, 0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(0, 0, baseRadius * 1.35, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 176, 226, 0.46)';
+        ctx.lineWidth = 2.2 * scaleFactor;
+        ctx.arc(0, 0, baseRadius * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(121, 255, 212, 0.34)';
+        ctx.lineWidth = 1.4 * scaleFactor;
+        ctx.arc(0, 0, baseRadius * 0.74 * (2 - pulse), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.restore();
+
+        ctx.save();
+        ctx.lineCap = 'round';
+        this.insectUltimate.focusTargets.forEach(target => {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 161, 224, 0.22)';
+            ctx.lineWidth = 1.6 * scaleFactor;
+            ctx.moveTo(this.x, this.y);
+            ctx.quadraticCurveTo(
+                (this.x + target.x) / 2 + Math.sin(time + target.x * 0.01) * 18 * scaleFactor,
+                (this.y + target.y) / 2 + Math.cos(time + target.y * 0.01) * 18 * scaleFactor,
+                target.x,
+                target.y
+            );
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(121, 255, 212, 0.16)';
+            ctx.lineWidth = 1 * scaleFactor;
+            ctx.arc(target.x, target.y, (target.r + 10) * scaleFactor, 0, Math.PI * 2);
+            ctx.stroke();
+        });
+
+        this.insectUltimate.visuals.forEach((node, index) => {
+            const species = this.getInsectSpecies(node.speciesKey);
+            const color = species?.color || '#79ffd4';
+            const secondaryColor = species?.secondaryColor || '#ffb0e8';
+            const auraColor = species?.auraColor || secondaryColor;
+            const size = Math.max(2.2, node.size * scaleFactor * 1.14);
+
+            if (node.targetRef) {
+                ctx.beginPath();
+                ctx.strokeStyle = `${auraColor}28`;
+                ctx.lineWidth = 0.9 * scaleFactor;
+                ctx.moveTo(node.targetRef.x, node.targetRef.y);
+                ctx.lineTo(node.x, node.y);
+                ctx.stroke();
+            } else if (index > 0) {
+                const prev = this.insectUltimate.visuals[index - 1];
+                ctx.beginPath();
+                ctx.strokeStyle = `${secondaryColor}22`;
+                ctx.lineWidth = 0.8 * scaleFactor;
+                ctx.moveTo(prev.x, prev.y);
+                ctx.lineTo(node.x, node.y);
+                ctx.stroke();
+            }
+
+            const gradient = ctx.createRadialGradient(
+                node.x - size * 0.4,
+                node.y - size * 0.4,
+                Math.max(0.3, size * 0.18),
+                node.x,
+                node.y,
+                size * 1.4
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.24, secondaryColor);
+            gradient.addColorStop(0.7, color);
+            gradient.addColorStop(1, `${auraColor}10`);
+
+            ctx.beginPath();
+            ctx.shadowBlur = node.targetRef ? 20 : 16;
+            ctx.shadowColor = auraColor;
+            ctx.fillStyle = gradient;
+            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.restore();
+    },
+
+    createInsectUltimateBurst(x, y, color = '#ff7bc3') {
+        const palette = [color, '#79ffd4', '#fff0c8', '#ffb7e7'];
+
+        visualParticles.push(
+            {
+                type: 'ring',
+                x,
+                y,
+                radius: 18,
+                radialVelocity: 5.2,
+                lineWidth: 3,
+                life: 1,
+                decay: 0.034,
+                opacity: 0.92,
+                color,
+                glow: 18
+            },
+            {
+                type: 'ring',
+                x,
+                y,
+                radius: 42,
+                radialVelocity: 7.6,
+                lineWidth: 2.2,
+                life: 0.92,
+                decay: 0.03,
+                opacity: 0.72,
+                color: '#79ffd4',
+                glow: 16
+            }
+        );
+
+        for (let i = 0; i < 18; i++) {
+            const angle = (Math.PI * 2 * i) / 18;
+            visualParticles.push({
+                type: 'ray',
+                x,
+                y,
+                angle,
+                radius: random(6, 16),
+                radialVelocity: random(3.2, 5.6),
+                length: random(22, 42),
+                lengthVelocity: random(0.16, 0.42),
+                lineWidth: random(1.5, 2.8),
+                life: 0.92,
+                decay: random(0.04, 0.055),
+                opacity: 0.9,
+                color: palette[i % palette.length],
+                glow: 14
+            });
+        }
+
+        for (let i = 0; i < 28; i++) {
+            const angle = random(0, Math.PI * 2);
+            const speed = random(2.8, 7.6);
+            visualParticles.push({
+                type: i % 5 === 0 ? 'square' : 'spark',
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - random(0.2, 1.2),
+                gravity: 0.04,
+                friction: 0.96,
+                size: random(2.4, 5.4),
+                sizeVelocity: -0.035,
+                life: 0.96,
+                decay: random(0.02, 0.034),
+                opacity: 0.9,
+                color: palette[i % palette.length],
+                glow: 12,
+                rotation: angle,
+                rotationSpeed: random(-0.18, 0.18)
+            });
+        }
     },
 
     createLevelUpExplosion(x, y, color) {
@@ -6627,6 +7110,7 @@ ProfileUI = {
         const displayName = Input.getPlayerDisplayName();
         const accent = rank?.color || '#8fffe0';
         const accentLight = rank?.lightColor || '#ffffff';
+        const rageLabel = Input.getUltimateResourceLabel();
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
             + (inventorySummary.categories.SHIELD_BREAK || 0)
             + (inventorySummary.categories.BERSERK || 0)
@@ -6666,7 +7150,7 @@ ProfileUI = {
                 <div class="profile-hero__eyebrow">Tình trạng hiện tại</div>
                 <div class="profile-hero__chips">
                     <span class="profile-chip is-soft">Linh lực<strong>${formatNumber(Input.mana)}/${formatNumber(Input.maxMana)}</strong></span>
-                    <span class="profile-chip is-soft">Nộ kiếm<strong>${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}</strong></span>
+                    <span class="profile-chip is-soft">${escapeHtml(rageLabel)}<strong>${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}</strong></span>
                     <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
                     <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
                     <span class="profile-chip is-soft">Kỹ năng<strong>${escapeHtml(Input.attackMode === 'INSECT' ? 'Khu Trùng Thuật' : 'Kiếm trận')}</strong></span>
@@ -6679,7 +7163,7 @@ ProfileUI = {
             { label: 'Đại cảnh giới', value: majorRealm?.name || 'Phàm giới' },
             { label: 'Tu vi', value: `${formatNumber(Input.exp)}/${formatNumber(rank?.exp || 0)}` },
             { label: 'Linh lực', value: `${formatNumber(Input.mana)}/${formatNumber(Input.maxMana)}` },
-            { label: 'Nộ kiếm', value: `${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}` },
+            { label: rageLabel, value: `${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}` },
             { label: 'Sát thương', value: `≈ ${formatNumber(Input.getEffectiveAttackDamage())}` },
             { label: 'Công lực', value: `+${Math.round((Input.getAttackMultiplier() - 1) * 100)}%` },
             { label: 'Phá khiên', value: `+${Math.round((Input.getShieldBreakMultiplier() - 1) * 100)}%` },
@@ -7111,22 +7595,29 @@ function animate() {
         return true;
     });
 
-    const renderSwarm = Input.attackMode === 'INSECT' && Input.canUseInsectAttackMode() && !Input.isUltMode && !Input.isUltimateBusy();
+    const renderSwarm = Input.isInsectSwarmActive();
+    const renderInsectUltimate = Input.isInsectUltimateActive();
     Input.updateInsectSwarm(dt, enemies, scaleFactor);
+    Input.updateInsectUltimate(dt, enemies, scaleFactor);
 
-    const swordInput = renderSwarm
-        ? { ...Input, isAttacking: false, isUltMode: false, ultimatePhase: 'idle', attackMode: 'SWORD' }
+    const hideSwords = renderSwarm || renderInsectUltimate;
+    const swordInput = hideSwords
+        ? { ...Input, isAttacking: false, isUltMode: false, ultimatePhase: 'idle', attackMode: 'SWORD', ultimateMode: null }
         : Input;
 
     swords.forEach(s => {
         s.update(guardCenter, enemies, swordInput, scaleFactor);
-        if (!renderSwarm) {
+        if (!hideSwords) {
             s.draw(ctx, scaleFactor);
         }
     });
 
     if (renderSwarm) {
         Input.drawInsectSwarm(ctx, scaleFactor);
+    }
+
+    if (renderInsectUltimate) {
+        Input.drawInsectUltimate(ctx, scaleFactor);
     }
 
     renderCursor();

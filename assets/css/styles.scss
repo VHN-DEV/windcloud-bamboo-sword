@@ -624,6 +624,27 @@ body.is-touch-device {
             box-shadow: 0 0 8px rgba($ult-color, 0.14) !important;
         }
 
+        &.is-insect-ultimate {
+            border-color: rgba(121, 255, 212, 0.34) !important;
+            box-shadow: 0 0 12px rgba(121, 255, 212, 0.18), 0 0 22px rgba(255, 123, 195, 0.12) !important;
+        }
+
+        &.is-insect-ultimate::before {
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0) 28%),
+                repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px 9px),
+                linear-gradient(0deg, rgba(255, 136, 205, 0.9) 0%, rgba(121, 255, 212, 0.78) 100%);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 18px rgba(255, 123, 195, 0.26);
+        }
+
+        &.is-insect-ultimate::after {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, transparent 42%, rgba(255, 123, 195, 0.12) 100%);
+        }
+
+        &.is-insect-ultimate .icon-ult {
+            filter: drop-shadow(0 0 7px rgba(255, 123, 195, 0.52)) drop-shadow(0 0 12px rgba(121, 255, 212, 0.36)) !important;
+        }
+
         // Hiệu ứng khi sẵn sàng (Ready)
         &.ready {
             opacity: 1;
@@ -656,6 +677,24 @@ body.is-touch-device {
             opacity: 1;
             transform: scale(1.08);
             filter: drop-shadow(0 0 12px rgba(#fff4b7, 0.98)) drop-shadow(0 0 18px rgba($ult-color, 0.86)) !important;
+        }
+
+        &.is-insect-ultimate.ready {
+            border-color: #ffd6ef !important;
+            box-shadow: 0 0 14px rgba(255, 214, 239, 0.76), 0 0 28px rgba(121, 255, 212, 0.32) !important;
+        }
+
+        &.is-insect-ultimate.ready .icon-ult {
+            filter: drop-shadow(0 0 10px rgba(255, 214, 239, 0.92)) drop-shadow(0 0 16px rgba(121, 255, 212, 0.52)) !important;
+        }
+
+        &.is-insect-ultimate.is-active {
+            border-color: #fff3fb !important;
+            box-shadow: 0 0 18px rgba(255, 243, 251, 0.82), 0 0 34px rgba(255, 123, 195, 0.36) !important;
+        }
+
+        &.is-insect-ultimate.is-active .icon-ult {
+            filter: drop-shadow(0 0 12px rgba(255, 243, 251, 0.96)) drop-shadow(0 0 18px rgba(121, 255, 212, 0.62)) !important;
         }
     }
 
