@@ -23,6 +23,13 @@ class Enemy {
         this.particles = [];
         this.cracks = [];
         this.shieldLevel = 0;
+        this.controlEffects = {
+            movementLockedUntil: 0,
+            slowUntil: 0,
+            slowFactor: 1,
+            dodgeDisabledUntil: 0,
+            shieldRecoveryBlockedUntil: 0
+        };
 
         // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
         const playerRank = Input.rankIndex || 0;
@@ -89,6 +96,7 @@ class Enemy {
         if (CONFIG.ENEMY.ANIMALS) {
             const randomPath = CONFIG.ENEMY.ANIMALS[Math.floor(Math.random() * CONFIG.ENEMY.ANIMALS.length)];
             const iconKey = randomPath.split('/').pop().split('.')[0];
+            this.animalKey = iconKey;
             this.icon = enemyIcons[iconKey];
         }
 
@@ -184,6 +192,8 @@ class Enemy {
         const enemyRankIndex = CONFIG.CULTIVATION.RANKS.indexOf(this.rankData);
         const rankDiff = enemyRankIndex - playerRankIndex;
         const now = Date.now();
+        const effectNow = performance.now();
+        const dodgeSuppressed = effectNow < (this.controlEffects?.dodgeDisabledUntil || 0) || Boolean(sword?.ignoreDodge);
 
         // --- 1. LOGIC NÉ TRÁNH THEO % VÀ CHÊNH LỆCH CẢNH GIỚI ---
         // Tỉ lệ cơ bản (ví dụ 10%) + Tinh anh (15%) + Mỗi cấp chênh lệch (5%)
@@ -197,7 +207,7 @@ class Enemy {
         // Giới hạn né tránh tối đa (ví dụ 80%) để không bị bất tử hoàn toàn theo kiểu né
         finalDodgeChance = Math.min(finalDodgeChance, CONFIG.ENEMY.MAX_DODGE_CHANCE || 0.8);
 
-        if (Math.random() < finalDodgeChance) {
+        if (!dodgeSuppressed && Math.random() < finalDodgeChance) {
             if (now - (this.lastNotifyTime || 0) > CONFIG.ENEMY.NOTIFY_COOLDOWN_MS) {
                 showNotify("NÉ TRÁNH: Đối phương quá linh hoạt!", "#ffffff");
                 this.lastNotifyTime = now;
@@ -235,7 +245,9 @@ class Enemy {
 
         // --- 4. XỬ LÝ KHIÊN ---
         if (this.hasShield && this.shieldHp > 0) {
-            const shieldBreakMultiplier = Input?.getShieldBreakMultiplier ? Input.getShieldBreakMultiplier() : 1;
+            const playerShieldBreakMultiplier = Input?.getShieldBreakMultiplier ? Input.getShieldBreakMultiplier() : 1;
+            const sourceShieldBreakMultiplier = Math.max(1, Number(sword?.shieldBreakMultiplier) || 1);
+            const shieldBreakMultiplier = playerShieldBreakMultiplier * sourceShieldBreakMultiplier;
             const shieldDamage = damage > 0 ? Math.max(1, Math.ceil(damage * shieldBreakMultiplier)) : 0;
             this.shieldHp -= shieldDamage;
             
@@ -300,7 +312,7 @@ class Enemy {
                 }
             }
 
-            if (CONFIG.ITEMS?.MATERIALS && typeof Input?.createRandomMaterialDropSpec === 'function') {
+            if (CONFIG.ITEMS?.MATERIALS && typeof Input?.createEnemyMaterialDropSpec === 'function') {
                 const materialCfg = CONFIG.ITEMS.MATERIAL_DROP || {};
                 const materialDropChance = Math.min(1, ((this.isElite ? materialCfg.ELITE_CHANCE : materialCfg.NORMAL_CHANCE) || 0) * dropRateMultiplier);
                 const materialCountCfg = this.isElite ? materialCfg.ELITE_COUNT : materialCfg.NORMAL_COUNT;
@@ -310,9 +322,15 @@ class Enemy {
 
                 if (Math.random() < materialDropChance) {
                     for (let i = 0; i < materialDropCount; i++) {
-                        pills.push(new Pill(this.x, this.y, Input.createRandomMaterialDropSpec(this.isElite)));
+                        pills.push(new Pill(this.x, this.y, Input.createEnemyMaterialDropSpec(this, this.isElite)));
                     }
                 }
+            }
+
+            if (typeof Input?.createGuaranteedMajorRealmDrops === 'function') {
+                Input.createGuaranteedMajorRealmDrops(this).forEach(dropSpec => {
+                    pills.push(new Pill(this.x, this.y, dropSpec));
+                });
             }
 
             this.respawn();
@@ -411,6 +429,7 @@ class Enemy {
     updateShieldRecovery() {
         if (!this.hasShield || this.shieldHp <= 0) return;
         if (this.shieldHp >= this.maxShieldHp) return;
+        if (performance.now() < (this.controlEffects?.shieldRecoveryBlockedUntil || 0)) return;
 
         const now = Date.now();
         const idleTime = now - this.lastHitTime;
@@ -430,6 +449,55 @@ class Enemy {
                 }
             }
         }
+    }
+
+    applyMovementLock(durationMs = 0) {
+        const lockDuration = Math.max(0, Number(durationMs) || 0);
+        this.controlEffects.movementLockedUntil = Math.max(this.controlEffects?.movementLockedUntil || 0, performance.now() + lockDuration);
+    }
+
+    applySlow(durationMs = 0, slowFactor = 1) {
+        const slowDuration = Math.max(0, Number(durationMs) || 0);
+        this.controlEffects.slowUntil = Math.max(this.controlEffects?.slowUntil || 0, performance.now() + slowDuration);
+        this.controlEffects.slowFactor = Math.min(this.controlEffects?.slowFactor || 1, Math.max(0.08, Math.min(1, Number(slowFactor) || 1)));
+    }
+
+    suppressDodge(durationMs = 0) {
+        const suppressDuration = Math.max(0, Number(durationMs) || 0);
+        this.controlEffects.dodgeDisabledUntil = Math.max(this.controlEffects?.dodgeDisabledUntil || 0, performance.now() + suppressDuration);
+    }
+
+    blockShieldRecovery(durationMs = 0) {
+        const blockDuration = Math.max(0, Number(durationMs) || 0);
+        this.controlEffects.shieldRecoveryBlockedUntil = Math.max(this.controlEffects?.shieldRecoveryBlockedUntil || 0, performance.now() + blockDuration);
+    }
+
+    updateMovement(scaleFactor) {
+        const now = Date.now() * 0.001;
+        const effectNow = performance.now();
+        const isMovementLocked = effectNow < (this.controlEffects?.movementLockedUntil || 0);
+        const slowFactor = effectNow < (this.controlEffects?.slowUntil || 0)
+            ? Math.max(0.08, Math.min(1, this.controlEffects?.slowFactor || 1))
+            : 1;
+
+        if (isMovementLocked) {
+            this.velocity.x *= 0.72;
+            this.velocity.y *= 0.72;
+            return;
+        }
+
+        this.angle += Math.sin(now + this.floatOffset) * 0.02;
+
+        const speed = this.wanderSpeed * slowFactor * scaleFactor;
+        this.velocity.x = Math.cos(this.angle) * speed;
+        this.velocity.y = Math.sin(this.angle) * speed;
+
+        this.x += this.velocity.x;
+        this.y += this.velocity.y;
+
+        const margin = 50 * scaleFactor;
+        if (this.x < margin || this.x > window.innerWidth - margin) this.angle = Math.PI - this.angle;
+        if (this.y < margin || this.y > window.innerHeight - margin) this.angle = -this.angle;
     }
 
     draw(ctx, scaleFactor) {

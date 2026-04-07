@@ -146,6 +146,54 @@ function getStartingSpiritStoneCounts() {
     };
 }
 
+const ITEM_COLLECTION_TABS = Object.freeze([
+    { key: 'DAN_DUOC', label: '\u0110an d\u01b0\u1ee3c' },
+    { key: 'TRUNG_NOAN', label: 'Tr\u00f9ng no\u00e3n' },
+    { key: 'NGUYEN_LIEU', label: 'Nguy\u00ean li\u1ec7u' },
+    { key: 'TUI', label: 'T\u00fai' },
+    { key: 'BI_PHAP', label: 'B\u00ed ph\u00e1p' },
+    { key: 'KHAC', label: 'Kh\u00e1c' }
+]);
+
+function getItemCollectionTabLabel(tabKey) {
+    return ITEM_COLLECTION_TABS.find(tab => tab.key === tabKey)?.label || 'Kh\u00e1c';
+}
+
+function getItemCollectionTabKey(item) {
+    const category = item?.category || 'EXP';
+
+    if (['EXP', 'INSIGHT', 'BREAKTHROUGH', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE'].includes(category)) {
+        return 'DAN_DUOC';
+    }
+
+    if (category === 'SPECIAL') return 'DAN_DUOC';
+    if (category === 'INSECT_EGG') return 'TRUNG_NOAN';
+    if (category === 'MATERIAL') return 'NGUYEN_LIEU';
+    if (['BAG', 'SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(category)) return 'TUI';
+    if (category === 'FLAME_ART' && item?.uniqueKey === 'CAN_LAM_BANG_DIEM') return 'KHAC';
+    if (['SWORD_ART', 'FLAME_ART', 'INSECT_SKILL', 'INSECT_ARTIFACT'].includes(category)) return 'BI_PHAP';
+
+    return 'KHAC';
+}
+
+function buildMaterialArtMarkup(materialKey) {
+    const slug = String(materialKey || 'material')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    return `
+        <div class="material-art material-art--${slug}" aria-hidden="true">
+            <span class="material-art__halo"></span>
+            <span class="material-art__piece material-art__piece--1"></span>
+            <span class="material-art__piece material-art__piece--2"></span>
+            <span class="material-art__piece material-art__piece--3"></span>
+            <span class="material-art__piece material-art__piece--4"></span>
+        </div>
+    `;
+}
+
 function buildPillVisualMarkup(item, qualityConfig) {
     const visualMap = {
         EXP: { className: 'is-exp', aura: 'rgba(105, 240, 203, 0.32)' },
@@ -175,7 +223,16 @@ function buildPillVisualMarkup(item, qualityConfig) {
 
     const visualKey = item.specialKey || item.category;
     const visual = visualMap[visualKey] || visualMap.EXP;
-    const centerMarkup = (visual.className === 'is-bag' || visual.className === 'is-spirit-bag' || visual.className === 'is-habitat')
+    const insectSpecies = item.category === 'INSECT_EGG' ? Input.getInsectSpecies(item.speciesKey) : null;
+    const centerMarkup = visual.className === 'is-insect-egg'
+        ? `
+            <div class="pill-visual__beast" style="${buildInsectVisualVars(insectSpecies, { egg: true })}">
+                ${buildInsectArtMarkup(item.speciesKey, { egg: true })}
+            </div>
+        `
+        : visual.className === 'is-material'
+            ? buildMaterialArtMarkup(item.materialKey)
+        : (visual.className === 'is-bag' || visual.className === 'is-spirit-bag' || visual.className === 'is-habitat')
         ? `
             <span class="pill-visual__core pill-visual__core--bag"></span>
             <img src="./assets/images/bag.svg" class="pill-visual__item-icon" alt="">
@@ -253,6 +310,116 @@ const INSECT_FOOD_PREFERENCES = {
     THON_LINH_TRUNG: ['YEU_DAN', 'TINH_THIT']
 };
 
+const KET_DAN_REALM_START_ID = CONFIG.CULTIVATION?.MAJOR_REALMS?.find(realm => realm.key === 'KET_DAN')?.startId || 18;
+
+const INSECT_COMBAT_PROFILES = Object.freeze({
+    DEFAULT: {
+        label: 'Trung tran can chien',
+        summary: 'Bao vay muc tieu gan nhat va can xe lien tuc.',
+        focus: 'nearest',
+        damageScale: 1,
+        latchRadius: 18
+    },
+    KIEN_THIEN_TINH: {
+        label: 'Tinh quang tap kich',
+        summary: 'Chia dan lao vao nhieu muc tieu gan nhau nhu mua sao.',
+        focus: 'nearest',
+        damageScale: 1.05,
+        latchRadius: 20
+    },
+    PHE_KIM_TRUNG: {
+        label: 'Can giap phac khi',
+        summary: 'Uu tien dich con khien, can vo giap rat nhanh.',
+        focus: 'shielded',
+        damageScale: 1.08,
+        latchRadius: 14
+    },
+    PHI_THIEN_TU_VAN_HAT: {
+        label: 'Truy kich doc van',
+        summary: 'Bam sat con moi, lien tuc dam doc va gay roi loai.',
+        focus: 'nearest',
+        damageScale: 0.96,
+        latchRadius: 15
+    },
+    HUYET_NGOC_TRI_CHU: {
+        label: 'Huyet vong',
+        summary: 'Det to khoa chan roi rut sinh co tu muc tieu dang yeu.',
+        focus: 'lowestHp',
+        damageScale: 1,
+        latchRadius: 18
+    },
+    HUYEN_DIEM_NGA: {
+        label: 'Huyen diem me than',
+        summary: 'Vu hoa me hoac, lam dung im muc tieu dang di chuyen va cat ne tranh.',
+        focus: 'swift',
+        damageScale: 0.88,
+        latchRadius: 22
+    },
+    KIM_TAM: {
+        label: 'Kim tam ky sinh',
+        summary: 'Bam vao dich yeu, rut linh luc va ket lieu ke sap guc.',
+        focus: 'lowestHp',
+        damageScale: 0.98,
+        latchRadius: 16
+    },
+    THIET_HOA_NGHI: {
+        label: 'Hoa nghich bao tap',
+        summary: 'Lao vao cum dich roi no tung, dot lan sang xung quanh.',
+        focus: 'cluster',
+        damageScale: 0.92,
+        latchRadius: 17
+    },
+    KIM_GIAP_HAT: {
+        label: 'Kim giap cong thanh',
+        summary: 'Dam truc dien vao muc tieu lon, pha thu va ep dung lai.',
+        focus: 'elite',
+        damageScale: 1.14,
+        latchRadius: 14
+    },
+    HUYET_THUC_NGHI: {
+        label: 'Huyet thuc cuong tap',
+        summary: 'Cang co sat khi trong chien truong cang danh hung han.',
+        focus: 'nearest',
+        damageScale: 0.96,
+        latchRadius: 16
+    },
+    BANG_TAM: {
+        label: 'Bang to phong toa',
+        summary: 'Nha bang ty len muc tieu, lam cham roi dong cung than phap.',
+        focus: 'nearest',
+        damageScale: 0.9,
+        latchRadius: 20
+    },
+    THON_LINH_TRUNG: {
+        label: 'Thon linh thuc khi',
+        summary: 'Gam nham linh luc, khoa hoi khien va lam suy yeu than phap.',
+        focus: 'shielded',
+        damageScale: 0.82,
+        latchRadius: 13
+    }
+});
+
+const ANIMAL_MATERIAL_DROP_TABLES = Object.freeze((() => {
+    const tables = {};
+    const assign = (animalKeys, rates) => {
+        animalKeys.forEach(animalKey => {
+            tables[animalKey] = { ...rates };
+        });
+    };
+
+    assign(['angular-spider'], { DOC_NANG: 4.6, LINH_TY: 2.8 });
+    assign(['ant', 'bee', 'jelly-fish', 'maggot'], { DOC_NANG: 4.2, TINH_THIT: 1.6 });
+    assign(['ammonite', 'crab', 'crocodile', 'snail-crawl', 'turtle'], { YEU_GIAC: 4.1, TINH_THIT: 2.0 });
+    assign(['angler-fish', 'fish-seafood', 'octopus', 'perana', 'shark', 'squid', 'whale', 'whale-tail'], { TINH_THIT: 4.5, YEU_HUYET: 2.1 });
+    assign(['animal-skull'], { YEU_GIAC: 3.4, YEU_HUYET: 2.8 });
+    assign(['angel-wings'], { LINH_TY: 4.0, YEU_HUYET: 1.8 });
+    assign(['deer', 'elephant', 'minotaur'], { YEU_GIAC: 4.5, YEU_HUYET: 2.0, TINH_THIT: 1.4 });
+    assign(['double-dragon', 'dragon', 'flying-dragon', 'hydra', 'three-headed-dragon'], { YEU_GIAC: 4.8, YEU_HUYET: 2.0, TINH_THIT: 1.3 });
+    assign(['bear', 'cat-kitty', 'cat', 'fox', 'gorilla', 'lion', 'monkey', 'rabbit', 'squirrel', 'tapir', 'tiger', 'wolf'], { YEU_HUYET: 4.0, TINH_THIT: 2.6 });
+
+    return tables;
+})());
+
 const Input = {
     screenX: width / 2, screenY: height / 2,
     x: width / 2, y: height / 2,
@@ -295,6 +462,7 @@ const Input = {
     insectEggs: {},
     tamedInsects: {},
     discoveredInsects: {},
+    insectCombatRoster: {},
     insectHabitats: {},
     beastBagCapacity: Math.max(1, parseInt(CONFIG.INSECT?.STARTING_BEAST_BAG_CAPACITY, 10) || 6),
     beastCare: {
@@ -303,7 +471,8 @@ const Input = {
     },
     insectCombat: {
         lastHitAt: 0,
-        visuals: []
+        visuals: [],
+        focusTargets: []
     },
     moveJoystick: {
         active: false,
@@ -1628,6 +1797,10 @@ const Input = {
         return CONFIG.INSECT?.SPECIES?.[speciesKey] || null;
     },
 
+    getInsectCombatProfile(speciesKey) {
+        return INSECT_COMBAT_PROFILES[speciesKey] || INSECT_COMBAT_PROFILES.DEFAULT;
+    },
+
     getInsectTierInfo(tierKey) {
         return CONFIG.INSECT?.TIERS?.[tierKey] || CONFIG.INSECT?.TIERS?.PHAM || { label: 'Ky trung', color: '#79ffd4', shortLabel: 'Trung' };
     },
@@ -1656,7 +1829,7 @@ const Input = {
         const shopInfo = this.getInsectTierShopInfo(species?.tier);
 
         return {
-            fullName: species ? `Linh Thú Đại ${species.name}` : 'Linh Thú Đại riêng',
+            fullName: species ? `Linh Thú Đại ${species.name}` : 'Linh Thú Đại',
             quality: shopInfo.quality || 'LOW',
             color: species?.color || tierInfo.color || '#8ebfff',
             capacity: 0,
@@ -2015,6 +2188,78 @@ const Input = {
         return Object.keys(this.tamedInsects || {}).filter(speciesKey => (this.tamedInsects[speciesKey] || 0) > 0);
     },
 
+    isInsectSpeciesEnabledForCombat(speciesKey) {
+        if (!this.getInsectSpecies(speciesKey)) return false;
+        return this.insectCombatRoster?.[speciesKey] !== false;
+    },
+
+    setInsectSpeciesCombatEnabled(speciesKey, enabled = true) {
+        const species = this.getInsectSpecies(speciesKey);
+        const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+        if (!species || count <= 0) return false;
+
+        if (!this.insectCombatRoster) this.insectCombatRoster = {};
+        if (enabled) {
+            delete this.insectCombatRoster[speciesKey];
+        } else {
+            this.insectCombatRoster[speciesKey] = false;
+        }
+
+        this.ensureValidAttackMode();
+        return true;
+    },
+
+    toggleInsectSpeciesCombatEnabled(speciesKey) {
+        const species = this.getInsectSpecies(speciesKey);
+        if (!species) return false;
+
+        const nextEnabled = !this.isInsectSpeciesEnabledForCombat(speciesKey);
+        if (!this.setInsectSpeciesCombatEnabled(speciesKey, nextEnabled)) return false;
+
+        showNotify(
+            nextEnabled
+                ? `${species.name} xuat tran.`
+                : `${species.name} duoc giu lai de sinh san.`,
+            species.color || '#79ffd4'
+        );
+
+        return true;
+    },
+
+    getCombatReadyInsectSpeciesKeys() {
+        return this.getActiveInsectSpeciesKeys().filter(speciesKey => this.isInsectSpeciesEnabledForCombat(speciesKey));
+    },
+
+    getCombatReadyInsectCount() {
+        return this.getCombatReadyInsectSpeciesKeys().reduce((total, speciesKey) => {
+            return total + Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+        }, 0);
+    },
+
+    getReservedInsectCount() {
+        return Math.max(0, this.getTotalTamedInsectCount() - this.getCombatReadyInsectCount());
+    },
+
+    getInsectCombatRoster() {
+        return this.getInsectSpeciesEntries()
+            .filter(([speciesKey]) => (this.tamedInsects?.[speciesKey] || 0) > 0)
+            .map(([speciesKey, species]) => {
+                const profile = this.getInsectCombatProfile(speciesKey);
+                const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+                const enabled = this.isInsectSpeciesEnabledForCombat(speciesKey);
+
+                return {
+                    speciesKey,
+                    name: species?.name || speciesKey,
+                    count,
+                    enabled,
+                    accent: species?.color || '#79ffd4',
+                    note: profile.summary,
+                    modeLabel: enabled ? 'Xuat chien' : 'Giu giong'
+                };
+            });
+    },
+
     getBeastSummary() {
         const totalEggs = this.getTotalEggCount();
         const totalBeasts = this.getTotalTamedInsectCount();
@@ -2106,7 +2351,7 @@ const Input = {
     },
 
     canUseInsectAttackMode() {
-        return this.hasKhuTrungThuatUnlocked() && this.getTotalTamedInsectCount() > 0;
+        return this.hasKhuTrungThuatUnlocked() && this.getCombatReadyInsectCount() > 0;
     },
 
     isInsectSwarmActive() {
@@ -2143,6 +2388,9 @@ const Input = {
     getAttackSkillList() {
         const formationUnlocked = this.hasDaiCanhKiemTranUnlocked();
         const swordStats = this.getAliveSwordStats();
+        const totalInsects = this.getTotalTamedInsectCount();
+        const combatReadyCount = this.getCombatReadyInsectCount();
+        const reservedCount = Math.max(0, totalInsects - combatReadyCount);
 
         return [
             {
@@ -2174,6 +2422,51 @@ const Input = {
         ];
     },
 
+    getAttackSkillList() {
+        const formationUnlocked = this.hasDaiCanhKiemTranUnlocked();
+        const swordStats = this.getAliveSwordStats();
+        const totalInsects = this.getTotalTamedInsectCount();
+        const combatReadyCount = this.getCombatReadyInsectCount();
+        const reservedCount = Math.max(0, totalInsects - combatReadyCount);
+
+        return [
+            {
+                key: 'SWORD',
+                name: formationUnlocked ? 'Dai Canh Kiem Tran' : 'Thanh Truc Phong Van Kiem',
+                description: formationUnlocked
+                    ? 'Trien khai kiem tran ho than, lay kiem quang dai tran lam cong thu chu dao.'
+                    : 'Chua linh ngo kiem tran, hien chi van dung mot thanh ban menh kiem de ho than va cong phat.',
+                unlocked: true,
+                active: this.attackMode === 'SWORD',
+                ready: true,
+                accent: '#8fffe0',
+                note: formationUnlocked
+                    ? `${formatNumber(swordStats.alive)} kiem con chien luc`
+                    : `${formatNumber(swordStats.alive)} kiem ban menh con chien luc`
+            },
+            {
+                key: 'INSECT',
+                name: 'Khu Trung Thuat',
+                description: 'Dieu dong linh trung da ap no bam vao muc tieu va tan cong theo dac tinh tung loai.',
+                unlocked: this.hasKhuTrungThuatUnlocked(),
+                active: this.attackMode === 'INSECT',
+                ready: this.canUseInsectAttackMode(),
+                accent: '#79ffd4',
+                note: this.hasKhuTrungThuatUnlocked()
+                    ? combatReadyCount > 0
+                        ? `${formatNumber(combatReadyCount)} linh trung xuat chien${reservedCount > 0 ? ` | ${formatNumber(reservedCount)} dang giu lai` : ''}`
+                        : totalInsects > 0
+                            ? 'Tat ca ky trung dang duoc giu lai de sinh san'
+                            : 'Chua co linh trung da ap no'
+                    : 'Can linh ngo ky nang nay',
+                roster: this.hasKhuTrungThuatUnlocked() ? this.getInsectCombatRoster() : [],
+                rosterSummary: this.hasKhuTrungThuatUnlocked()
+                    ? `${formatNumber(combatReadyCount)} xuat chien / ${formatNumber(totalInsects)} dang co`
+                    : ''
+            }
+        ];
+    },
+
     renderAttackModeUI() {
         const skillBtn = document.getElementById('btn-skill-list');
         if (skillBtn) {
@@ -2182,6 +2475,26 @@ const Input = {
             skillBtn.title = this.attackMode === 'INSECT'
                 ? `Khu Trùng Thuật - ${formatNumber(this.getTotalTamedInsectCount())} linh trùng`
                 : 'Bảng kỹ năng tấn công';
+        }
+
+        const swordCounter = document.getElementById('sword-counter');
+        if (swordCounter) {
+            swordCounter.classList.toggle('is-hidden', this.isInsectSwarmActive());
+        }
+
+        if (SkillsUI && typeof SkillsUI.render === 'function' && SkillsUI.isOpen()) {
+            SkillsUI.render();
+        }
+    },
+
+    renderAttackModeUI() {
+        const skillBtn = document.getElementById('btn-skill-list');
+        if (skillBtn) {
+            skillBtn.classList.toggle('is-active', this.attackMode === 'INSECT');
+            skillBtn.classList.toggle('is-disabled', !this.hasKhuTrungThuatUnlocked());
+            skillBtn.title = this.attackMode === 'INSECT'
+                ? `Khu Trung Thuat - ${formatNumber(this.getCombatReadyInsectCount())} linh trung xuat chien`
+                : 'Bang ky nang tan cong';
         }
 
         const swordCounter = document.getElementById('sword-counter');
@@ -2223,6 +2536,36 @@ const Input = {
         this.attackMode = nextMode;
         this.renderAttackModeUI();
         showNotify(nextMode === 'INSECT' ? 'Đổi sang Khu Trùng Thuật' : 'Đổi về Thanh Trúc Kiếm Trận', nextMode === 'INSECT' ? '#79ffd4' : '#8fffe0');
+        return true;
+    },
+
+    setAttackMode(mode) {
+        const nextMode = mode === 'INSECT' ? 'INSECT' : 'SWORD';
+
+        if (!this.hasUnlockedAttackSkill(nextMode)) {
+            showNotify('Chua linh ngo ky nang nay.', '#ffd36b');
+            return false;
+        }
+
+        if (nextMode === 'INSECT' && !this.canUseInsectAttackMode()) {
+            const totalInsects = this.getTotalTamedInsectCount();
+            showNotify(
+                totalInsects > 0
+                    ? 'Tat ca ky trung dang duoc giu lai, hay bat it nhat mot loai de xuat chien.'
+                    : 'Chua co linh trung da ap no de bay trung tran.',
+                '#ffb26b'
+            );
+            return false;
+        }
+
+        if (this.attackMode === nextMode) {
+            this.renderAttackModeUI();
+            return true;
+        }
+
+        this.attackMode = nextMode;
+        this.renderAttackModeUI();
+        showNotify(nextMode === 'INSECT' ? 'Doi sang Khu Trung Thuat' : 'Doi ve Thanh Truc Kiem Tran', nextMode === 'INSECT' ? '#79ffd4' : '#8fffe0');
         return true;
     },
 
@@ -2272,7 +2615,7 @@ const Input = {
         }
 
         if (hatchPreview.reason === 'materials') {
-            showNotify(`Thieu nguyen lieu de ap no ${species.name}.`, CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color);
+            showNotify(`Thiêu nguyên liệu để ấp nở ${species.name}.`, CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color);
             return { success: false, reason: 'materials', count: 0 };
         }
 
@@ -2281,7 +2624,7 @@ const Input = {
         }
 
         if (!this.consumeRequiredMaterials(requirements, hatchCount)) {
-            showNotify(`Thieu nguyen lieu de ap no ${species.name}.`, CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color);
+            showNotify(`Thiêu nguyên liệu để ấp nở ${species.name}.`, CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color);
             return { success: false, reason: 'materials', count: 0 };
         }
 
@@ -2294,9 +2637,10 @@ const Input = {
         return { success: true, reason: 'hatched', count: hatchCount };
     },
 
-    loseRandomTamedInsect(baseChance = 0) {
+    loseRandomTamedInsect(baseChance = 0, speciesPool = null) {
         const chance = Math.max(0, Math.min(1, baseChance || 0));
-        const candidates = this.getActiveInsectSpeciesKeys();
+        const candidates = (speciesPool || this.getCombatReadyInsectSpeciesKeys())
+            .filter(speciesKey => (this.tamedInsects?.[speciesKey] || 0) > 0);
 
         if (!candidates.length || Math.random() >= chance) return null;
 
@@ -2361,6 +2705,51 @@ const Input = {
             quality: materialConfig?.quality || (isElite ? 'MEDIUM' : 'LOW'),
             materialKey
         };
+    },
+
+    getEnemyMaterialDropRates(enemy = null) {
+        const animalKey = enemy?.animalKey || null;
+        const configuredRates = animalKey ? ANIMAL_MATERIAL_DROP_TABLES[animalKey] : null;
+
+        if (configuredRates) {
+            return { ...configuredRates };
+        }
+
+        return {
+            TINH_THIT: 2.2,
+            YEU_HUYET: 1.6,
+            YEU_GIAC: 1.2,
+            DOC_NANG: 0.8,
+            LINH_TY: 0.8
+        };
+    },
+
+    createEnemyMaterialDropSpec(enemy = null, isElite = false) {
+        const materialRates = this.getEnemyMaterialDropRates(enemy);
+        const fallbackKey = Object.keys(materialRates)[0] || 'TINH_THIT';
+        const materialKey = pickWeightedKey(materialRates, fallbackKey);
+        const materialConfig = this.getMaterialConfig(materialKey);
+
+        return {
+            kind: 'MATERIAL',
+            category: 'MATERIAL',
+            quality: materialConfig?.quality || (isElite ? 'MEDIUM' : 'LOW'),
+            materialKey
+        };
+    },
+
+    createGuaranteedMajorRealmDrops(enemy = null) {
+        if ((enemy?.rankData?.id || 0) < KET_DAN_REALM_START_ID) return [];
+
+        const demonCore = this.getMaterialConfig('YEU_DAN');
+        const dropCount = enemy?.isElite ? 2 : 1;
+
+        return Array.from({ length: dropCount }, () => ({
+            kind: 'MATERIAL',
+            category: 'MATERIAL',
+            quality: demonCore?.quality || 'HIGH',
+            materialKey: 'YEU_DAN'
+        }));
     },
 
     getSpiritStoneType(quality) {
@@ -2531,7 +2920,7 @@ const Input = {
         }
 
         if (item.category === 'MATERIAL' || item.kind === 'MATERIAL') {
-            return qualityConfig.fullName || 'Nguyen lieu';
+            return qualityConfig.fullName || 'Nguyên liệu';
         }
 
         if (item.kind === 'INSECT_EGG' || item.category === 'INSECT_EGG') {
@@ -2557,8 +2946,8 @@ const Input = {
 
     _getItemCategoryLabelLegacy(item) {
         const staticLabels = {
-            MATERIAL: 'Nguyen lieu',
-            SPIRIT_HABITAT: 'Linh Thu Dai rieng',
+            MATERIAL: 'Nguyên liệu',
+            SPIRIT_HABITAT: 'Linh thú đại',
             BAG: 'Túi trữ vật',
             SPIRIT_BAG: 'Linh thú đại',
             INSECT_SKILL: 'Trùng đạo bí pháp',
@@ -2620,8 +3009,8 @@ const Input = {
                 .join(', ');
             const habitatConfig = this.getInsectHabitatConfig(item.speciesKey);
             return species
-                ? `${tier.label}: ${species.description} Nguyen lieu ap no: ${requirements || 'khong can'}. Muon sinh no on dinh can ${habitatConfig.fullName}.`
-                : 'Trá»©ng ká»³ trĂ¹ng cĂ³ thá»ƒ áº¥p ná»Ÿ trong tab Linh thĂº.';
+                ? `${tier.label}: ${species.description} Nguyên liệu ấp nở: ${requirements || 'không cần'}. Muốn ấp nở ổn định cần ${habitatConfig.fullName}.`
+                : 'Trứng kỳ trùng có thể ấp nở trong tab Linh thú.';
         }
 
         switch (item.category) {
@@ -2709,8 +3098,8 @@ const Input = {
 
     getItemCategoryLabel(item) {
         const staticLabels = {
-            MATERIAL: 'Nguyen lieu',
-            SPIRIT_HABITAT: 'Linh Thu Dai rieng',
+            MATERIAL: 'Nguyên liệu',
+            SPIRIT_HABITAT: 'Linh thú đại',
             BAG: 'Túi trữ vật',
             SPIRIT_BAG: 'Linh thú đại',
             SWORD_ART: 'Kiếm đạo bí pháp',
@@ -3768,6 +4157,516 @@ const Input = {
     },
 
     // Hàm tạo hiệu ứng hạt bùng nổ
+    getSwarmVisualCount() {
+        return Math.max(0, Math.min(Math.floor(CONFIG.INSECT?.ATTACK?.VISUAL_LIMIT || 0), this.getCombatReadyInsectCount()));
+    },
+
+    pickOwnedInsectSpeciesKey(speciesPool = null) {
+        const candidateKeys = (speciesPool || this.getCombatReadyInsectSpeciesKeys())
+            .filter(speciesKey => (this.tamedInsects?.[speciesKey] || 0) > 0);
+        const weighted = candidateKeys.reduce((rates, speciesKey) => {
+            rates[speciesKey] = Math.max(0.05, this.tamedInsects?.[speciesKey] || 0);
+            return rates;
+        }, {});
+
+        return pickWeightedKey(weighted, candidateKeys[0] || null);
+    },
+
+    getInsectAttackCandidates(centerX, centerY, enemies, targetRange) {
+        return enemies
+            .filter(enemy => Math.hypot(enemy.x - centerX, enemy.y - centerY) <= targetRange)
+            .sort((a, b) => Math.hypot(a.x - centerX, a.y - centerY) - Math.hypot(b.x - centerX, b.y - centerY));
+    },
+
+    chooseInsectTargetForSpecies(speciesKey, candidates, centerX, centerY, excludedTargets = new Set()) {
+        const profile = this.getInsectCombatProfile(speciesKey);
+        const rankedTargets = [...(candidates || [])]
+            .filter(enemy => enemy && !excludedTargets.has(enemy))
+            .sort((left, right) => {
+                const scoreEnemy = (enemy) => {
+                    const distanceScore = Math.hypot(enemy.x - centerX, enemy.y - centerY);
+                    const hpRatio = enemy.maxHp > 0 ? (enemy.hp / enemy.maxHp) : 1;
+                    const isShielded = Boolean(enemy.hasShield && enemy.shieldHp > 0);
+                    let score = distanceScore;
+
+                    if (profile.focus === 'shielded') {
+                        score += isShielded ? -180 : 28;
+                    } else if (profile.focus === 'lowestHp') {
+                        score += hpRatio * 160;
+                    } else if (profile.focus === 'cluster') {
+                        const nearbyCount = (candidates || []).filter(other => {
+                            return other !== enemy && Math.hypot(other.x - enemy.x, other.y - enemy.y) <= 110;
+                        }).length;
+                        score -= nearbyCount * 34;
+                    } else if (profile.focus === 'elite') {
+                        score += enemy.isElite ? -130 : 16;
+                        score += isShielded ? -42 : 0;
+                    } else if (profile.focus === 'swift') {
+                        score -= ((enemy.wanderSpeed || 0) * 110) + ((enemy.dodgeChance || 0) * 140);
+                    }
+
+                    return score;
+                };
+
+                return scoreEnemy(left) - scoreEnemy(right);
+            });
+
+        return rankedTargets[0] || null;
+    },
+
+    getInsectSpeciesStrikeFactor(speciesKey, count, totalReadyCount) {
+        const cfg = CONFIG.INSECT?.ATTACK || {};
+        const species = this.getInsectSpecies(speciesKey);
+        const profile = this.getInsectCombatProfile(speciesKey);
+        const totalReady = Math.max(1, totalReadyCount || 1);
+        const shareRatio = Math.max(0.05, count / totalReady);
+        const focusFactor = Math.max(0.5, Math.min(1.35, shareRatio * 1.65));
+        const densityFactor = 1 + Math.min(0.24, Math.max(0, count - 1) * 0.018);
+        const baseDamageFactor = Math.max(
+            0.18,
+            (cfg.BASE_DAMAGE_FACTOR || 0.45) + (Math.floor(totalReady / 5) * (cfg.BONUS_DAMAGE_PER_5 || 0.08))
+        );
+
+        return Math.max(
+            0.12,
+            baseDamageFactor
+                * (species?.attackFactor || 1)
+                * focusFactor
+                * densityFactor
+                * (profile.damageScale || 1)
+        );
+    },
+
+    createInsectStrikeSource(damageFactor, speciesKey, options = {}) {
+        return {
+            getDamageMultiplier: () => damageFactor,
+            powerPenalty: damageFactor,
+            sourceType: 'INSECT',
+            speciesKey,
+            shieldBreakMultiplier: Math.max(1, Number(options.shieldBreakMultiplier) || 1),
+            ignoreDodge: Boolean(options.ignoreDodge)
+        };
+    },
+
+    addInsectStrikeResult(summary, outcome) {
+        if (!outcome?.result) return;
+        if (outcome.landed) summary.landedHits += 1;
+        if (outcome.result === 'shielded') summary.shieldHits += 1;
+        if (outcome.result === 'killed') summary.killCount += 1;
+    },
+
+    strikeEnemyWithInsects(target, speciesKey, damageFactor, options = {}) {
+        if (!target) {
+            return { result: null, landed: false, shieldHits: 0, killCount: 0 };
+        }
+
+        const species = this.getInsectSpecies(speciesKey);
+        const strikeColor = options.color || species?.color || '#79ffd4';
+
+        if (options.dodgeDisabledMs) target.suppressDodge?.(options.dodgeDisabledMs);
+        if (options.rootMs) target.applyMovementLock?.(options.rootMs);
+        if (options.slowMs) target.applySlow?.(options.slowMs, options.slowFactor || 0.5);
+        if (options.shieldRecoveryBlockMs) target.blockShieldRecovery?.(options.shieldRecoveryBlockMs);
+
+        const result = target.hit(this.createInsectStrikeSource(damageFactor, speciesKey, options));
+        const landed = result === 'hit' || result === 'killed' || result === 'shielded';
+
+        if (landed) {
+            this.createAttackBurst?.(target.x, target.y, result === 'shielded' ? '#ffb26b' : strikeColor);
+        }
+
+        if (landed && options.lockAfterHitMs) {
+            target.applyMovementLock?.(options.lockAfterHitMs);
+        }
+
+        return {
+            result,
+            landed,
+            shieldHits: result === 'shielded' ? 1 : 0,
+            killCount: result === 'killed' ? 1 : 0
+        };
+    },
+
+    resolveInsectSpeciesStrike({ speciesKey, count, totalReadyCount, primaryTarget, candidates }) {
+        const summary = { shieldHits: 0, killCount: 0, landedHits: 0 };
+        if (!primaryTarget || count <= 0) return summary;
+
+        const species = this.getInsectSpecies(speciesKey);
+        const profile = this.getInsectCombatProfile(speciesKey);
+        const color = species?.secondaryColor || species?.color || '#79ffd4';
+        const sortedOthers = [...(candidates || [])]
+            .filter(enemy => enemy !== primaryTarget)
+            .sort((a, b) => Math.hypot(a.x - primaryTarget.x, a.y - primaryTarget.y) - Math.hypot(b.x - primaryTarget.x, b.y - primaryTarget.y));
+
+        const strike = (target, damageFactor, options = {}) => {
+            const outcome = this.strikeEnemyWithInsects(target, speciesKey, damageFactor, { ...options, color });
+            this.addInsectStrikeResult(summary, outcome);
+            return outcome;
+        };
+
+        let baseFactor = this.getInsectSpeciesStrikeFactor(speciesKey, count, totalReadyCount);
+        let primaryOutcome = null;
+
+        switch (speciesKey) {
+            case 'KIEN_THIEN_TINH': {
+                primaryOutcome = strike(primaryTarget, baseFactor, { ignoreDodge: count >= 16 });
+                const chainCount = Math.max(1, Math.min(3, 1 + Math.floor(count / 12)));
+                sortedOthers.slice(0, chainCount).forEach(target => {
+                    strike(target, baseFactor * 0.72, { ignoreDodge: count >= 16 });
+                });
+                break;
+            }
+            case 'PHE_KIM_TRUNG': {
+                const shielded = Boolean(primaryTarget.hasShield && primaryTarget.shieldHp > 0);
+                primaryOutcome = strike(primaryTarget, baseFactor * (shielded ? 1.08 : 1), {
+                    shieldBreakMultiplier: shielded ? 3.4 : 1.7
+                });
+                if (shielded && primaryOutcome.result !== 'killed') {
+                    strike(primaryTarget, baseFactor * 0.56, {
+                        shieldBreakMultiplier: 2.2,
+                        ignoreDodge: true
+                    });
+                }
+                break;
+            }
+            case 'PHI_THIEN_TU_VAN_HAT': {
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    dodgeDisabledMs: 650,
+                    ignoreDodge: count >= 6
+                });
+                if (primaryOutcome.result !== 'killed') {
+                    strike(primaryTarget, baseFactor * 0.44, {
+                        ignoreDodge: true,
+                        slowMs: 900,
+                        slowFactor: 0.74
+                    });
+                }
+                break;
+            }
+            case 'HUYET_NGOC_TRI_CHU': {
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    rootMs: 950 + Math.min(700, count * 40),
+                    dodgeDisabledMs: 480
+                });
+                const hpRatio = primaryTarget.maxHp > 0 ? (primaryTarget.hp / primaryTarget.maxHp) : 1;
+                if (primaryOutcome.result !== 'killed' && hpRatio <= 0.72) {
+                    strike(primaryTarget, baseFactor * 0.58, { ignoreDodge: true });
+                }
+                break;
+            }
+            case 'HUYEN_DIEM_NGA': {
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    ignoreDodge: true,
+                    rootMs: 1400 + Math.min(800, count * 35),
+                    slowMs: 1800,
+                    slowFactor: 0.08,
+                    dodgeDisabledMs: 1600
+                });
+                break;
+            }
+            case 'KIM_TAM': {
+                const hpRatio = primaryTarget.maxHp > 0 ? (primaryTarget.hp / primaryTarget.maxHp) : 1;
+                if (hpRatio <= 0.28) {
+                    baseFactor *= 1.8;
+                }
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    shieldRecoveryBlockMs: 2400,
+                    dodgeDisabledMs: 800
+                });
+                if (primaryOutcome.result === 'shielded') {
+                    strike(primaryTarget, baseFactor * 0.48, {
+                        ignoreDodge: true,
+                        shieldBreakMultiplier: 1.6,
+                        shieldRecoveryBlockMs: 2400
+                    });
+                }
+                break;
+            }
+            case 'THIET_HOA_NGHI': {
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    rootMs: 420,
+                    dodgeDisabledMs: 320
+                });
+                sortedOthers
+                    .filter(enemy => Math.hypot(enemy.x - primaryTarget.x, enemy.y - primaryTarget.y) <= 96)
+                    .slice(0, 2)
+                    .forEach(target => {
+                        strike(target, baseFactor * 0.52, {
+                            slowMs: 720,
+                            slowFactor: 0.66,
+                            ignoreDodge: count >= 10
+                        });
+                    });
+                break;
+            }
+            case 'KIM_GIAP_HAT': {
+                const fortifiedTarget = primaryTarget.isElite || Boolean(primaryTarget.hasShield && primaryTarget.shieldHp > 0);
+                primaryOutcome = strike(primaryTarget, baseFactor * (fortifiedTarget ? 1.28 : 1.05), {
+                    shieldBreakMultiplier: 1.9,
+                    rootMs: 820,
+                    ignoreDodge: count >= 10
+                });
+                break;
+            }
+            case 'HUYET_THUC_NGHI': {
+                const frenzyFactor = 1 + Math.min(0.55, this.combo * 0.015);
+                primaryOutcome = strike(primaryTarget, baseFactor * frenzyFactor, {
+                    ignoreDodge: count >= 14
+                });
+                if ((primaryOutcome.result === 'killed' || this.combo >= 10) && sortedOthers.length) {
+                    strike(sortedOthers[0], baseFactor * 0.5 * frenzyFactor, { ignoreDodge: true });
+                }
+                break;
+            }
+            case 'BANG_TAM': {
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    slowMs: 2600,
+                    slowFactor: 0.26,
+                    dodgeDisabledMs: 900
+                });
+                if (primaryOutcome.landed && count >= 8) {
+                    primaryTarget.applyMovementLock?.(650 + Math.min(500, count * 20));
+                }
+                break;
+            }
+            case 'THON_LINH_TRUNG': {
+                const shielded = Boolean(primaryTarget.hasShield && primaryTarget.shieldHp > 0);
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    shieldRecoveryBlockMs: 3200,
+                    dodgeDisabledMs: 1100,
+                    shieldBreakMultiplier: shielded ? 1.85 : 1.25
+                });
+                if (primaryOutcome.result !== 'killed' && (shielded || count >= 12)) {
+                    strike(primaryTarget, baseFactor * 0.46, {
+                        ignoreDodge: true,
+                        shieldRecoveryBlockMs: 3200,
+                        shieldBreakMultiplier: 1.55
+                    });
+                }
+                break;
+            }
+            default: {
+                primaryOutcome = strike(primaryTarget, baseFactor, {
+                    ignoreDodge: profile.focus === 'swift'
+                });
+                break;
+            }
+        }
+
+        return summary;
+    },
+
+    updateInsectSwarm(dt, enemies, scaleFactor) {
+        const cfg = CONFIG.INSECT?.ATTACK || {};
+        const shouldRender = this.attackMode === 'INSECT' && this.canUseInsectAttackMode() && !this.isUltMode && !this.isUltimateBusy();
+
+        if (!shouldRender) {
+            this.insectCombat.visuals = [];
+            this.insectCombat.focusTargets = [];
+            return;
+        }
+
+        const centerX = this.x;
+        const centerY = this.y;
+        const combatSpeciesKeys = this.getCombatReadyInsectSpeciesKeys();
+        const visualCount = this.getSwarmVisualCount();
+        const visuals = this.insectCombat.visuals || [];
+        const minRadius = Math.max(8, cfg.VISUAL_MIN_RADIUS || 18) * scaleFactor;
+        const maxRadius = Math.max(minRadius + 4, cfg.VISUAL_MAX_RADIUS || 70) * scaleFactor;
+        const jitter = Math.max(2, cfg.VISUAL_JITTER || 10) * scaleFactor;
+        const focusTargets = this.getInsectAttackCandidates(
+            centerX,
+            centerY,
+            enemies,
+            Math.max(80, (cfg.TARGET_RANGE || 220) * 1.1)
+        ).slice(0, 5);
+
+        while (visuals.length < visualCount) {
+            const speciesKey = this.pickOwnedInsectSpeciesKey(combatSpeciesKeys);
+            const species = this.getInsectSpecies(speciesKey);
+
+            visuals.push({
+                speciesKey,
+                angle: Math.random() * Math.PI * 2,
+                radius: random(minRadius, maxRadius),
+                targetRadius: random(minRadius, maxRadius),
+                speed: random(1.4, 3.2),
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: random(1.2, 2.8),
+                size: random(2, 3.8) * (species?.tier === 'DE' ? 1.18 : 1),
+                targetRef: null,
+                x: centerX,
+                y: centerY
+            });
+        }
+
+        if (visuals.length > visualCount) {
+            visuals.length = visualCount;
+        }
+
+        visuals.forEach(node => {
+            if (!combatSpeciesKeys.includes(node.speciesKey)) {
+                node.speciesKey = this.pickOwnedInsectSpeciesKey(combatSpeciesKeys) || node.speciesKey;
+            }
+
+            const profile = this.getInsectCombatProfile(node.speciesKey);
+            const hasTargetFocus = this.isAttacking && focusTargets.length > 0;
+
+            if (hasTargetFocus) {
+                if (!focusTargets.includes(node.targetRef)) {
+                    node.targetRef = this.chooseInsectTargetForSpecies(node.speciesKey, focusTargets, centerX, centerY);
+                }
+            } else {
+                node.targetRef = null;
+            }
+
+            const orbitMin = node.targetRef ? Math.max(8, (profile.latchRadius || 16) * 0.7) * scaleFactor : minRadius;
+            const orbitMax = node.targetRef ? Math.max(orbitMin + 4, (profile.latchRadius || 16) * 1.35) * scaleFactor : maxRadius;
+            const anchorX = node.targetRef ? node.targetRef.x : centerX;
+            const anchorY = node.targetRef ? node.targetRef.y : centerY;
+            const chaosJitter = node.targetRef ? jitter * 0.35 : jitter;
+
+            node.angle += dt * node.speed * (node.targetRef ? 4.2 : (this.isAttacking ? 2.6 : 1.6));
+            node.wobble += dt * node.wobbleSpeed;
+            node.targetRadius += random(node.targetRef ? -4 : -8, node.targetRef ? 4 : 8) * dt * 10;
+            node.targetRadius = Math.max(orbitMin, Math.min(orbitMax, node.targetRadius));
+            node.radius += (node.targetRadius - node.radius) * (node.targetRef ? 0.12 : 0.08);
+
+            const swirlX = Math.cos(node.angle) * node.radius;
+            const swirlY = Math.sin(node.angle * 1.18 + node.wobble) * (node.radius * (node.targetRef ? 0.54 : 0.72));
+            const chaosX = Math.cos(node.wobble * 1.7 + node.angle * 0.45) * chaosJitter;
+            const chaosY = Math.sin(node.wobble * 1.35 - node.angle * 0.4) * chaosJitter;
+
+            node.x = anchorX + swirlX + chaosX;
+            node.y = anchorY + swirlY + chaosY;
+        });
+
+        this.insectCombat.visuals = visuals;
+        this.insectCombat.focusTargets = focusTargets;
+
+        if (!this.isAttacking || !combatSpeciesKeys.length) return;
+
+        const now = performance.now();
+        const hitInterval = Math.max(60, cfg.HIT_INTERVAL_MS || 220);
+        if (now - (this.insectCombat.lastHitAt || 0) < hitInterval) return;
+
+        this.insectCombat.lastHitAt = now;
+
+        const candidates = this.getInsectAttackCandidates(centerX, centerY, enemies, Math.max(60, cfg.TARGET_RANGE || 220));
+        if (!candidates.length) return;
+
+        const totalReadyCount = Math.max(1, this.getCombatReadyInsectCount());
+        const attackSummary = { shieldHits: 0, killCount: 0, landedHits: 0 };
+        const reservedTargets = new Set();
+
+        combatSpeciesKeys.forEach(speciesKey => {
+            const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+            if (count <= 0) return;
+
+            const primaryTarget = this.chooseInsectTargetForSpecies(speciesKey, candidates, centerX, centerY, reservedTargets);
+            if (primaryTarget) {
+                reservedTargets.add(primaryTarget);
+            }
+
+            const result = this.resolveInsectSpeciesStrike({
+                speciesKey,
+                count,
+                totalReadyCount,
+                primaryTarget,
+                candidates
+            });
+
+            attackSummary.shieldHits += result.shieldHits;
+            attackSummary.killCount += result.killCount;
+            attackSummary.landedHits += result.landedHits;
+        });
+
+        const regularHits = Math.max(0, attackSummary.landedHits - attackSummary.shieldHits);
+        const hitLossChance = 1 - Math.pow(1 - Math.max(0, Math.min(1, cfg.DEATH_ON_HIT_CHANCE || 0)), regularHits);
+        const shieldLossChance = 1 - Math.pow(1 - Math.max(0, Math.min(1, cfg.DEATH_ON_SHIELD_CHANCE || 0)), attackSummary.shieldHits);
+        const casualtyChance = 1 - ((1 - hitLossChance) * (1 - shieldLossChance));
+        const casualtyKey = this.loseRandomTamedInsect(casualtyChance, combatSpeciesKeys);
+
+        let shouldRefresh = false;
+
+        if (casualtyKey) {
+            const species = this.getInsectSpecies(casualtyKey);
+            showNotify(`1 ${species?.name || 'linh trung'} tan lac trong giao tranh`, species?.color || '#ff8a80');
+            shouldRefresh = true;
+        }
+
+        if (attackSummary.killCount > 0) {
+            let bornCount = 0;
+            for (let i = 0; i < attackSummary.killCount; i++) {
+                if (this.reproduceRandomInsect(cfg.REPRODUCE_ON_KILL_CHANCE || 0)) {
+                    bornCount++;
+                }
+            }
+
+            if (bornCount > 0) {
+                showNotify(`Dan trung sinh soi them ${formatNumber(bornCount)} con`, '#79ffd4');
+                shouldRefresh = true;
+            }
+        }
+
+        if (shouldRefresh) {
+            this.refreshResourceUI();
+        }
+    },
+
+    drawInsectSwarm(ctx, scaleFactor) {
+        if (!this.insectCombat.visuals?.length) return;
+
+        ctx.save();
+        ctx.lineWidth = 1;
+
+        this.insectCombat.visuals.forEach((node, index) => {
+            const species = this.getInsectSpecies(node.speciesKey);
+            const color = species?.color || '#79ffd4';
+            const secondaryColor = species?.secondaryColor || color;
+            const auraColor = species?.auraColor || secondaryColor;
+            const trailColor = species?.auraColor || secondaryColor;
+            const size = Math.max(1.8, node.size * scaleFactor);
+
+            if (node.targetRef) {
+                ctx.beginPath();
+                ctx.strokeStyle = `${trailColor}33`;
+                ctx.moveTo(node.targetRef.x, node.targetRef.y);
+                ctx.lineTo(node.x, node.y);
+                ctx.stroke();
+            } else if (index > 0) {
+                const prev = this.insectCombat.visuals[index - 1];
+                ctx.beginPath();
+                ctx.strokeStyle = `${trailColor}26`;
+                ctx.moveTo(prev.x, prev.y);
+                ctx.lineTo(node.x, node.y);
+                ctx.stroke();
+            }
+
+            const gradient = ctx.createRadialGradient(
+                node.x - size * 0.35,
+                node.y - size * 0.35,
+                Math.max(0.2, size * 0.15),
+                node.x,
+                node.y,
+                size * 1.2
+            );
+            gradient.addColorStop(0, '#ffffff');
+            gradient.addColorStop(0.25, secondaryColor);
+            gradient.addColorStop(0.7, color);
+            gradient.addColorStop(1, `${auraColor}12`);
+
+            ctx.beginPath();
+            ctx.shadowBlur = node.targetRef ? 18 : 14;
+            ctx.shadowColor = auraColor;
+            ctx.fillStyle = gradient;
+            ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.restore();
+    },
+
     createLevelUpExplosion(x, y, color) {
         const accent = color || "#78f2ff";
         const palette = [accent, "#ffffff", "#8df6ff", "#ffe39b", "#7ad7ff"];
@@ -4679,7 +5578,7 @@ function buildInsectEggCardMarkup(speciesKey, count) {
             const materialConfig = Input.getMaterialConfig(requirement.materialKey);
             return `${materialConfig?.fullName || requirement.materialKey} ${formatNumber(requirement.owned)}/${formatNumber(requirement.count)}`;
         }).join(' • ')
-        : 'Khong can nguyen lieu';
+        : 'Không cần nguyên liệu';
 
     return `
         <article class="inventory-slot beast-slot egg-slot" style="--slot-accent:${species.eggColor || species.color};${buildInsectVisualVars(species, { egg: true })}">
@@ -4692,7 +5591,7 @@ function buildInsectEggCardMarkup(speciesKey, count) {
             <p>${escapeHtml(styleHint)}</p>
             <div class="beast-slot__stats">
                 <span>${escapeHtml(requirementText)}</span>
-                <span>${escapeHtml(hatchPreview.hasHabitat ? `Da co ${hatchPreview.habitatName}` : `Can ${hatchPreview.habitatName} de sinh no`)}</span>
+                <span>${escapeHtml(hatchPreview.hasHabitat ? `Đã có ${hatchPreview.habitatName}` : `Cần ${hatchPreview.habitatName} để ấp nở`)}</span>
             </div>
             <div class="slot-count">${formatNumber(count)}</div>
             <div class="slot-actions">
@@ -4711,8 +5610,8 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
     const styleHint = getInsectStyleHint(species);
     const careStatus = Input.getSpeciesCareStatus(speciesKey);
     const foodStatusText = careStatus.hasFood
-        ? `Thuc an du (${formatNumber(careStatus.availableFood)})`
-        : `Thieu thuc an (${formatNumber(careStatus.availableFood)}/${formatNumber(careStatus.foodDemand)})`;
+        ? `Thức ăn đủ (${formatNumber(careStatus.availableFood)})`
+        : `Thiếu thức ăn (${formatNumber(careStatus.availableFood)}/${formatNumber(careStatus.foodDemand)})`;
 
     return `
         <article class="inventory-slot beast-slot" style="--slot-accent:${species.color};${buildInsectVisualVars(species)}">
@@ -4729,9 +5628,9 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
             </div>
             <div class="slot-count">${formatNumber(count)}</div>
             <div class="beast-slot__stats">
-                <span>${escapeHtml(careStatus.hasHabitat ? 'Dung Linh Thu Dai' : 'Sai Linh Thu Dai')}</span>
+                <span>${escapeHtml(careStatus.hasHabitat ? 'Đúng Linh thú đại' : 'Sai Linh thú đại')}</span>
                 <span>${escapeHtml(foodStatusText)}</span>
-                <span>${escapeHtml(careStatus.canReproduce ? 'Co the sinh no' : 'Chua the sinh no')}</span>
+                <span>${escapeHtml(careStatus.canReproduce ? 'Có thể ấp nở' : 'Chưa thể ấp nở')}</span>
             </div>
         </article>
     `;
@@ -4768,7 +5667,7 @@ ShopUI = {
     toolbar: document.getElementById('shop-toolbar'),
     pagination: document.getElementById('shop-pagination'),
     searchQuery: '',
-    categoryFilter: 'ALL',
+    categoryFilter: 'DAN_DUOC',
     qualityFilter: 'ALL',
     currentPage: 1,
     lastPageSize: 0,
@@ -4813,13 +5712,6 @@ ShopUI = {
         });
 
         this.overlay.addEventListener('change', (e) => {
-            if (e.target.id === 'shop-filter-category') {
-                this.categoryFilter = e.target.value || 'ALL';
-                this.currentPage = 1;
-                this.render();
-                return;
-            }
-
             if (e.target.id === 'shop-filter-quality') {
                 this.qualityFilter = e.target.value || 'ALL';
                 this.currentPage = 1;
@@ -4843,12 +5735,24 @@ ShopUI = {
 
         if (this.toolbar) {
             this.toolbar.addEventListener('pointerdown', (e) => {
+                const tabBtn = e.target.closest('[data-shop-tab]');
+                if (tabBtn) {
+                    e.stopPropagation();
+                    const nextTab = tabBtn.getAttribute('data-shop-tab') || 'DAN_DUOC';
+                    if (this.categoryFilter !== nextTab) {
+                        this.categoryFilter = nextTab;
+                        this.currentPage = 1;
+                        this.render();
+                    }
+                    return;
+                }
+
                 const resetBtn = e.target.closest('[data-shop-action="reset-filters"]');
                 if (!resetBtn) return;
 
                 e.stopPropagation();
                 this.searchQuery = '';
-                this.categoryFilter = 'ALL';
+                this.categoryFilter = 'DAN_DUOC';
                 this.qualityFilter = 'ALL';
                 this.currentPage = 1;
                 this.render();
@@ -5122,6 +6026,102 @@ ShopUI = {
     }
 };
 
+ShopUI.ensureToolbar = function () {
+    if (!this.toolbar || this.toolbar.dataset.ready === 'true') return;
+
+    const qualityOptions = ['ALL', ...QUALITY_ORDER].map(quality => {
+        const label = quality === 'ALL' ? 'T\u1ea5t c\u1ea3 ph\u1ea9m ch\u1ea5t' : getQualityLabel(quality);
+        return `<option value="${quality}">${escapeHtml(label)}</option>`;
+    }).join('');
+
+    this.toolbar.innerHTML = `
+        <div class="shop-tip" id="shop-tip"></div>
+        <div class="panel-tabs shop-tabs" id="shop-tabs">
+            ${ITEM_COLLECTION_TABS.map(tab => `
+                <button class="panel-tab" type="button" data-shop-tab="${tab.key}">
+                    ${escapeHtml(tab.label)}
+                </button>
+            `).join('')}
+        </div>
+        <div class="shop-toolbar-row">
+            <label class="shop-field shop-field-search">
+                <span>T\u00ecm ki\u1ebfm</span>
+                <input id="shop-search" class="shop-control-input" type="search" placeholder="T\u00ean \u0111an, t\u00fai, c\u00f4ng d\u1ee5ng, ph\u1ea9m ch\u1ea5t...">
+            </label>
+            <div class="shop-filter-group">
+                <label class="shop-field">
+                    <span>Ph\u1ea9m ch\u1ea5t</span>
+                    <select id="shop-filter-quality" class="shop-control-input">${qualityOptions}</select>
+                </label>
+            </div>
+        </div>
+        <div class="shop-toolbar-meta">
+            <div id="shop-summary" class="shop-summary"></div>
+            <button type="button" class="btn-shop-reset" data-shop-action="reset-filters">X\u00f3a l\u1ecdc</button>
+        </div>
+    `;
+
+    this.toolbar.dataset.ready = 'true';
+};
+
+ShopUI.syncToolbar = function (totalCount, filteredCount) {
+    if (!this.toolbar) return;
+
+    const nextRealm = Input.getNextMajorRealmInfo();
+    const tip = nextRealm
+        ? `\u0110ang b\u00e0y b\u00e1n \u0111\u1ee7 lo\u1ea1i \u0111an d\u01b0\u1ee3c, b\u00ed ph\u00e1p v\u00e0 v\u1eadt t\u01b0 cho l\u1ea7n \u0111\u1ed9t ph\u00e1 t\u1edbi ${escapeHtml(nextRealm.name)}.`
+        : '\u0110\u00e3 \u1edf c\u1ea3nh gi\u1edbi t\u1ed1i cao, c\u1eeda h\u00e0ng v\u1eabn c\u00f2n \u0111an c\u01b0\u1eddng h\u00f3a v\u00e0 v\u1eadt ph\u1ea9m \u0111\u1eb7c bi\u1ec7t.';
+
+    const tipEl = this.toolbar.querySelector('#shop-tip');
+    const searchEl = this.toolbar.querySelector('#shop-search');
+    const qualityEl = this.toolbar.querySelector('#shop-filter-quality');
+    const summaryEl = this.toolbar.querySelector('#shop-summary');
+    const resetBtn = this.toolbar.querySelector('[data-shop-action="reset-filters"]');
+
+    if (tipEl) tipEl.innerHTML = tip;
+    if (searchEl && searchEl.value !== this.searchQuery) searchEl.value = this.searchQuery;
+    if (qualityEl && qualityEl.value !== this.qualityFilter) qualityEl.value = this.qualityFilter;
+
+    this.toolbar.querySelectorAll('[data-shop-tab]').forEach(tabBtn => {
+        tabBtn.classList.toggle('is-active', tabBtn.getAttribute('data-shop-tab') === this.categoryFilter);
+    });
+
+    if (summaryEl) {
+        summaryEl.innerHTML = `${escapeHtml(getItemCollectionTabLabel(this.categoryFilter))}: <strong>${formatNumber(filteredCount)}</strong> / ${formatNumber(totalCount)} v\u1eadt ph\u1ea9m`;
+    }
+
+    if (resetBtn) {
+        resetBtn.disabled = !this.searchQuery && this.categoryFilter === 'DAN_DUOC' && this.qualityFilter === 'ALL';
+    }
+};
+
+ShopUI.filterItems = function (items) {
+    const query = normalizeSearchText(this.searchQuery);
+
+    return items.filter(item => {
+        if (getItemCollectionTabKey(item) !== this.categoryFilter) {
+            return false;
+        }
+
+        if (this.qualityFilter !== 'ALL' && item.quality !== this.qualityFilter) {
+            return false;
+        }
+
+        if (!query) return true;
+
+        const haystack = normalizeSearchText([
+            Input.getItemDisplayName(item),
+            Input.getItemDescription(item),
+            Input.getItemCategoryLabel(item),
+            getQualityLabel(item.quality),
+            item.realmName || '',
+            getItemCollectionTabLabel(getItemCollectionTabKey(item))
+        ].join(' '));
+
+        return haystack.includes(query);
+    });
+};
+
 InventoryUI = {
     overlay: document.getElementById('inventory-popup'),
     btnOpen: document.getElementById('btn-inventory'),
@@ -5341,6 +6341,17 @@ SkillsUI = {
         }
 
         this.list.addEventListener('pointerdown', (e) => {
+            const toggleBtn = e.target.closest('[data-insect-toggle]');
+            if (toggleBtn) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                if (Input.toggleInsectSpeciesCombatEnabled(toggleBtn.getAttribute('data-insect-toggle'))) {
+                    this.render();
+                }
+                return;
+            }
+
             const skillBtn = e.target.closest('[data-attack-skill]');
             if (!skillBtn) return;
 
@@ -5355,6 +6366,42 @@ SkillsUI = {
         this.overlay.addEventListener('pointerdown', (e) => {
             if (e.target === this.overlay) this.close();
         });
+    },
+
+    renderInsectRosterMarkup(skill) {
+        if (skill.key !== 'INSECT' || !skill.unlocked) return '';
+
+        if (!skill.roster?.length) {
+            return `
+                <div class="attack-skill-card__roster is-empty">
+                    <span>Chua co linh trung nao da ap no de xuat chien.</span>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="attack-skill-card__roster">
+                <div class="attack-skill-card__roster-head">
+                    <strong>Linh trung tham chien</strong>
+                    <span>${escapeHtml(skill.rosterSummary || '')}</span>
+                </div>
+                <div class="insect-toggle-list">
+                    ${skill.roster.map(entry => `
+                        <button
+                            class="insect-toggle-chip ${entry.enabled ? 'is-enabled' : ''}"
+                            type="button"
+                            data-insect-toggle="${escapeHtml(entry.speciesKey)}"
+                            style="--toggle-accent:${entry.accent}"
+                            aria-pressed="${entry.enabled ? 'true' : 'false'}"
+                        >
+                            <span class="insect-toggle-chip__title">${escapeHtml(entry.name)}</span>
+                            <span class="insect-toggle-chip__meta">${formatNumber(entry.count)} con | ${escapeHtml(entry.modeLabel)}</span>
+                            <span class="insect-toggle-chip__note">${escapeHtml(entry.note)}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
     },
 
     render() {
@@ -5387,6 +6434,29 @@ SkillsUI = {
     close() {
         closePopup(this.overlay);
     }
+};
+
+SkillsUI.render = function () {
+    if (!this.list) return;
+
+    this.list.innerHTML = Input.getAttackSkillList().map(skill => `
+        <article class="attack-skill-card ${skill.active ? 'is-active' : ''} ${!skill.unlocked || !skill.ready ? 'is-disabled' : ''}" style="--skill-accent:${skill.accent}">
+            <div class="attack-skill-card__head">
+                <div>
+                    <h4>${escapeHtml(skill.name)}</h4>
+                    <p>${escapeHtml(skill.description)}</p>
+                </div>
+                <span class="attack-skill-card__tag">${skill.active ? 'Dang dung' : (skill.unlocked ? 'Da hoc' : 'Chua hoc')}</span>
+            </div>
+            <div class="attack-skill-card__foot">
+                <span>${escapeHtml(skill.note)}</span>
+                <button class="btn-slot-action" type="button" data-attack-skill="${escapeHtml(skill.key)}" ${skill.unlocked && skill.ready ? '' : 'disabled'}>
+                    ${skill.active ? 'Da chon' : 'Chon'}
+                </button>
+            </div>
+            ${this.renderInsectRosterMarkup(skill)}
+        </article>
+    `).join('');
 };
 
 InsectBookUI = {
