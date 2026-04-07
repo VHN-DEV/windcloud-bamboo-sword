@@ -1132,6 +1132,15 @@ const Input = {
         return CONFIG.SPIRIT_STONE.TYPES[quality] || CONFIG.SPIRIT_STONE.TYPES.LOW;
     },
 
+    getSpiritStoneCompactLabel(quality) {
+        return {
+            LOW: 'HP',
+            MEDIUM: 'TrP',
+            HIGH: 'ThP',
+            SUPREME: 'CP'
+        }[quality] || 'HP';
+    },
+
     getSpiritStoneTotalValue() {
         return Object.entries(this.spiritStones).reduce((total, [quality, count]) => {
             return total + (count * this.getSpiritStoneType(quality).value);
@@ -1166,6 +1175,46 @@ const Input = {
 
         this.setSpiritStoneTotalValue(this.getSpiritStoneTotalValue() - safeCost);
         return true;
+    },
+
+    getSpiritStoneBreakdown(totalLowValue) {
+        let remaining = Math.max(0, Math.floor(totalLowValue));
+
+        return STONE_ORDER.map(quality => {
+            const type = this.getSpiritStoneType(quality);
+            const count = Math.floor(remaining / type.value);
+            remaining %= type.value;
+
+            return {
+                quality,
+                count,
+                type
+            };
+        });
+    },
+
+    renderSpiritStoneCostMarkup(totalLowValue) {
+        const entries = this.getSpiritStoneBreakdown(totalLowValue)
+            .filter(entry => entry.count > 0);
+
+        if (!entries.length) {
+            const fallback = this.getSpiritStoneType('LOW');
+            entries.push({
+                quality: 'LOW',
+                count: 0,
+                type: fallback
+            });
+        }
+
+        return `
+            <span class="stone-cost-list">
+                ${entries.map(entry => `
+                    <span class="stone-cost-chip" style="--stone-accent:${entry.type.color}" title="${escapeHtml(entry.type.label)}">
+                        ${formatNumber(entry.count)} ${escapeHtml(this.getSpiritStoneCompactLabel(entry.quality))}
+                    </span>
+                `).join('')}
+            </span>
+        `;
     },
 
     buildInventoryKey(spec) {
@@ -1285,6 +1334,27 @@ const Input = {
             default:
                 return `Tăng ${Math.round(qualityConfig.expFactor * 100)}% tu vi của cảnh giới hiện tại.`;
         }
+    },
+
+    getItemDescriptionMarkup(item) {
+        const description = this.getItemDescription(item);
+        const sideEffectMarker = 'Tác dụng phụ:';
+        const markerIndex = description.indexOf(sideEffectMarker);
+
+        if (markerIndex === -1) {
+            return escapeHtml(description);
+        }
+
+        const mainText = description.slice(0, markerIndex).trim();
+        const sideText = description.slice(markerIndex + sideEffectMarker.length).trim();
+
+        return `
+            ${escapeHtml(mainText)}
+            <span class="item-description__side-effect">
+                <span class="item-description__side-label">${escapeHtml(sideEffectMarker)}</span>
+                ${escapeHtml(sideText)}
+            </span>
+        `.trim();
     },
 
     addInventoryItem(spec, count = 1) {
@@ -2607,14 +2677,19 @@ ShopUI = {
         const cards = items.map(item => {
             const qualityConfig = Input.getItemQualityConfig(item);
             const canAfford = !Input.isVoidCollapsed && Input.canAffordLowStoneCost(item.priceLowStone);
+            const priceMarkup = Input.renderSpiritStoneCostMarkup(item.priceLowStone);
 
             return `
                 <article class="shop-card has-pill-art" style="--slot-accent:${qualityConfig.color}">
                     <div class="slot-badge">${escapeHtml(Input.getItemCategoryLabel(item))}</div>
                     ${buildPillVisualMarkup(item, qualityConfig)}
                     <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                    <p>${escapeHtml(Input.getItemDescription(item))}</p>
+                    <p class="item-description">${Input.getItemDescriptionMarkup(item)}</p>
                     <div class="slot-meta">Giá: ${formatNumber(item.priceLowStone)} hạ phẩm linh thạch</div>
+                    <div class="slot-meta slot-meta-price">
+                        <span class="slot-meta-title">Giá</span>
+                        ${priceMarkup}
+                    </div>
                     <button class="btn-slot-action" data-shop-id="${escapeHtml(item.id)}" ${canAfford ? '' : 'disabled'}>Mua</button>
                 </article>
             `;
@@ -2715,6 +2790,7 @@ InventoryUI = {
             const qualityConfig = Input.getItemQualityConfig(item);
             const usable = Input.isInventoryItemUsable(item);
             const sellPrice = Input.getInventorySellPrice(item);
+            const sellPriceMarkup = Input.renderSpiritStoneCostMarkup(sellPrice);
             const label = item.category === 'BREAKTHROUGH' && !usable
                 ? `Chờ ${item.realmName}`
                 : 'Dùng';
@@ -2724,8 +2800,12 @@ InventoryUI = {
                     <div class="slot-badge">${formatNumber(item.count)}x</div>
                     ${buildPillVisualMarkup(item, qualityConfig)}
                     <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                    <p>${escapeHtml(Input.getItemDescription(item))}</p>
+                    <p class="item-description">${Input.getItemDescriptionMarkup(item)}</p>
                     <div class="slot-meta">Bán lại: ${formatNumber(sellPrice)} hạ phẩm linh thạch</div>
+                    <div class="slot-meta slot-meta-price">
+                        <span class="slot-meta-title">Bán lại</span>
+                        ${sellPriceMarkup}
+                    </div>
                     <div class="slot-actions">
                         <button class="btn-slot-action" data-action="use" data-item-key="${escapeHtml(item.key)}" ${usable ? '' : 'disabled'}>${escapeHtml(label)}</button>
                         <button class="btn-slot-action is-secondary" data-action="sell" data-item-key="${escapeHtml(item.key)}">Bán</button>
@@ -2813,7 +2893,6 @@ ProfileUI = {
         const swordStats = Input.getAliveSwordStats();
         const inventorySummary = Input.getInventorySummary();
         const displayName = Input.getPlayerDisplayName();
-        const initials = Input.getPlayerMonogram();
         const accent = rank?.color || '#8fffe0';
         const accentLight = rank?.lightColor || '#ffffff';
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
@@ -2828,18 +2907,15 @@ ProfileUI = {
             + (inventorySummary.categories.INSIGHT || 0)
             + (inventorySummary.categories.EXP || 0);
 
-        const avatarInitials = this.btnOpen ? this.btnOpen.querySelector('.profile-avatar__initials') : null;
-        if (avatarInitials) {
-            avatarInitials.textContent = initials;
-        }
-
         this.btnOpen.setAttribute('title', `${displayName} - ${rank?.name || 'Chưa nhập đạo'}`);
         this.btnOpen.setAttribute('aria-label', `Mở hồ sơ của ${displayName}`);
 
         this.overview.innerHTML = `
             <article class="profile-hero__card is-accent" style="--profile-accent:${accent};--profile-light:${accentLight}">
                 <div class="profile-hero__identity">
-                    <div class="profile-hero__avatar">${escapeHtml(initials)}</div>
+                    <div class="profile-hero__avatar" aria-hidden="true">
+                        <img class="profile-hero__avatar-icon" src="./assets/images/sword-light.svg" alt="">
+                    </div>
                     <div>
                         <div class="profile-hero__eyebrow">Đạo hiệu</div>
                         <h4 class="profile-hero__title">${escapeHtml(displayName)}</h4>
