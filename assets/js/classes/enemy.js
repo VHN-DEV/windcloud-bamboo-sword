@@ -300,6 +300,21 @@ class Enemy {
                 }
             }
 
+            if (CONFIG.ITEMS?.MATERIALS && typeof Input?.createRandomMaterialDropSpec === 'function') {
+                const materialCfg = CONFIG.ITEMS.MATERIAL_DROP || {};
+                const materialDropChance = Math.min(1, ((this.isElite ? materialCfg.ELITE_CHANCE : materialCfg.NORMAL_CHANCE) || 0) * dropRateMultiplier);
+                const materialCountCfg = this.isElite ? materialCfg.ELITE_COUNT : materialCfg.NORMAL_COUNT;
+                const minCount = Math.max(1, Math.floor(materialCountCfg?.MIN || 1));
+                const maxCount = Math.max(minCount, Math.floor(materialCountCfg?.MAX || minCount));
+                const materialDropCount = minCount + Math.floor(Math.random() * ((maxCount - minCount) + 1));
+
+                if (Math.random() < materialDropChance) {
+                    for (let i = 0; i < materialDropCount; i++) {
+                        pills.push(new Pill(this.x, this.y, Input.createRandomMaterialDropSpec(this.isElite)));
+                    }
+                }
+            }
+
             this.respawn();
             return "killed";
 

@@ -34,6 +34,14 @@ class Pill {
             return CONFIG.SPIRIT_STONE.TYPES[this.dropSpec.quality] || CONFIG.SPIRIT_STONE.TYPES.LOW;
         }
 
+        if (this.dropSpec.kind === 'MATERIAL') {
+            const materialConfig = CONFIG.ITEMS?.MATERIALS?.[this.dropSpec.materialKey];
+            return {
+                color: materialConfig?.color || '#ffb27d',
+                radius: materialConfig?.radius || 4.8
+            };
+        }
+
         if (this.dropSpec.kind === 'INSECT_EGG') {
             const species = CONFIG.INSECT?.SPECIES?.[this.dropSpec.speciesKey];
             return {

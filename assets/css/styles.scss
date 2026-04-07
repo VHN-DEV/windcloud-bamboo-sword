@@ -40,6 +40,30 @@ body {
     height: 100%;
 }
 
+body.game-native-cursor-hidden,
+body.game-native-cursor-hidden * {
+    cursor: none !important;
+}
+
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay,
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay * {
+    cursor: default !important;
+}
+
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay input,
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay textarea {
+    cursor: text !important;
+}
+
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay button,
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay .close-btn,
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay a,
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay label[for],
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay summary,
+body.game-native-cursor-hidden.popup-cursor-active .popup-overlay select {
+    cursor: pointer !important;
+}
+
 canvas {
     display: block;
 }
@@ -330,7 +354,7 @@ canvas {
 }
 
 .breakthrough-group {
-    @include abs-pos($top: 100x, $right: 25px);
+    @include abs-pos($top: 100px, $right: 25px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3268,7 +3292,7 @@ select.shop-control-input {
 .stone-cost-chip + .stone-cost-chip::before {
     content: '·';
     color: rgba(255, 255, 255, 0.38);
-    margin: 0 6px;
+    margin: 0 auto;
 }
 
 .btn-slot-action {

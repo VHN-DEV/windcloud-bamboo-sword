@@ -185,6 +185,74 @@ const CONFIG = {
                 color: "#ffd76f",
                 buyPriceLowStone: 18000
             }
+        },
+        MATERIALS: {
+            YEU_GIAC: {
+                fullName: "Yêu giác",
+                quality: "HIGH",
+                color: "#f5c87a",
+                radius: 4.8,
+                buyPriceLowStone: 120,
+                dropWeight: 1.05,
+                nutrition: 0,
+                description: "Sừng yêu thú cứng như linh thiết, thường dùng làm nguyên liệu ấp nở kỳ trùng giáp xác."
+            },
+            YEU_HUYET: {
+                fullName: "Yêu huyết",
+                quality: "MEDIUM",
+                color: "#ff6f88",
+                radius: 4.9,
+                buyPriceLowStone: 90,
+                dropWeight: 1.35,
+                nutrition: 2,
+                description: "Tinh huyết lấy từ yêu thú vừa ngã xuống, thích hợp làm thức ăn và môi chất dưỡng trùng."
+            },
+            YEU_DAN: {
+                fullName: "Yêu đan",
+                quality: "HIGH",
+                color: "#a48dff",
+                radius: 5.2,
+                buyPriceLowStone: 180,
+                dropWeight: 0.72,
+                nutrition: 1,
+                description: "Nội đan ngưng tụ yêu lực, là linh tài hiếm dùng để kích hoạt trứng và bồi bổ vài loài kỳ trùng."
+            },
+            TINH_THIT: {
+                fullName: "Tinh thịt",
+                quality: "MEDIUM",
+                color: "#ffb27d",
+                radius: 4.9,
+                buyPriceLowStone: 75,
+                dropWeight: 1.55,
+                nutrition: 3,
+                description: "Phần huyết nhục tinh luyện từ xác yêu thú, là loại thức ăn ổn định nhất cho nhiều đàn kỳ trùng."
+            },
+            DOC_NANG: {
+                fullName: "Độc nang",
+                quality: "HIGH",
+                color: "#75d86a",
+                radius: 5,
+                buyPriceLowStone: 140,
+                dropWeight: 0.88,
+                nutrition: 1,
+                description: "Túi độc còn nguyên dược tính, vừa có thể ấp các dị trùng độc hệ vừa dùng làm khẩu phần đặc thù."
+            },
+            LINH_TY: {
+                fullName: "Linh ty",
+                quality: "MEDIUM",
+                color: "#93d6ff",
+                radius: 4.8,
+                buyPriceLowStone: 110,
+                dropWeight: 1.02,
+                nutrition: 2,
+                description: "Tơ linh khí kết lại thành sợi, vừa dùng ổn định ổ ấp vừa làm thức ăn cho các loài tàm, nga và chu."
+            }
+        },
+        MATERIAL_DROP: {
+            NORMAL_CHANCE: 0.42,
+            ELITE_CHANCE: 0.88,
+            NORMAL_COUNT: { MIN: 1, MAX: 2 },
+            ELITE_COUNT: { MIN: 2, MAX: 4 }
         }
     },
     MANA: {
@@ -490,6 +558,14 @@ const CONFIG = {
         HATCH: {
             MIN_MANA_COST: 0,
             NOTIFY_COLOR: "#79ffd4"
+        },
+        CARE: {
+            FEED_INTERVAL_MS: 30000,
+            FOOD_PER_INSECT: 1,
+            STARVATION_DEATH_CHANCE: 0.24,
+            WRONG_HABITAT_DEATH_CHANCE: 0.18,
+            MAX_CYCLES_PER_UPDATE: 5,
+            ALERT_COOLDOWN_MS: 12000
         },
         ATTACK: {
             HIT_INTERVAL_MS: 220,
