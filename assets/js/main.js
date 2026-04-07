@@ -149,12 +149,22 @@ function buildPillVisualMarkup(item, qualityConfig) {
         REGEN: { className: 'is-regen', aura: 'rgba(89, 226, 219, 0.30)' },
         SPEED: { className: 'is-speed', aura: 'rgba(149, 255, 186, 0.30)' },
         FORTUNE: { className: 'is-fortune', aura: 'rgba(255, 214, 102, 0.32)' },
+        BAG: { className: 'is-bag', aura: 'rgba(151, 197, 255, 0.26)' },
         CHUNG_CUC_DAO_NGUYEN_DAN: { className: 'is-special-rainbow', aura: 'rgba(255, 255, 255, 0.40)' },
         TAN_DAO_DIET_NGUYEN_DAN: { className: 'is-special-void', aura: 'rgba(84, 42, 115, 0.44)' }
     };
 
     const visualKey = item.specialKey || item.category;
     const visual = visualMap[visualKey] || visualMap.EXP;
+    const centerMarkup = visual.className === 'is-bag'
+        ? `
+            <span class="pill-visual__core pill-visual__core--bag"></span>
+            <img src="./assets/images/bag.svg" class="pill-visual__item-icon" alt="">
+        `
+        : `
+            <span class="pill-visual__core"></span>
+            <span class="pill-visual__sigil"></span>
+        `;
 
     return `
         <div class="pill-visual ${visual.className}" style="--pill-accent:${qualityConfig.color};--pill-aura:${visual.aura}" aria-hidden="true">
@@ -164,8 +174,7 @@ function buildPillVisualMarkup(item, qualityConfig) {
             <span class="pill-visual__spark pill-visual__spark--1"></span>
             <span class="pill-visual__spark pill-visual__spark--2"></span>
             <span class="pill-visual__spark pill-visual__spark--3"></span>
-            <span class="pill-visual__core"></span>
-            <span class="pill-visual__sigil"></span>
+            ${centerMarkup}
         </div>
     `;
 }
@@ -188,6 +197,10 @@ const Input = {
     exp: 0,
     rankIndex: 0, // Vị trí hiện tại trong mảng RANKS
     inventory: {},
+    inventoryCapacity: Math.max(
+        parseInt(CONFIG.ITEMS.INVENTORY_BASE_CAPACITY, 10) || 0,
+        parseInt(CONFIG.ITEMS.INVENTORY_MIN_SLOTS, 10) || 16
+    ),
     spiritStones: getStartingSpiritStoneCounts(),
     playerName: 'Thanh Trúc Kiếm Chủ',
     playerAvatarInitials: 'TT',
@@ -836,18 +849,58 @@ const Input = {
         };
     },
 
+    getInventoryCapacity() {
+        const baseCapacity = Math.max(
+            parseInt(CONFIG.ITEMS.INVENTORY_BASE_CAPACITY, 10) || 0,
+            parseInt(CONFIG.ITEMS.INVENTORY_MIN_SLOTS, 10) || 16
+        );
+
+        return Math.max(baseCapacity, Math.floor(this.inventoryCapacity || 0));
+    },
+
+    hasInventorySpaceForSpec(spec) {
+        const itemKey = this.buildInventoryKey(spec);
+        const existingItem = this.inventory[itemKey];
+
+        if (existingItem && existingItem.count > 0) {
+            return true;
+        }
+
+        return this.getInventoryEntries().length < this.getInventoryCapacity();
+    },
+
+    canUpgradeInventoryCapacity(item) {
+        if (!item || item.category !== 'BAG') return false;
+
+        const qualityConfig = this.getItemQualityConfig(item);
+        return Math.floor(qualityConfig.capacity || 0) > this.getInventoryCapacity();
+    },
+
+    upgradeInventoryCapacity(nextCapacity) {
+        const safeCapacity = Math.max(this.getInventoryCapacity(), Math.floor(nextCapacity || 0));
+        if (safeCapacity <= this.getInventoryCapacity()) return false;
+
+        this.inventoryCapacity = safeCapacity;
+        return true;
+    },
+
     getInventorySummary() {
         const entries = this.getInventoryEntries();
         const categories = entries.reduce((summary, item) => {
             summary[item.category] = (summary[item.category] || 0) + item.count;
             return summary;
         }, {});
+        const uniqueCount = entries.length;
+        const capacity = this.getInventoryCapacity();
 
         return {
             entries,
             totalCount: entries.reduce((total, item) => total + item.count, 0),
-            uniqueCount: entries.length,
-            categories
+            uniqueCount,
+            categories,
+            capacity,
+            freeSlots: Math.max(0, capacity - uniqueCount),
+            usageRatio: capacity > 0 ? (uniqueCount / capacity) : 0
         };
     },
 
@@ -1242,7 +1295,8 @@ const Input = {
             MAX_MANA: CONFIG.PILL.MAX_MANA_QUALITIES,
             REGEN: CONFIG.PILL.REGEN_QUALITIES,
             SPEED: CONFIG.PILL.SPEED_QUALITIES,
-            FORTUNE: CONFIG.PILL.FORTUNE_QUALITIES
+            FORTUNE: CONFIG.PILL.FORTUNE_QUALITIES,
+            BAG: CONFIG.ITEMS.STORAGE_BAGS
         };
 
         if (item.specialKey) {
@@ -1264,10 +1318,16 @@ const Input = {
             return `${qualityConfig.label} ${realmName} đan`;
         }
 
+        if (item.category === 'BAG') {
+            return qualityConfig.fullName;
+        }
+
         return qualityConfig.fullName;
     },
 
     getItemCategoryLabel(item) {
+        if (item.category === 'BAG') return 'Túi trữ vật';
+
         const labels = {
             EXP: 'Tu vi',
             INSIGHT: 'Ngộ đạo',
@@ -1298,6 +1358,17 @@ const Input = {
         }
 
         switch (item.category) {
+            case 'BAG': {
+                const targetCapacity = Math.max(0, Math.floor(qualityConfig.capacity || 0));
+                const currentCapacity = this.getInventoryCapacity();
+                const extraSlots = Math.max(0, targetCapacity - currentCapacity);
+
+                if (extraSlots > 0) {
+                    return `Mở rộng túi trữ vật lên ${formatNumber(targetCapacity)} ô, thêm ${formatNumber(extraSlots)} ô so với hiện tại.`;
+                }
+
+                return `Túi này chứa tối đa ${formatNumber(targetCapacity)} ô và cảnh giới chứa đồ của ngươi đã đạt đến mức này.`;
+            }
             case 'INSIGHT':
                 return `Tăng vĩnh viễn ${Math.round((qualityConfig.expGainPct || 0) * 100)}% tu vi nhận từ chiến đấu và đan tu vi.`;
             case 'BREAKTHROUGH': {
@@ -1359,6 +1430,10 @@ const Input = {
 
     addInventoryItem(spec, count = 1) {
         const itemKey = this.buildInventoryKey(spec);
+        if (!this.inventory[itemKey] && !this.hasInventorySpaceForSpec(spec)) {
+            return null;
+        }
+
         if (!this.inventory[itemKey]) {
             this.inventory[itemKey] = {
                 key: itemKey,
@@ -1479,7 +1554,42 @@ const Input = {
             });
         });
 
-        return items;
+        QUALITY_ORDER.forEach(quality => {
+            const bagConfig = CONFIG.ITEMS.STORAGE_BAGS?.[quality];
+            if (!bagConfig) return;
+
+            items.push({
+                id: `BAG:${quality}`,
+                kind: 'UPGRADE',
+                category: 'BAG',
+                quality,
+                priceLowStone: bagConfig.buyPriceLowStone || 0
+            });
+        });
+
+        const shopOrder = {
+            BAG: -1,
+            EXP: 0,
+            INSIGHT: 1,
+            ATTACK: 2,
+            SHIELD_BREAK: 3,
+            BERSERK: 4,
+            RAGE: 5,
+            MANA: 6,
+            MAX_MANA: 7,
+            REGEN: 8,
+            SPEED: 9,
+            FORTUNE: 10,
+            BREAKTHROUGH: 11,
+            SPECIAL: 12
+        };
+
+        return items.sort((a, b) => {
+            const categoryDiff = (shopOrder[a.category] ?? 99) - (shopOrder[b.category] ?? 99);
+            if (categoryDiff !== 0) return categoryDiff;
+
+            return QUALITY_ORDER.indexOf(a.quality) - QUALITY_ORDER.indexOf(b.quality);
+        });
     },
 
     collectDrop(dropSpec) {
@@ -1490,6 +1600,12 @@ const Input = {
             this.addSpiritStone(dropSpec.quality, 1);
             showNotify(`+1 ${stoneType.label}`, stoneType.color);
         } else {
+            if (!this.hasInventorySpaceForSpec(dropSpec)) {
+                const qualityConfig = this.getItemQualityConfig(dropSpec);
+                showNotify('Túi trữ vật đã đầy, hãy mở rộng thêm dung tích.', qualityConfig.color || '#ff8a80');
+                return;
+            }
+
             const item = this.addInventoryItem(dropSpec, 1);
             const qualityConfig = this.getItemQualityConfig(item);
             showNotify(`+1 ${this.getItemDisplayName(item)}`, qualityConfig.color);
@@ -1523,9 +1639,32 @@ const Input = {
         const item = this.getShopItems().find(entry => entry.id === itemId);
         if (!item) return false;
 
+        if (item.category === 'BAG' && !this.canUpgradeInventoryCapacity(item)) {
+            showNotify('Túi hiện tại của ngươi đã rộng hơn hoặc bằng loại này.', '#ffd36b');
+            return false;
+        }
+
+        if (item.category !== 'BAG' && !this.hasInventorySpaceForSpec(item)) {
+            showNotify('Túi trữ vật đã đầy, không thể mua thêm vật phẩm mới.', '#ff8a80');
+            return false;
+        }
+
         if (!this.spendSpiritStones(item.priceLowStone)) {
             showNotify("Linh thạch không đủ để giao dịch", "#ff8a80");
             return false;
+        }
+
+        if (item.category === 'BAG') {
+            const qualityConfig = this.getItemQualityConfig(item);
+            const previousCapacity = this.getInventoryCapacity();
+            this.upgradeInventoryCapacity(qualityConfig.capacity || previousCapacity);
+
+            showNotify(
+                `Túi trữ vật mở rộng lên ${formatNumber(this.getInventoryCapacity())} ô (+${formatNumber(Math.max(0, this.getInventoryCapacity() - previousCapacity))} ô)`,
+                qualityConfig.color
+            );
+            this.refreshResourceUI();
+            return true;
         }
 
         const addedItem = this.addInventoryItem(item, 1);
@@ -2169,6 +2308,7 @@ const SettingsUI = {
                 if (parsed.SWORD) Object.assign(CONFIG.SWORD, parsed.SWORD);
                 if (parsed.ENEMY) Object.assign(CONFIG.ENEMY, parsed.ENEMY);
                 if (parsed.MANA) Object.assign(CONFIG.MANA, parsed.MANA);
+                if (parsed.ITEMS) Object.assign(CONFIG.ITEMS, parsed.ITEMS);
                 if (parsed.PILL) Object.assign(CONFIG.PILL, parsed.PILL);
                 if (parsed.SPIRIT_STONE) Object.assign(CONFIG.SPIRIT_STONE, parsed.SPIRIT_STONE);
                 if (parsed.ULTIMATE) Object.assign(CONFIG.ULTIMATE, parsed.ULTIMATE);
@@ -2377,6 +2517,27 @@ function buildWalletMarkup() {
     `;
 }
 
+function buildInventoryCapacityMarkup() {
+    const summary = Input.getInventorySummary();
+    const usagePct = Math.max(0, Math.min(100, Math.round((summary.usageRatio || 0) * 100)));
+
+    return `
+        <div class="inventory-capacity-card">
+            <div class="inventory-capacity-card__row">
+                <span class="inventory-capacity-card__label">Túi trữ vật</span>
+                <strong class="inventory-capacity-card__value">${formatNumber(summary.uniqueCount)}/${formatNumber(summary.capacity)} ô</strong>
+            </div>
+            <div class="inventory-capacity-card__track">
+                <span style="width:${usagePct}%"></span>
+            </div>
+            <div class="inventory-capacity-card__meta">
+                <span>Còn trống ${formatNumber(summary.freeSlots)} ô</span>
+                <span>${summary.freeSlots > 0 ? 'Có thể nhận thêm vật phẩm mới' : 'Túi đã đầy'}</span>
+            </div>
+        </div>
+    `;
+}
+
 function openPopup(overlay) {
     if (!overlay) return;
     document.body.style.cursor = 'default';
@@ -2510,7 +2671,7 @@ ShopUI = {
     },
 
     getCategoryOptions() {
-        return ['ALL', 'EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'SPECIAL'];
+        return ['ALL', 'EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'BAG', 'SPECIAL'];
     },
 
     ensureToolbar() {
@@ -2531,7 +2692,7 @@ ShopUI = {
             <div class="shop-toolbar-row">
                 <label class="shop-field shop-field-search">
                     <span>Tìm kiếm</span>
-                    <input id="shop-search" class="shop-control-input" type="search" placeholder="Tên đan, công dụng, phẩm chất...">
+                    <input id="shop-search" class="shop-control-input" type="search" placeholder="Tên đan, túi, công dụng, phẩm chất...">
                 </label>
                 <div class="shop-filter-group">
                     <label class="shop-field">
@@ -2573,7 +2734,7 @@ ShopUI = {
         if (categoryEl && categoryEl.value !== this.categoryFilter) categoryEl.value = this.categoryFilter;
         if (qualityEl && qualityEl.value !== this.qualityFilter) qualityEl.value = this.qualityFilter;
         if (summaryEl) {
-            summaryEl.innerHTML = `Hiển thị <strong>${formatNumber(filteredCount)}</strong> / ${formatNumber(totalCount)} loại đan`;
+            summaryEl.innerHTML = `Hiển thị <strong>${formatNumber(filteredCount)}</strong> / ${formatNumber(totalCount)} vật phẩm`;
         }
         if (resetBtn) {
             resetBtn.disabled = !this.searchQuery && this.categoryFilter === 'ALL' && this.qualityFilter === 'ALL';
@@ -2670,14 +2831,20 @@ ShopUI = {
         if (!this.list) return;
 
         if (!items.length) {
-            this.list.innerHTML = '<div class="shop-empty">Không tìm thấy đan dược phù hợp với bộ lọc hiện tại.</div>';
+            this.list.innerHTML = '<div class="shop-empty">Không tìm thấy vật phẩm phù hợp với bộ lọc hiện tại.</div>';
             return;
         }
 
         const cards = items.map(item => {
             const qualityConfig = Input.getItemQualityConfig(item);
-            const canAfford = !Input.isVoidCollapsed && Input.canAffordLowStoneCost(item.priceLowStone);
+            const canStoreOrUpgrade = item.category === 'BAG'
+                ? Input.canUpgradeInventoryCapacity(item)
+                : Input.hasInventorySpaceForSpec(item);
+            const canAfford = !Input.isVoidCollapsed && canStoreOrUpgrade && Input.canAffordLowStoneCost(item.priceLowStone);
             const priceMarkup = Input.renderSpiritStoneCostMarkup(item.priceLowStone);
+            const actionLabel = item.category === 'BAG'
+                ? (canStoreOrUpgrade ? 'Mở rộng' : 'Đã mở')
+                : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
 
             return `
                 <article class="shop-card has-pill-art" style="--slot-accent:${qualityConfig.color}">
@@ -2690,7 +2857,7 @@ ShopUI = {
                         <span class="slot-meta-title">Giá</span>
                         ${priceMarkup}
                     </div>
-                    <button class="btn-slot-action" data-shop-id="${escapeHtml(item.id)}" ${canAfford ? '' : 'disabled'}>Mua</button>
+                    <button class="btn-slot-action" data-shop-id="${escapeHtml(item.id)}" ${canAfford ? '' : 'disabled'}>${escapeHtml(actionLabel)}</button>
                 </article>
             `;
         }).join('');
@@ -2783,9 +2950,10 @@ InventoryUI = {
     render() {
         if (!this.wallet || !this.pillGrid || !this.stoneGrid) return;
 
-        this.wallet.innerHTML = buildWalletMarkup();
+        this.wallet.innerHTML = buildWalletMarkup() + buildInventoryCapacityMarkup();
 
-        const entries = Input.getInventoryEntries();
+        const inventorySummary = Input.getInventorySummary();
+        const entries = inventorySummary.entries;
         const cards = entries.map(item => {
             const qualityConfig = Input.getItemQualityConfig(item);
             const usable = Input.isInventoryItemUsable(item);
@@ -2953,7 +3121,9 @@ ProfileUI = {
             { label: 'Vận khí', value: `+${Math.round((Input.getDropRateMultiplier() - 1) * 100)}%` },
             { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
             { label: 'Kiếm trận', value: `${swordStats.alive}/${swordStats.total}` },
-            { label: 'Kiếm hỏng', value: `${swordStats.broken}` }
+            { label: 'Kiếm hỏng', value: `${swordStats.broken}` },
+            { label: 'Túi trữ vật', value: `${formatNumber(inventorySummary.uniqueCount)}/${formatNumber(inventorySummary.capacity)} ô` },
+            { label: 'Ô trống', value: `${formatNumber(inventorySummary.freeSlots)}` }
         ];
 
         this.statsGrid.innerHTML = stats.map(stat => `

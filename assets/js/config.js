@@ -149,7 +149,34 @@ const CONFIG = {
     },
     ITEMS: {
         INVENTORY_MIN_SLOTS: 16, // Số ô tối thiểu luôn hiển thị trong Túi không gian
-        SELLBACK_RATIO: 0.5
+        INVENTORY_BASE_CAPACITY: 16,
+        SELLBACK_RATIO: 0.5,
+        STORAGE_BAGS: {
+            LOW: {
+                fullName: "Thanh Mộc Trữ Vật Nang",
+                capacity: 24,
+                color: "#72f1cf",
+                buyPriceLowStone: 320
+            },
+            MEDIUM: {
+                fullName: "Lưu Vân Nạp Linh Túi",
+                capacity: 40,
+                color: "#6db8ff",
+                buyPriceLowStone: 1200
+            },
+            HIGH: {
+                fullName: "Tinh Hà Giới Tử Đại",
+                capacity: 64,
+                color: "#c090ff",
+                buyPriceLowStone: 5200
+            },
+            SUPREME: {
+                fullName: "Càn Khôn Vạn Tượng Nang",
+                capacity: 96,
+                color: "#ffd76f",
+                buyPriceLowStone: 18000
+            }
+        }
     },
     MANA: {
         // Lưu ý: MAX giờ đây sẽ được ghi đè bởi giá trị trong CULTIVATION.RANKS
