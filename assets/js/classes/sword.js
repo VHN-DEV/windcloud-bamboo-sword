@@ -448,8 +448,8 @@ class Sword {
             // Tính toán sát thương và Enlarge
             if (this.isEnlarged) {
                 this.powerPenalty *= 1.5;
-                if (typeof Input.createLevelUpExplosion === 'function') {
-                    Input.createLevelUpExplosion(target.x, target.y, "#ffcc00");
+                if (typeof Input.createAttackBurst === 'function') {
+                    Input.createAttackBurst(target.x, target.y, "#ffcc00");
                 }
                 this.isEnlarged = false;
                 this.targetVisualScale = 1;

@@ -44,6 +44,7 @@ const CONFIG = {
         CHARGE_STEPS: 10,   // Số nấc hiển thị tiến độ nộ trên nút ultimate
     },
     INPUT: {
+        JOYSTICK_CURSOR_SPEED: 0.10, // Hệ số độ nhạy/tốc độ con trỏ khi điều khiển bằng joystick mobile
         DOUBLE_TAP_DELAY: 300   // Khoảng cách tối đa giữa 2 lần chạm để tính là double tap
     },
     COLORS: {

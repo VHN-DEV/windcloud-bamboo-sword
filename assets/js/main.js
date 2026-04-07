@@ -71,6 +71,7 @@ const STONE_ORDER = ['SUPREME', 'HIGH', 'MEDIUM', 'LOW'];
 const numberFormatter = new Intl.NumberFormat('vi-VN');
 let ShopUI = null;
 let InventoryUI = null;
+let ProfileUI = null;
 
 function pickWeightedKey(rates, fallbackKey = null) {
     const entries = Object.entries(rates || {});
@@ -188,6 +189,8 @@ const Input = {
     rankIndex: 0, // Vị trí hiện tại trong mảng RANKS
     inventory: {},
     spiritStones: getStartingSpiritStoneCounts(),
+    playerName: 'Thanh Trúc Kiếm Chủ',
+    playerAvatarInitials: 'TT',
     moveJoystick: {
         active: false,
         pointerId: null,
@@ -273,6 +276,10 @@ const Input = {
                 ultBtn.title = `Nộ ${Math.round(this.rage)}/${this.maxRage}`;
             }
             ultBtn.setAttribute('aria-label', ultBtn.title);
+        }
+
+        if (ProfileUI && typeof ProfileUI.isOpen === 'function' && ProfileUI.isOpen()) {
+            ProfileUI.render();
         }
     },
 
@@ -570,6 +577,10 @@ const Input = {
                 bar.classList.remove('low-mana');
             }
         }
+
+        if (ProfileUI && typeof ProfileUI.isOpen === 'function' && ProfileUI.isOpen()) {
+            ProfileUI.render();
+        }
     },
 
     triggerManaShake() {
@@ -670,7 +681,7 @@ const Input = {
                     showNotify(`ĐỘT PHÁ THÀNH CÔNG: ${nextRank.name.toUpperCase()}`, "#ffcc00");
                 }
             }
-            this.createLevelUpExplosion(this.x, this.y, currentRank.color);
+            this.createLevelUpExplosion(this.x, this.y, nextRank?.color || currentRank.color);
         } else {
             // --- THẤT BẠI ---
             const penaltyFactor = CONFIG.CULTIVATION.BREAKTHROUGH_PENALTY_FACTOR; // Ví dụ: 0.4
@@ -763,6 +774,24 @@ const Input = {
         return CONFIG.CULTIVATION.RANKS[this.rankIndex] || null;
     },
 
+    getPlayerDisplayName() {
+        return this.playerName || 'Thanh Trúc Kiếm Chủ';
+    },
+
+    getPlayerMonogram() {
+        const custom = String(this.playerAvatarInitials || '').trim().slice(0, 2).toUpperCase();
+        if (custom) return custom;
+
+        const initials = this.getPlayerDisplayName()
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(word => word.charAt(0).toUpperCase())
+            .join('');
+
+        return initials || 'TT';
+    },
+
     getCurrentMajorRealmInfo() {
         const rank = this.getCurrentRank();
         if (!rank) return null;
@@ -779,6 +808,46 @@ const Input = {
         return {
             key: currentRealm.nextKey,
             name: currentRealm.nextName
+        };
+    },
+
+    getCurrentBreakthroughChance() {
+        const rank = this.getCurrentRank();
+        if (!rank) return 0;
+
+        const maxAllowed = CONFIG.CULTIVATION.MAX_BREAKTHROUGH_CHANCE || 0.99;
+        return Math.max(0, Math.min(maxAllowed, rank.chance + this.calculateTotalPillBoost()));
+    },
+
+    getEffectiveAttackDamage() {
+        const rank = this.getCurrentRank();
+        const baseDamage = rank?.damage || 0;
+        return Math.max(1, Math.ceil(baseDamage * this.getAttackMultiplier()));
+    },
+
+    getAliveSwordStats() {
+        const total = Array.isArray(swords) ? swords.length : 0;
+        const alive = Array.isArray(swords) ? swords.filter(sword => !sword.isDead).length : 0;
+
+        return {
+            alive,
+            total,
+            broken: Math.max(0, total - alive)
+        };
+    },
+
+    getInventorySummary() {
+        const entries = this.getInventoryEntries();
+        const categories = entries.reduce((summary, item) => {
+            summary[item.category] = (summary[item.category] || 0) + item.count;
+            return summary;
+        }, {});
+
+        return {
+            entries,
+            totalCount: entries.reduce((total, item) => total + item.count, 0),
+            uniqueCount: entries.length,
+            categories
         };
     },
 
@@ -935,7 +1004,8 @@ const Input = {
 
         const normX = this.moveJoystick.offsetX / distance;
         const normY = this.moveJoystick.offsetY / distance;
-        const worldDistance = (this.moveJoystick.aimDistance * effectiveRatio) / Math.max(0.001, Camera.currentZoom || 1);
+        const cursorSpeed = Math.max(0.2, parseFloat(CONFIG.INPUT.JOYSTICK_CURSOR_SPEED) || 1);
+        const worldDistance = (this.moveJoystick.aimDistance * effectiveRatio * cursorSpeed) / Math.max(0.001, Camera.currentZoom || 1);
 
         return {
             x: guardCenter.x + (normX * worldDistance),
@@ -1368,6 +1438,10 @@ const Input = {
         if (InventoryUI && typeof InventoryUI.render === 'function') {
             InventoryUI.render();
         }
+
+        if (ProfileUI && typeof ProfileUI.render === 'function') {
+            ProfileUI.render();
+        }
     },
 
     buyShopItem(itemId) {
@@ -1567,7 +1641,7 @@ const Input = {
                     showNotify(`ĐỘT PHÁ THÀNH CÔNG: ${nextRank.name.toUpperCase()}`, "#ffcc00");
                 }
             }
-            this.createLevelUpExplosion(this.x, this.y, currentRank.color);
+            this.createLevelUpExplosion(this.x, this.y, nextRank?.color || currentRank.color);
         } else {
             const penaltyFactor = CONFIG.CULTIVATION.BREAKTHROUGH_PENALTY_FACTOR;
             const penalty = Math.floor(this.exp * penaltyFactor);
@@ -1638,6 +1712,9 @@ const Input = {
         if (rankText) {
             rankText.innerText = `Cảnh giới: ${rank.name}`;
             rankText.style.color = rank.color;
+        }
+        if (ProfileUI && typeof ProfileUI.isOpen === 'function' && ProfileUI.isOpen()) {
+            ProfileUI.render();
         }
     },
 
@@ -1719,15 +1796,131 @@ const Input = {
 
     // Hàm tạo hiệu ứng hạt bùng nổ
     createLevelUpExplosion(x, y, color) {
-        for (let i = 0; i < 30; i++) { // Giảm số lượng hạt
+        const accent = color || "#78f2ff";
+        const palette = [accent, "#ffffff", "#8df6ff", "#ffe39b", "#7ad7ff"];
+
+        visualParticles.push(
+            {
+                type: 'ring',
+                x,
+                y,
+                radius: 14,
+                radialVelocity: 4.4,
+                lineWidth: 3.4,
+                life: 1,
+                decay: 0.038,
+                opacity: 0.9,
+                color: accent,
+                glow: 18
+            },
+            {
+                type: 'ring',
+                x,
+                y,
+                radius: 28,
+                radialVelocity: 5.9,
+                lineWidth: 2.4,
+                life: 0.92,
+                decay: 0.034,
+                opacity: 0.72,
+                color: "#ffe39b",
+                glow: 16
+            },
+            {
+                type: 'glow',
+                x,
+                y,
+                size: 20,
+                sizeVelocity: 0.9,
+                life: 0.72,
+                decay: 0.06,
+                opacity: 0.3,
+                color: accent,
+                glow: 24
+            }
+        );
+
+        for (let i = 0; i < 12; i++) {
+            const angle = (Math.PI * 2 * i) / 12;
             visualParticles.push({
-                x: x,
-                y: y,
-                vx: (Math.random() - 0.5) * 8, // Giảm tốc độ bay
-                vy: (Math.random() - 0.5) * 8,
-                size: Math.random() * 3 + 1,   // Hạt nhỏ li ti như bụi ánh sáng
-                life: 1.0,
-                color: color || "#fff"
+                type: 'ray',
+                x,
+                y,
+                angle,
+                radius: random(4, 12),
+                radialVelocity: random(2.8, 4.6),
+                length: random(14, 30),
+                lengthVelocity: random(0.1, 0.4),
+                lineWidth: random(1.5, 2.8),
+                life: 0.86,
+                decay: random(0.045, 0.06),
+                opacity: 0.88,
+                color: palette[i % palette.length],
+                glow: 14
+            });
+        }
+
+        for (let i = 0; i < 30; i++) {
+            const angle = random(0, Math.PI * 2);
+            const speed = random(2.5, 8.4);
+            visualParticles.push({
+                type: i % 5 === 0 ? 'square' : 'spark',
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - random(0.4, 1.6),
+                gravity: 0.05,
+                friction: 0.97,
+                size: random(2.4, 5.6),
+                sizeVelocity: -0.03,
+                life: 1,
+                decay: random(0.018, 0.032),
+                opacity: 0.94,
+                color: palette[i % palette.length],
+                glow: 12,
+                rotation: angle,
+                rotationSpeed: random(-0.16, 0.16)
+            });
+        }
+
+        return;
+    },
+
+    createAttackBurst(x, y, color = "#ffcc00") {
+        const palette = [color, "#fff1a8", "#ffd36b", "#ff9d4d"];
+
+        visualParticles.push({
+            type: 'ring',
+            x,
+            y,
+            radius: 8,
+            radialVelocity: 3.8,
+            lineWidth: 2.2,
+            life: 0.9,
+            decay: 0.1,
+            opacity: 0.82,
+            color,
+            glow: 12
+        });
+
+        for (let i = 0; i < 14; i++) {
+            const angle = (Math.PI * 2 * i) / 14 + random(-0.12, 0.12);
+            const speed = random(2.4, 5.8);
+            visualParticles.push({
+                type: i % 4 === 0 ? 'square' : 'spark',
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: random(2, 4.8),
+                sizeVelocity: -0.04,
+                friction: 0.95,
+                life: 0.85,
+                decay: random(0.055, 0.085),
+                color: palette[i % palette.length],
+                glow: 10,
+                rotation: angle,
+                rotationSpeed: random(-0.14, 0.14)
             });
         }
     },
@@ -2571,6 +2764,192 @@ InventoryUI = {
     }
 };
 
+ProfileUI = {
+    overlay: document.getElementById('profile-popup'),
+    btnOpen: document.getElementById('btn-profile'),
+    btnClose: document.getElementById('close-profile'),
+    overview: document.getElementById('profile-overview'),
+    statsGrid: document.getElementById('profile-stats-grid'),
+    wallet: document.getElementById('profile-wallet'),
+    pills: document.getElementById('profile-pills'),
+
+    isOpen() {
+        return Boolean(this.overlay && this.overlay.classList.contains('show'));
+    },
+
+    init() {
+        if (!this.overlay || !this.btnOpen) return;
+
+        const content = this.overlay.querySelector('.popup-content');
+        if (content) {
+            content.addEventListener('pointerdown', (e) => e.stopPropagation());
+        }
+
+        this.btnOpen.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            this.open();
+        });
+
+        if (this.btnClose) {
+            this.btnClose.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.close();
+            });
+        }
+
+        this.overlay.addEventListener('pointerdown', (e) => {
+            if (e.target === this.overlay) this.close();
+        });
+
+        this.render();
+    },
+
+    render() {
+        if (!this.overview || !this.statsGrid || !this.wallet || !this.pills) return;
+
+        const rank = Input.getCurrentRank();
+        const majorRealm = Input.getCurrentMajorRealmInfo();
+        const breakthroughChance = Input.getCurrentBreakthroughChance();
+        const swordStats = Input.getAliveSwordStats();
+        const inventorySummary = Input.getInventorySummary();
+        const displayName = Input.getPlayerDisplayName();
+        const initials = Input.getPlayerMonogram();
+        const accent = rank?.color || '#8fffe0';
+        const accentLight = rank?.lightColor || '#ffffff';
+        const combatPillCount = (inventorySummary.categories.ATTACK || 0)
+            + (inventorySummary.categories.SHIELD_BREAK || 0)
+            + (inventorySummary.categories.BERSERK || 0)
+            + (inventorySummary.categories.RAGE || 0);
+        const supportPillCount = (inventorySummary.categories.MANA || 0)
+            + (inventorySummary.categories.MAX_MANA || 0)
+            + (inventorySummary.categories.REGEN || 0)
+            + (inventorySummary.categories.SPEED || 0)
+            + (inventorySummary.categories.FORTUNE || 0)
+            + (inventorySummary.categories.INSIGHT || 0)
+            + (inventorySummary.categories.EXP || 0);
+
+        const avatarInitials = this.btnOpen ? this.btnOpen.querySelector('.profile-avatar__initials') : null;
+        if (avatarInitials) {
+            avatarInitials.textContent = initials;
+        }
+
+        this.btnOpen.setAttribute('title', `${displayName} - ${rank?.name || 'Chưa nhập đạo'}`);
+        this.btnOpen.setAttribute('aria-label', `Mở hồ sơ của ${displayName}`);
+
+        this.overview.innerHTML = `
+            <article class="profile-hero__card is-accent" style="--profile-accent:${accent};--profile-light:${accentLight}">
+                <div class="profile-hero__identity">
+                    <div class="profile-hero__avatar">${escapeHtml(initials)}</div>
+                    <div>
+                        <div class="profile-hero__eyebrow">Đạo hiệu</div>
+                        <h4 class="profile-hero__title">${escapeHtml(displayName)}</h4>
+                        <div class="profile-hero__subtitle">${escapeHtml(majorRealm?.name || 'Phàm giới')} • ${escapeHtml(rank?.name || 'Chưa nhập đạo')}</div>
+                    </div>
+                </div>
+                <div class="profile-hero__chips">
+                    <span class="profile-chip">Tu vi<strong>${formatNumber(Input.exp)}/${formatNumber(rank?.exp || 0)}</strong></span>
+                    <span class="profile-chip">Đột phá<strong>${Math.round(breakthroughChance * 100)}%</strong></span>
+                    <span class="profile-chip">Kiếm trận<strong>${swordStats.alive}/${swordStats.total}</strong></span>
+                </div>
+            </article>
+            <article class="profile-hero__card">
+                <div class="profile-hero__eyebrow">Tình trạng hiện tại</div>
+                <div class="profile-hero__chips">
+                    <span class="profile-chip is-soft">Linh lực<strong>${formatNumber(Input.mana)}/${formatNumber(Input.maxMana)}</strong></span>
+                    <span class="profile-chip is-soft">Nộ kiếm<strong>${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}</strong></span>
+                    <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
+                    <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
+                </div>
+            </article>
+        `;
+
+        const stats = [
+            { label: 'Cảnh giới', value: rank?.name || 'Chưa nhập đạo' },
+            { label: 'Đại cảnh giới', value: majorRealm?.name || 'Phàm giới' },
+            { label: 'Tu vi', value: `${formatNumber(Input.exp)}/${formatNumber(rank?.exp || 0)}` },
+            { label: 'Linh lực', value: `${formatNumber(Input.mana)}/${formatNumber(Input.maxMana)}` },
+            { label: 'Nộ kiếm', value: `${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}` },
+            { label: 'Sát thương', value: `≈ ${formatNumber(Input.getEffectiveAttackDamage())}` },
+            { label: 'Công lực', value: `+${Math.round((Input.getAttackMultiplier() - 1) * 100)}%` },
+            { label: 'Phá khiên', value: `+${Math.round((Input.getShieldBreakMultiplier() - 1) * 100)}%` },
+            { label: 'Tốc độ', value: `+${Math.round((Input.getSpeedMultiplier() - 1) * 100)}%` },
+            { label: 'Hồi linh', value: `+${Math.round((Input.getManaRegenMultiplier() - 1) * 100)}%` },
+            { label: 'Vận khí', value: `+${Math.round((Input.getDropRateMultiplier() - 1) * 100)}%` },
+            { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
+            { label: 'Kiếm trận', value: `${swordStats.alive}/${swordStats.total}` },
+            { label: 'Kiếm hỏng', value: `${swordStats.broken}` }
+        ];
+
+        this.statsGrid.innerHTML = stats.map(stat => `
+            <article class="profile-stat-card" style="--profile-accent:${accent}">
+                <span class="profile-stat-label">${escapeHtml(stat.label)}</span>
+                <strong class="profile-stat-value">${escapeHtml(stat.value)}</strong>
+            </article>
+        `).join('');
+
+        this.wallet.innerHTML = buildWalletMarkup();
+
+        if (!inventorySummary.entries.length) {
+            this.pills.innerHTML = '<div class="profile-empty">Túi đan dược còn trống, chỉ mới tích lũy linh thạch và khí tức nền tảng.</div>';
+            return;
+        }
+
+        const categoryOrder = Object.keys(CONFIG.PILL.CATEGORY_SORT || {});
+        const categoryMarkup = Object.entries(inventorySummary.categories)
+            .sort((a, b) => {
+                const aIndex = categoryOrder.indexOf(a[0]);
+                const bIndex = categoryOrder.indexOf(b[0]);
+                return (aIndex === -1 ? 99 : aIndex) - (bIndex === -1 ? 99 : bIndex);
+            })
+            .map(([category, count]) => `
+                <span class="profile-chip is-soft">
+                    ${escapeHtml(Input.getItemCategoryLabel({ category }))}
+                    <strong>${formatNumber(count)}</strong>
+                </span>
+            `)
+            .join('');
+
+        const featuredMarkup = inventorySummary.entries.slice(0, 4).map(item => `
+            <div class="profile-pill-entry">
+                <span>${escapeHtml(Input.getItemDisplayName(item))}</span>
+                <strong>${formatNumber(item.count)}x</strong>
+            </div>
+        `).join('');
+
+        this.pills.innerHTML = `
+            <div class="profile-pill-summary">
+                <article class="profile-stat-card" style="--profile-accent:${accent}">
+                    <span class="profile-stat-label">Tổng đan</span>
+                    <strong class="profile-stat-value">${formatNumber(inventorySummary.totalCount)}</strong>
+                </article>
+                <article class="profile-stat-card" style="--profile-accent:${accent}">
+                    <span class="profile-stat-label">Số loại</span>
+                    <strong class="profile-stat-value">${formatNumber(inventorySummary.uniqueCount)}</strong>
+                </article>
+                <article class="profile-stat-card" style="--profile-accent:${accent}">
+                    <span class="profile-stat-label">Đan chiến đấu</span>
+                    <strong class="profile-stat-value">${formatNumber(combatPillCount)}</strong>
+                </article>
+                <article class="profile-stat-card" style="--profile-accent:${accent}">
+                    <span class="profile-stat-label">Đan hỗ trợ</span>
+                    <strong class="profile-stat-value">${formatNumber(supportPillCount)}</strong>
+                </article>
+            </div>
+            <div class="profile-chip-grid">${categoryMarkup}</div>
+            <div class="profile-pill-list">${featuredMarkup}</div>
+        `;
+    },
+
+    open() {
+        this.render();
+        openPopup(this.overlay);
+    },
+
+    close() {
+        closePopup(this.overlay);
+    }
+};
+
 document.getElementById('btn-form').addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -2752,12 +3131,6 @@ function init() {
     Input.syncDerivedStats();
 
     document.body.classList.toggle('is-touch-device', Input.isTouchDevice);
-    const instructions = document.getElementById('instructions');
-    if (instructions) {
-        instructions.innerText = Input.isTouchDevice
-            ? 'Mobile: joystick trái để di chuyển, giữ Attack bên phải để công kích'
-            : 'Di chuột để di chuyển, giữ Attack để công kích';
-    }
 
     SettingsUI.init();
     Input.spiritStones = getStartingSpiritStoneCounts();
@@ -2766,6 +3139,7 @@ function init() {
     Input.renderRageUI();
     if (ShopUI) ShopUI.init();
     if (InventoryUI) InventoryUI.init();
+    if (ProfileUI) ProfileUI.init();
     starField = new StarField(CONFIG.BG.STAR_COUNT, width, height);
     for (let i = 0; i < CONFIG.ENEMY.SPAWN_COUNT; i++) enemies.push(new Enemy());
     for (let i = 0; i < CONFIG.SWORD.COUNT; i++) swords.push(new Sword(i, scaleFactor));
@@ -2875,18 +3249,72 @@ function animate() {
     // Vẽ và cập nhật hạt hiệu ứng
     for (let i = visualParticles.length - 1; i >= 0; i--) {
         const p = visualParticles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.02;
-        ctx.globalAlpha = p.life;
+        const friction = p.friction ?? 1;
+        const nextVx = (p.vx || 0) * friction;
+        const nextVy = ((p.vy || 0) + (p.gravity || 0)) * friction;
+        p.vx = nextVx;
+        p.vy = nextVy;
+        p.x += nextVx;
+        p.y += nextVy;
+
+        if (typeof p.radialVelocity === 'number') {
+            p.radius = (p.radius || 0) + p.radialVelocity;
+        }
+
+        if (typeof p.sizeVelocity === 'number') {
+            p.size = Math.max(0, (p.size || 0) + p.sizeVelocity);
+        }
+
+        if (typeof p.lengthVelocity === 'number') {
+            p.length = Math.max(0, (p.length || 0) + p.lengthVelocity);
+        }
+
+        if (typeof p.rotationSpeed === 'number') {
+            p.rotation = (p.rotation || 0) + p.rotationSpeed;
+        }
+
+        p.life -= p.decay ?? 0.02;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life) * (p.opacity ?? 1);
         ctx.fillStyle = p.color;
+        ctx.strokeStyle = p.color;
+        ctx.shadowBlur = p.glow || 0;
+        ctx.shadowColor = p.color;
+
         if (p.type === 'square') {
-            ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+            const size = p.size || 0;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation || 0);
+            ctx.fillRect(-size / 2, -size / 2, size, size);
+        } else if (p.type === 'ring') {
+            ctx.lineWidth = Math.max(0.6, (p.lineWidth || 2) * Math.max(0.35, p.life));
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(0, p.radius || 0), 0, Math.PI * 2);
+            ctx.stroke();
+        } else if (p.type === 'ray') {
+            const angle = p.angle || 0;
+            const startRadius = p.radius || 0;
+            const endRadius = startRadius + (p.length || 0);
+            ctx.lineWidth = Math.max(0.8, (p.lineWidth || 2) * Math.max(0.35, p.life));
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(
+                p.x + (Math.cos(angle) * startRadius),
+                p.y + (Math.sin(angle) * startRadius)
+            );
+            ctx.lineTo(
+                p.x + (Math.cos(angle) * endRadius),
+                p.y + (Math.sin(angle) * endRadius)
+            );
+            ctx.stroke();
         } else {
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, Math.max(0, p.size || 0), 0, Math.PI * 2);
             ctx.fill();
         }
+
+        ctx.restore();
         if (p.life <= 0) visualParticles.splice(i, 1);
     }
     ctx.globalAlpha = 1;

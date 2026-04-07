@@ -11,14 +11,22 @@
 
 <body>
     <canvas id="c"></canvas>
-    <div id="instructions" class="game-ui">Di chuột để di chuyển, giữ Attack để công kích</div>
 
     <div id="mana-container" class="game-ui">
-        <div id="cultivation-rank">Cảnh giới: Luyện khí sơ kỳ (Tầng 1)</div>
+        <div class="status-head">
+            <button id="btn-profile" class="profile-avatar" type="button" aria-label="Mở hồ sơ kiếm tu">
+                <span class="profile-avatar__halo" aria-hidden="true"></span>
+                <span class="profile-avatar__initials">TT</span>
+            </button>
 
-        <div id="mana-bar-bg">
-            <div id="mana-bar"></div>
-            <div id="mana-text">Linh lực: 100/100</div>
+            <div class="status-main">
+                <div id="cultivation-rank">Cảnh giới: Luyện khí sơ kỳ (Tầng 1)</div>
+
+                <div id="mana-bar-bg">
+                    <div id="mana-bar"></div>
+                    <div id="mana-text">Linh lực: 100/100</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -192,6 +200,33 @@
                     <h4>Linh thạch</h4>
                     <div id="inventory-stone-grid" class="inventory-grid inventory-grid-stone"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-popup" class="popup-overlay">
+        <div class="popup-content popup-content-profile">
+            <div class="popup-header">
+                <h3>HỒ SƠ KIẾM TU</h3>
+                <span id="close-profile" class="close-btn">&times;</span>
+            </div>
+            <div class="popup-body popup-panel-body">
+                <section id="profile-overview" class="profile-hero"></section>
+
+                <section class="panel-section">
+                    <h4>Thuộc tính</h4>
+                    <div id="profile-stats-grid" class="profile-stats-grid"></div>
+                </section>
+
+                <section class="panel-section">
+                    <h4>Linh thạch</h4>
+                    <div id="profile-wallet"></div>
+                </section>
+
+                <section class="panel-section">
+                    <h4>Đan dược</h4>
+                    <div id="profile-pills" class="profile-pills"></div>
+                </section>
             </div>
         </div>
     </div>

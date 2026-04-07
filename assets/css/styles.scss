@@ -160,11 +160,88 @@ canvas {
             transform: translateX(-3px);
         }
     }
+}
 
-    #instructions {
-        @include abs-pos($bottom: 20px, $left: 20px);
-        color: rgba(255, 255, 255, 0.3);
-        font-size: 12px;
+#mana-container {
+    width: min(320px, calc(100vw - 40px));
+
+    .status-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 22px;
+        background:
+            radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 34%),
+            linear-gradient(180deg, rgba(8, 18, 30, 0.94), rgba(3, 10, 16, 0.92));
+        border: 1px solid rgba($primary-color, 0.18);
+        box-shadow: 0 18px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+    }
+
+    .status-main {
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .profile-avatar {
+        pointer-events: auto;
+        width: 54px;
+        height: 54px;
+        flex: 0 0 54px;
+        border: none;
+        border-radius: 50%;
+        padding: 0;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        color: #f4fffb;
+        background:
+            radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.42), transparent 20%),
+            linear-gradient(160deg, rgba(135, 255, 221, 0.38), rgba(10, 33, 37, 0.98));
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba($primary-color, 0.2);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+
+        &:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba($primary-color, 0.34), 0 0 18px rgba($primary-color, 0.2);
+        }
+
+        &:active {
+            transform: scale(0.97);
+        }
+    }
+
+    .profile-avatar__halo,
+    .profile-avatar__initials {
+        position: absolute;
+        inset: 0;
+    }
+
+    .profile-avatar__halo {
+        inset: 4px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.05), 0 0 18px rgba($primary-color, 0.16);
+    }
+
+    .profile-avatar__initials {
+        @include flex-center;
+        z-index: 1;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    #cultivation-rank {
+        margin-bottom: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
@@ -365,13 +442,6 @@ canvas {
 body.is-touch-device {
     .move-group {
         display: flex;
-    }
-
-    #instructions {
-        left: 24px;
-        bottom: 136px;
-        max-width: 170px;
-        line-height: 1.4;
     }
 }
 
@@ -587,7 +657,7 @@ body.is-touch-device {
 // 6. SWORD COUNTER UI
 // ====================================================================
 #sword-counter {
-    @include abs-pos($top: 65px, $left: 20px);
+    @include abs-pos($top: 65px, $right: 20px);
     position: fixed;
     display: flex;
     align-items: center;
@@ -951,6 +1021,186 @@ body.is-touch-device {
     strong {
         color: var(--wallet-accent);
     }
+}
+
+.popup-content-profile {
+    max-width: 760px;
+}
+
+.profile-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+    gap: 14px;
+}
+
+.profile-hero__card {
+    --profile-accent: #8fffe0;
+    --profile-light: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 18px;
+    border: 1px solid rgba($primary-color, 0.14);
+    background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(14, 24, 34, 0.96), rgba(8, 13, 20, 0.94));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 28px rgba(0, 0, 0, 0.18);
+
+    &.is-accent {
+        border-color: color-mix(in srgb, var(--profile-accent) 44%, transparent);
+        background:
+            radial-gradient(circle at top left, color-mix(in srgb, var(--profile-light) 18%, transparent), transparent 28%),
+            radial-gradient(circle at bottom right, color-mix(in srgb, var(--profile-accent) 18%, transparent), transparent 38%),
+            linear-gradient(180deg, rgba(14, 24, 34, 0.98), rgba(8, 13, 20, 0.94));
+    }
+}
+
+.profile-hero__identity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.profile-hero__avatar {
+    @include flex-center;
+    width: 72px;
+    height: 72px;
+    flex: 0 0 72px;
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #f6fffd;
+    background:
+        radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.42), transparent 20%),
+        linear-gradient(160deg, color-mix(in srgb, var(--profile-light) 16%, transparent), color-mix(in srgb, var(--profile-accent) 46%, rgba(4, 13, 20, 0.94)));
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.profile-hero__eyebrow {
+    color: rgba(240, 255, 249, 0.56);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.profile-hero__title {
+    margin: 4px 0 6px;
+    color: #f6fffd;
+    font-size: 24px;
+    line-height: 1.15;
+}
+
+.profile-hero__subtitle {
+    color: rgba(240, 255, 249, 0.72);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.profile-hero__chips,
+.profile-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.profile-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(245, 255, 251, 0.88);
+    font-size: 12px;
+    font-weight: 600;
+
+    strong {
+        color: #ffd86b;
+        font-size: 13px;
+    }
+
+    &.is-soft {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(245, 255, 251, 0.78);
+    }
+}
+
+.profile-stats-grid,
+.profile-pill-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.profile-stat-card {
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--profile-accent) 38%, rgba(255, 255, 255, 0.08));
+    background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 34%),
+        linear-gradient(180deg, rgba(12, 22, 31, 0.96), rgba(8, 13, 20, 0.92));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.profile-stat-label {
+    display: block;
+    margin-bottom: 8px;
+    color: rgba(240, 255, 249, 0.6);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.profile-stat-value {
+    display: block;
+    color: #f6fffd;
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+.profile-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.profile-pill-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.profile-pill-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba($primary-color, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(245, 255, 251, 0.82);
+    font-size: 12px;
+    line-height: 1.5;
+
+    strong {
+        color: #ffd86b;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+}
+
+.profile-empty {
+    padding: 18px 16px;
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.6;
 }
 
 .shop-tip {
@@ -1691,17 +1941,24 @@ select.shop-control-input {
 @media (max-width: 720px) {
     .controls-layer {
         .setting-group {
+            top: 90px;
             right: 12px;
-            gap: 8px;
+            gap: 6px;
+            z-index: 120;
 
             .btn-setting {
-                width: 36px;
-                height: 36px;
+                width: 34px;
+                height: 34px;
             }
         }
     }
 
     .popup-content-wide {
+        width: 96%;
+        max-height: 88vh;
+    }
+
+    .popup-content-profile {
         width: 96%;
         max-height: 88vh;
     }
@@ -1727,6 +1984,54 @@ select.shop-control-input {
         grid-template-columns: 1fr;
     }
 
+    #mana-container {
+        width: min(340px, calc(100vw - 24px));
+        left: 12px;
+        top: 12px;
+
+        .status-head {
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .profile-avatar {
+            width: 48px;
+            height: 48px;
+            flex-basis: 48px;
+        }
+    }
+
+    #sword-counter {
+        top: 95px;
+        left: 12px;
+        right: auto;
+        padding: 2px 8px 2px 4px;
+        z-index: 120;
+
+        .counter-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 6px;
+        }
+
+        #sword-count-text {
+            font-size: 13px;
+        }
+    }
+
+    .breakthrough-group {
+        top: 136px;
+        right: 12px;
+    }
+
+    .profile-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-pill-list {
+        grid-template-columns: 1fr;
+    }
+
     .shop-tip {
         margin-bottom: 10px;
         padding: 10px 12px;
@@ -1746,7 +2051,9 @@ select.shop-control-input {
     }
 
     .shop-grid,
-    .inventory-grid {
+    .inventory-grid,
+    .profile-stats-grid,
+    .profile-pill-summary {
         grid-template-columns: 1fr;
         gap: 10px;
     }
