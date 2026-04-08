@@ -158,7 +158,49 @@ const CONFIG = {
             "./assets/images/animals/whale-tail.svg",
             "./assets/images/animals/whale.svg",
             "./assets/images/animals/wolf.svg",
-        ]
+        ],
+        MATERIAL_DROPS: {
+            "ammonite": { GIAP_XAC: 5.2, LINH_LAN: 1.4 },
+            "angel-wings": { LINH_VU: 5.1, LINH_TY: 1.9, YEU_HUYET: 1.2 },
+            "angler-fish": { LINH_LAN: 4.2, YEU_NANH: 2.1, TINH_THIT: 1.4 },
+            "angular-spider": { LINH_TY: 4.8, DOC_NANG: 3.4, PHONG_CHAM: 1.6 },
+            "animal-skull": { YEU_COT: 5.4, YEU_HUYET: 1.4 },
+            "ant": { PHONG_CHAM: 4.6, TINH_THIT: 1.4, YEU_HUYET: 0.8 },
+            "bear": { YEU_BI: 4.4, TINH_THIT: 2.4, YEU_HUYET: 1.6 },
+            "bee": { PHONG_CHAM: 4.8, DOC_NANG: 2.8, LINH_VU: 1.2 },
+            "cat-kitty": { LINH_MAO: 4.2, YEU_NANH: 2.2, YEU_HUYET: 1.1 },
+            "cat": { LINH_MAO: 4.2, YEU_NANH: 2.4, YEU_HUYET: 1.0 },
+            "crab": { GIAP_XAC: 5.0, TINH_THIT: 1.8, YEU_GIAC: 1.1 },
+            "crocodile": { YEU_BI: 4.0, LINH_LAN: 2.8, TINH_THIT: 1.3 },
+            "deer": { YEU_GIAC: 5.2, LINH_MAO: 1.5, YEU_HUYET: 1.4 },
+            "double-dragon": { LONG_LAN: 5.6, YEU_DAN: 2.0, YEU_HUYET: 1.2 },
+            "dragon": { LONG_LAN: 5.4, YEU_DAN: 1.8, YEU_HUYET: 1.3 },
+            "elephant": { TU_NGA: 5.2, YEU_BI: 2.2, YEU_COT: 1.3 },
+            "fish-seafood": { LINH_LAN: 4.4, TINH_THIT: 2.4 },
+            "flying-dragon": { LONG_LAN: 5.2, LINH_VU: 1.6, YEU_DAN: 1.7 },
+            "fox": { LINH_MAO: 4.2, YEU_NANH: 2.5, YEU_HUYET: 1.0 },
+            "gorilla": { YEU_BI: 4.2, YEU_COT: 1.8, TINH_THIT: 2.0 },
+            "hydra": { LONG_LAN: 4.2, DOC_NANG: 3.6, YEU_DAN: 1.6 },
+            "jelly-fish": { XUC_TU: 4.4, DOC_NANG: 2.8, YEU_HUYET: 1.0 },
+            "lion": { YEU_NANH: 5.4, YEU_HUYET: 1.8, TINH_THIT: 1.4 },
+            "maggot": { TINH_THIT: 4.0, YEU_HUYET: 2.2, DOC_NANG: 0.9 },
+            "minotaur": { YEU_GIAC: 4.8, YEU_COT: 2.3, YEU_HUYET: 1.8 },
+            "monkey": { LINH_MAO: 3.8, YEU_BI: 2.4, TINH_THIT: 1.8 },
+            "octopus": { XUC_TU: 5.0, YEU_HUYET: 2.0, TINH_THIT: 1.3 },
+            "perana": { YEU_NANH: 4.8, LINH_LAN: 2.4, YEU_HUYET: 1.4 },
+            "rabbit": { LINH_MAO: 5.0, YEU_HUYET: 1.2, TINH_THIT: 1.0 },
+            "shark": { YEU_NANH: 5.2, LINH_LAN: 2.8, TINH_THIT: 1.4 },
+            "snail-crawl": { GIAP_XAC: 4.8, LINH_TY: 1.6, TINH_THIT: 1.0 },
+            "squid": { XUC_TU: 4.8, LINH_LAN: 1.8, TINH_THIT: 1.2 },
+            "squirrel": { LINH_MAO: 4.6, YEU_HUYET: 1.1, TINH_THIT: 1.0 },
+            "tapir": { YEU_BI: 4.3, TINH_THIT: 2.2, YEU_HUYET: 1.4 },
+            "three-headed-dragon": { LONG_LAN: 5.8, YEU_DAN: 2.2, YEU_HUYET: 1.4 },
+            "tiger": { YEU_NANH: 5.6, YEU_HUYET: 1.9, TINH_THIT: 1.5 },
+            "turtle": { GIAP_XAC: 5.2, YEU_COT: 1.6, TINH_THIT: 1.2 },
+            "whale-tail": { YEU_COT: 4.8, LINH_LAN: 2.0, TINH_THIT: 1.5 },
+            "whale": { YEU_COT: 5.0, TINH_THIT: 2.6, LINH_LAN: 1.4 },
+            "wolf": { YEU_NANH: 5.8, YEU_HUYET: 1.8, TINH_THIT: 1.4 }
+        }
     },
     ITEMS: {
         INVENTORY_MIN_SLOTS: 16, // Số ô tối thiểu luôn hiển thị trong Túi không gian
@@ -250,6 +292,116 @@ const CONFIG = {
                 dropWeight: 1.02,
                 nutrition: 2,
                 description: "Tơ linh khí kết lại thành sợi, vừa dùng ổn định ổ ấp vừa làm thức ăn cho các loài tàm, nga và chu."
+            },
+            YEU_NANH: {
+                fullName: "Yêu nanh",
+                quality: "MEDIUM",
+                color: "#f8e6b4",
+                radius: 4.7,
+                buyPriceLowStone: 105,
+                dropWeight: 1.18,
+                nutrition: 0,
+                description: "Nanh nhọn còn sót sát khí, thường lấy từ lang yêu, hổ yêu hay hải thú hung lệ để luyện khí hoặc giao dịch."
+            },
+            LINH_VU: {
+                fullName: "Linh vũ",
+                quality: "MEDIUM",
+                color: "#d7f0ff",
+                radius: 4.7,
+                buyPriceLowStone: 95,
+                dropWeight: 0.96,
+                nutrition: 1,
+                description: "Lông cánh thấm linh quang, nhẹ như hư vụ, thích hợp làm phụ liệu cho linh thú phi hành và vài loại kỳ trùng."
+            },
+            GIAP_XAC: {
+                fullName: "Giáp xác",
+                quality: "HIGH",
+                color: "#d7b38a",
+                radius: 5.1,
+                buyPriceLowStone: 135,
+                dropWeight: 0.92,
+                nutrition: 0,
+                description: "Mảnh vỏ cứng lột từ quy yêu, giải yêu hay giáp xác dị chủng, thường dùng để bồi cốt, rèn giáp và ấp trùng giáp xác."
+            },
+            YEU_BI: {
+                fullName: "Yêu bì",
+                quality: "MEDIUM",
+                color: "#b98262",
+                radius: 4.9,
+                buyPriceLowStone: 90,
+                dropWeight: 1.16,
+                nutrition: 2,
+                description: "Da yêu thú đã qua tinh luyện, dẻo mà bền, vừa có thể may linh cụ vừa dùng làm khẩu phần dưỡng đàn."
+            },
+            LONG_LAN: {
+                fullName: "Long lân",
+                quality: "HIGH",
+                color: "#7dd7c5",
+                radius: 5.2,
+                buyPriceLowStone: 185,
+                dropWeight: 0.68,
+                nutrition: 1,
+                description: "Vảy rồng lưu lại long uy, là linh tài thượng phẩm hiếm gặp, thường rơi từ chân long hoặc dị long nhiều đầu."
+            },
+            LINH_LAN: {
+                fullName: "Linh lân",
+                quality: "MEDIUM",
+                color: "#69c7ff",
+                radius: 4.9,
+                buyPriceLowStone: 100,
+                dropWeight: 1.08,
+                nutrition: 1,
+                description: "Phiến lân óng ánh thu được từ ngư yêu và thủy thú, giàu thủy linh, hợp làm thức ăn và vật dẫn cho linh trùng thủy hệ."
+            },
+            XUC_TU: {
+                fullName: "Xúc tu",
+                quality: "MEDIUM",
+                color: "#b88cff",
+                radius: 4.9,
+                buyPriceLowStone: 92,
+                dropWeight: 1.04,
+                nutrition: 2,
+                description: "Xúc tu dai dẻo của hải yêu, sứa yêu hay bạch tuộc dị chủng, chứa nhiều linh dịch và huyết tinh."
+            },
+            YEU_COT: {
+                fullName: "Yêu cốt",
+                quality: "HIGH",
+                color: "#f2efe8",
+                radius: 5.1,
+                buyPriceLowStone: 145,
+                dropWeight: 0.82,
+                nutrition: 1,
+                description: "Tinh cốt còn lưu dư uy của đại yêu, thường dùng để luyện khí, dựng khung linh cụ hoặc nghiền bột bồi dưỡng linh thú."
+            },
+            PHONG_CHAM: {
+                fullName: "Phong châm",
+                quality: "HIGH",
+                color: "#ffd96f",
+                radius: 4.8,
+                buyPriceLowStone: 128,
+                dropWeight: 0.86,
+                nutrition: 0,
+                description: "Độc châm bén như kim thu được từ phong yêu hay dị trùng giáp xác, rất hợp để luyện độc khí và bày ám trận."
+            },
+            LINH_MAO: {
+                fullName: "Linh mao",
+                quality: "LOW",
+                color: "#f6f0d8",
+                radius: 4.5,
+                buyPriceLowStone: 68,
+                dropWeight: 1.26,
+                nutrition: 1,
+                description: "Lông mao mềm nhẹ, tích tụ linh tức từ hồ yêu, miêu yêu hay thỏ yêu, có thể làm lót ổ ấp và phụ liệu dưỡng thú."
+            },
+            TU_NGA: {
+                fullName: "Tượng ngà",
+                quality: "HIGH",
+                color: "#fff2cf",
+                radius: 5.2,
+                buyPriceLowStone: 190,
+                dropWeight: 0.64,
+                nutrition: 0,
+                description: "Ngà cổ của tượng yêu, cứng bền mà chứa linh văn tự nhiên, là vật hiếm cho luyện khí và khắc trận văn."
             }
         },
         MATERIAL_DROP: {

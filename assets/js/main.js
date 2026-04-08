@@ -399,26 +399,7 @@ const INSECT_COMBAT_PROFILES = Object.freeze({
     }
 });
 
-const ANIMAL_MATERIAL_DROP_TABLES = Object.freeze((() => {
-    const tables = {};
-    const assign = (animalKeys, rates) => {
-        animalKeys.forEach(animalKey => {
-            tables[animalKey] = { ...rates };
-        });
-    };
-
-    assign(['angular-spider'], { DOC_NANG: 4.6, LINH_TY: 2.8 });
-    assign(['ant', 'bee', 'jelly-fish', 'maggot'], { DOC_NANG: 4.2, TINH_THIT: 1.6 });
-    assign(['ammonite', 'crab', 'crocodile', 'snail-crawl', 'turtle'], { YEU_GIAC: 4.1, TINH_THIT: 2.0 });
-    assign(['angler-fish', 'fish-seafood', 'octopus', 'perana', 'shark', 'squid', 'whale', 'whale-tail'], { TINH_THIT: 4.5, YEU_HUYET: 2.1 });
-    assign(['animal-skull'], { YEU_GIAC: 3.4, YEU_HUYET: 2.8 });
-    assign(['angel-wings'], { LINH_TY: 4.0, YEU_HUYET: 1.8 });
-    assign(['deer', 'elephant', 'minotaur'], { YEU_GIAC: 4.5, YEU_HUYET: 2.0, TINH_THIT: 1.4 });
-    assign(['double-dragon', 'dragon', 'flying-dragon', 'hydra', 'three-headed-dragon'], { YEU_GIAC: 4.8, YEU_HUYET: 2.0, TINH_THIT: 1.3 });
-    assign(['bear', 'cat-kitty', 'cat', 'fox', 'gorilla', 'lion', 'monkey', 'rabbit', 'squirrel', 'tapir', 'tiger', 'wolf'], { YEU_HUYET: 4.0, TINH_THIT: 2.6 });
-
-    return tables;
-})());
+const ANIMAL_MATERIAL_DROP_TABLES = Object.freeze(CONFIG.ENEMY?.MATERIAL_DROPS || {});
 
 const Input = {
     screenX: width / 2, screenY: height / 2,
@@ -445,7 +426,7 @@ const Input = {
     spiritStones: getStartingSpiritStoneCounts(),
     playerName: 'Thanh Trúc Kiếm Chủ',
     playerAvatarInitials: 'TT',
-    attackMode: 'SWORD',
+    attackMode: 'BASE',
     selectedInventoryTab: 'items',
     uniquePurchases: {
         DAI_CANH_KIEM_TRAN: false,
@@ -721,7 +702,7 @@ const Input = {
         this.refreshResourceUI();
         this.renderManaUI();
         this.renderRageUI();
-        showNotify('Tẫn Đạo Diệt Nguyên Đan phản phệ: thân thể tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+        showNotify('Tẫn Đạo Diệt Nguyên Đan phản phệ: thân thể tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
     },
 
     applyTanDaoDietNguyenDan(item, qualityConfig) {
@@ -768,7 +749,7 @@ const Input = {
 
     startUltimate() {
         if (this.isVoidCollapsed) {
-            showNotify('Thân thể đã tan vào hư vô, hãy reload web để hồi phục', '#a778ff');
+            showNotify('Thân thể đã tan vào hư vô, hãy tải lại giới vực để hồi phục', '#a778ff');
             return false;
         }
 
@@ -1073,7 +1054,7 @@ const Input = {
         if (!item || item.count <= 0) return false;
 
         if (this.isVoidCollapsed) {
-            showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+            showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
             return false;
         }
 
@@ -1151,6 +1132,7 @@ const Input = {
         switch (item.category) {
             case 'SWORD_ART':
                 this.unlockCultivationArt('DAI_CANH_KIEM_TRAN');
+                this.attackMode = 'SWORD';
                 syncSwordFormation();
                 showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: kiếm trận đã triển khai ${formatNumber(this.getUnlockedSwordTargetCount())} kiếm.`, qualityConfig.color);
                 this.refreshResourceUI();
@@ -1163,7 +1145,7 @@ const Input = {
             case 'INSECT_SKILL':
                 this.unlockCultivationArt('KHU_TRUNG_THUAT');
                 this.renderAttackModeUI();
-                showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: có thể dùng linh trùng làm công sát mới.`, qualityConfig.color);
+                showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: đã có thể điều linh trùng nhập trận.`, qualityConfig.color);
                 this.refreshResourceUI();
                 return true;
             case 'INSIGHT':
@@ -1237,7 +1219,7 @@ const Input = {
         if (!item || item.count <= 0) return false;
 
         if (this.isVoidCollapsed) {
-            showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+            showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
             return false;
         }
 
@@ -1306,6 +1288,7 @@ const Input = {
         switch (item.category) {
             case 'SWORD_ART':
                 this.unlockCultivationArt('DAI_CANH_KIEM_TRAN');
+                this.attackMode = 'SWORD';
                 syncSwordFormation();
                 showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: kiếm trận đã triển khai ${formatNumber(this.getUnlockedSwordTargetCount())} kiếm.`, qualityConfig.color);
                 this.refreshResourceUI();
@@ -2342,8 +2325,8 @@ const Input = {
 
         showNotify(
             nextEnabled
-                ? `${species.name} xuat tran.`
-                : `${species.name} duoc giu lai de sinh san.`,
+                ? `${species.name} nhập trận.`
+                : `${species.name} lưu lại dưỡng đàn.`,
             species.color || '#79ffd4'
         );
 
@@ -2379,7 +2362,7 @@ const Input = {
                     enabled,
                     accent: species?.color || '#79ffd4',
                     note: profile.summary,
-                    modeLabel: enabled ? 'Xuat chien' : 'Giu giong'
+                    modeLabel: enabled ? 'Xuất trận' : 'Dưỡng đàn'
                 };
             });
     },
@@ -2469,9 +2452,19 @@ const Input = {
     },
 
     hasUnlockedAttackSkill(mode) {
-        if (mode === 'SWORD') return true;
+        if (mode === 'SWORD') return this.hasDaiCanhKiemTranUnlocked();
         if (mode === 'INSECT') return this.hasKhuTrungThuatUnlocked();
-        return false;
+        return mode === 'BASE';
+    },
+
+    hasActiveAttackSkill() {
+        return this.attackMode === 'SWORD' || this.attackMode === 'INSECT';
+    },
+
+    getAttackModeDisplayName(mode = this.attackMode) {
+        if (mode === 'SWORD') return 'Đại Canh Kiếm Trận';
+        if (mode === 'INSECT') return 'Khu Trùng Thuật';
+        return 'Thanh Trúc Bản Mệnh Kiếm';
     },
 
     canUseInsectAttackMode() {
@@ -2482,33 +2475,6 @@ const Input = {
         return this.attackMode === 'INSECT' && this.canUseInsectAttackMode() && !this.isUltMode && !this.isUltimateBusy();
     },
 
-    _getAttackSkillListLegacy() {
-        return [
-            {
-                key: 'SWORD',
-                name: 'Thanh Trúc Kiếm Trận',
-                description: 'Duy trì kiếm trận hộ thân, lấy kiếm quang làm công thủ chủ đạo.',
-                unlocked: true,
-                active: this.attackMode === 'SWORD',
-                ready: true,
-                accent: '#8fffe0',
-                note: `${formatNumber(this.getAliveSwordStats().alive)} kiếm còn chiến lực`
-            },
-            {
-                key: 'INSECT',
-                name: 'Khu Trùng Thuật',
-                description: 'Điều động linh trùng đã ấp nở thành trùng vân công sát bay quanh con trỏ.',
-                unlocked: this.hasKhuTrungThuatUnlocked(),
-                active: this.attackMode === 'INSECT',
-                ready: this.canUseInsectAttackMode(),
-                accent: '#79ffd4',
-                note: this.hasKhuTrungThuatUnlocked()
-                    ? `${formatNumber(this.getTotalTamedInsectCount())} linh trùng đã nở`
-                    : 'Cần mua rồi lĩnh ngộ trong túi trữ vật'
-            }
-        ];
-    },
-
     getAttackSkillList() {
         const formationUnlocked = this.hasDaiCanhKiemTranUnlocked();
         const swordStats = this.getAliveSwordStats();
@@ -2519,73 +2485,36 @@ const Input = {
         return [
             {
                 key: 'SWORD',
-                name: formationUnlocked ? 'Đại Canh Kiếm Trận' : 'Thanh Trúc Phong Vân Kiếm',
-                description: formationUnlocked
-                    ? 'Triển khai kiếm trận hộ thân, lấy kiếm quang đại trận làm công thủ chủ đạo.'
-                    : 'Chưa lĩnh ngộ kiếm trận, hiện chỉ vận dụng một thanh bản mệnh kiếm để hộ thân và công phạt.',
-                unlocked: true,
+                name: 'Đại Canh Kiếm Trận',
+                description: 'Khai đại trận hộ thân, ngự kiếm quang trấn thủ và công phạt bốn phương.',
+                unlocked: formationUnlocked,
                 active: this.attackMode === 'SWORD',
-                ready: true,
+                ready: formationUnlocked,
                 accent: '#8fffe0',
                 note: formationUnlocked
-                    ? `${formatNumber(swordStats.alive)} kiếm còn chiến lực`
-                    : `${formatNumber(swordStats.alive)} kiếm bản mệnh còn chiến lực`
+                    ? this.attackMode === 'SWORD'
+                        ? `${formatNumber(swordStats.alive)} kiếm đang hộ trận`
+                        : `Khai trận sẽ bày ${formatNumber(getConfiguredSwordCount())} thanh`
+                    : 'Chưa lĩnh ngộ bí pháp kiếm trận'
             },
             {
                 key: 'INSECT',
                 name: 'Khu Trùng Thuật',
-                description: 'Điều động linh trùng đã ấp nở thành trùng vân công sát bay quanh con trỏ.',
-                unlocked: this.hasKhuTrungThuatUnlocked(),
-                active: this.attackMode === 'INSECT',
-                ready: this.canUseInsectAttackMode(),
-                accent: '#79ffd4',
-                note: this.hasKhuTrungThuatUnlocked()
-                    ? `${formatNumber(this.getTotalTamedInsectCount())} linh trùng đã nở`
-                    : 'Cần lĩnh ngộ kỹ năng này'
-            }
-        ];
-    },
-
-    getAttackSkillList() {
-        const formationUnlocked = this.hasDaiCanhKiemTranUnlocked();
-        const swordStats = this.getAliveSwordStats();
-        const totalInsects = this.getTotalTamedInsectCount();
-        const combatReadyCount = this.getCombatReadyInsectCount();
-        const reservedCount = Math.max(0, totalInsects - combatReadyCount);
-
-        return [
-            {
-                key: 'SWORD',
-                name: formationUnlocked ? 'Đại Canh Kiếm Trận' : 'Thanh Trúc Phong Vân Kiếm',
-                description: formationUnlocked
-                    ? 'Triển khai kiếm trận hộ thân, lấy kiếm quang đại trận làm công thủ chủ đạo.'
-                    : 'Chưa lĩnh ngộ kiếm trận, hiện chỉ vận dụng một thanh bản mệnh kiếm để hộ thân và công phạt.',
-                unlocked: true,
-                active: this.attackMode === 'SWORD',
-                ready: true,
-                accent: '#8fffe0',
-                note: formationUnlocked
-                    ? `${formatNumber(swordStats.alive)} kiếm còn chiến lực`
-                    : `${formatNumber(swordStats.alive)} kiếm bản mệnh còn chiến lực`
-            },
-            {
-                key: 'INSECT',
-                name: 'Khu Trùng Thuật',
-                description: 'Điều động linh trùng đã ấp nở bám vào mục tiêu và tấn công theo đặc tính từng loài.',
+                description: 'Điểm linh trùng nhập trận, bám sát mục tiêu và công phạt theo bản mệnh từng loài.',
                 unlocked: this.hasKhuTrungThuatUnlocked(),
                 active: this.attackMode === 'INSECT',
                 ready: this.canUseInsectAttackMode(),
                 accent: '#79ffd4',
                 note: this.hasKhuTrungThuatUnlocked()
                     ? combatReadyCount > 0
-                        ? `${formatNumber(combatReadyCount)} linh trùng xuất chiến${reservedCount > 0 ? ` | ${formatNumber(reservedCount)} đang giữ lại` : ''}`
+                        ? `${formatNumber(combatReadyCount)} linh trùng xuất trận${reservedCount > 0 ? ` | ${formatNumber(reservedCount)} đang dưỡng đàn` : ''}`
                         : totalInsects > 0
-                            ? 'Tất cả kỳ trùng đang được giữ lại để sinh sản'
-                            : 'Chưa có linh trùng đã ấp nở'
-                    : 'Cần lĩnh ngộ kỹ năng này',
+                            ? 'Toàn bộ kỳ trùng đang lưu lại dưỡng đàn'
+                            : 'Chưa có linh trùng nào phá noãn'
+                    : 'Chưa lĩnh ngộ bí pháp ngự trùng',
                 roster: this.hasKhuTrungThuatUnlocked() ? this.getInsectCombatRoster() : [],
                 rosterSummary: this.hasKhuTrungThuatUnlocked()
-                    ? `${formatNumber(combatReadyCount)} xuất chiến / ${formatNumber(totalInsects)} đang có`
+                    ? `${formatNumber(combatReadyCount)} xuất trận / ${formatNumber(totalInsects)} trong đàn`
                     : ''
             }
         ];
@@ -2594,31 +2523,16 @@ const Input = {
     renderAttackModeUI() {
         const skillBtn = document.getElementById('btn-skill-list');
         if (skillBtn) {
-            skillBtn.classList.toggle('is-active', this.attackMode === 'INSECT');
-            skillBtn.classList.toggle('is-disabled', !this.hasKhuTrungThuatUnlocked());
-            skillBtn.title = this.attackMode === 'INSECT'
-                ? `Khu Trùng Thuật - ${formatNumber(this.getTotalTamedInsectCount())} linh trùng`
-                : 'Bảng kỹ năng tấn công';
-        }
+            skillBtn.classList.toggle('is-active', this.hasActiveAttackSkill());
+            skillBtn.classList.toggle('is-disabled', !this.hasDaiCanhKiemTranUnlocked() && !this.hasKhuTrungThuatUnlocked());
 
-        const swordCounter = document.getElementById('sword-counter');
-        if (swordCounter) {
-            swordCounter.classList.toggle('is-hidden', this.isInsectSwarmActive() || this.isInsectUltimateActive());
-        }
-
-        if (SkillsUI && typeof SkillsUI.render === 'function' && SkillsUI.isOpen()) {
-            SkillsUI.render();
-        }
-    },
-
-    renderAttackModeUI() {
-        const skillBtn = document.getElementById('btn-skill-list');
-        if (skillBtn) {
-            skillBtn.classList.toggle('is-active', this.attackMode === 'INSECT');
-            skillBtn.classList.toggle('is-disabled', !this.hasKhuTrungThuatUnlocked());
-            skillBtn.title = this.attackMode === 'INSECT'
-                ? `Khu Trùng Thuật - ${formatNumber(this.getCombatReadyInsectCount())} linh trùng xuất chiến`
-                : 'Bảng kỹ năng tấn công';
+            if (this.attackMode === 'INSECT') {
+                skillBtn.title = `Khu Trùng Thuật - ${formatNumber(this.getCombatReadyInsectCount())} linh trùng xuất trận`;
+            } else if (this.attackMode === 'SWORD') {
+                skillBtn.title = `Đại Canh Kiếm Trận - ${formatNumber(this.getAliveSwordStats().alive)} kiếm hộ trận`;
+            } else {
+                skillBtn.title = 'Bảng bí pháp';
+            }
         }
 
         const swordCounter = document.getElementById('sword-counter');
@@ -2632,44 +2546,38 @@ const Input = {
     },
 
     ensureValidAttackMode() {
+        const previousMode = this.attackMode;
+
+        if (this.attackMode === 'SWORD' && !this.hasDaiCanhKiemTranUnlocked()) {
+            this.attackMode = 'BASE';
+        }
+
         if (this.attackMode === 'INSECT' && !this.canUseInsectAttackMode()) {
-            this.attackMode = 'SWORD';
+            this.attackMode = 'BASE';
+        }
+
+        if (previousMode !== this.attackMode) {
+            syncSwordFormation();
+            return;
         }
 
         this.renderAttackModeUI();
     },
 
-    setAttackMode(mode) {
-        const nextMode = mode === 'INSECT' ? 'INSECT' : 'SWORD';
-
+    clearAttackSkill() {
         if (this.isUltimateBusy()) {
-            showNotify('Không thể đổi kỹ năng khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
+            showNotify('Không thể thu hồi bí pháp khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
             return false;
         }
 
-        if (this.isUltimateBusy()) {
-            showNotify('Không thể đổi kỹ năng khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
-            return false;
-        }
-
-        if (!this.hasUnlockedAttackSkill(nextMode)) {
-            showNotify('Chưa lĩnh ngộ kỹ năng này.', '#ffd36b');
-            return false;
-        }
-
-        if (nextMode === 'INSECT' && !this.canUseInsectAttackMode()) {
-            showNotify('Chưa có linh trùng đã ấp nở để bày trùng trận.', '#ffb26b');
-            return false;
-        }
-
-        if (this.attackMode === nextMode) {
+        if (!this.hasActiveAttackSkill()) {
             this.renderAttackModeUI();
             return true;
         }
 
-        this.attackMode = nextMode;
-        this.renderAttackModeUI();
-        showNotify(nextMode === 'INSECT' ? 'Đổi sang Khu Trùng Thuật' : 'Đổi về Thanh Trúc Kiếm Trận', nextMode === 'INSECT' ? '#79ffd4' : '#8fffe0');
+        this.attackMode = 'BASE';
+        syncSwordFormation();
+        showNotify(`Thu hồi bí pháp, trở về ${formatNumber(getBaseSwordCountBeforeFormation())} thanh bản mệnh kiếm.`, '#8fffe0');
         return true;
     },
 
@@ -2677,12 +2585,12 @@ const Input = {
         const nextMode = mode === 'INSECT' ? 'INSECT' : 'SWORD';
 
         if (this.isUltimateBusy()) {
-            showNotify('Không thể đổi kỹ năng khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
+            showNotify('Không thể đổi bí pháp khi tuyệt kỹ đang vận chuyển.', '#ffd36b');
             return false;
         }
 
         if (!this.hasUnlockedAttackSkill(nextMode)) {
-            showNotify('Chưa lĩnh ngộ kỹ năng này.', '#ffd36b');
+            showNotify('Chưa lĩnh ngộ bí pháp này.', '#ffd36b');
             return false;
         }
 
@@ -2690,21 +2598,23 @@ const Input = {
             const totalInsects = this.getTotalTamedInsectCount();
             showNotify(
                 totalInsects > 0
-                    ? 'Tất cả kỳ trùng đang được giữ lại, hãy bật ít nhất một loài để xuất chiến.'
-                    : 'Chưa có linh trùng đã ấp nở để bày trùng trận.',
+                    ? 'Đàn trùng đều đang lưu lại dưỡng đàn, hãy điểm danh ít nhất một loài xuất trận.'
+                    : 'Chưa có linh trùng nào đủ duyên nhập trận.',
                 '#ffb26b'
             );
             return false;
         }
 
         if (this.attackMode === nextMode) {
-            this.renderAttackModeUI();
-            return true;
+            return this.clearAttackSkill();
         }
 
         this.attackMode = nextMode;
-        this.renderAttackModeUI();
-        showNotify(nextMode === 'INSECT' ? 'Đổi sang Khu Trùng Thuật' : 'Đổi về Thanh Trúc Kiếm Trận', nextMode === 'INSECT' ? '#79ffd4' : '#8fffe0');
+        syncSwordFormation();
+        showNotify(
+            nextMode === 'INSECT' ? 'Chuyển sang Khu Trùng Thuật.' : 'Khai triển Đại Canh Kiếm Trận.',
+            nextMode === 'INSECT' ? '#79ffd4' : '#8fffe0'
+        );
         return true;
     },
 
@@ -3125,7 +3035,7 @@ const Input = {
         }
 
         if (item.specialKey === 'TAN_DAO_DIET_NGUYEN_DAN') {
-            return 'Cấm kị hắc đan, cưỡng ép bước vào Chân tiên đại viên mãn trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi reload web.';
+            return 'Cấm kị hắc đan, cưỡng ép bước vào Chân tiên đại viên mãn trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
         }
 
         if (item.category === 'SPIRIT_HABITAT') {
@@ -3279,7 +3189,7 @@ const Input = {
         }
 
         if (item.specialKey === 'TAN_DAO_DIET_NGUYEN_DAN') {
-            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Chân tiên đại viên mãn trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi reload web.';
+            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Chân tiên đại viên mãn trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
         }
 
         switch (item.category) {
@@ -3643,7 +3553,7 @@ const Input = {
 
     buyShopItem(itemId) {
         if (this.isVoidCollapsed) {
-            showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+            showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
             return false;
         }
 
@@ -3763,7 +3673,7 @@ const Input = {
         if (!item || item.count <= 0) return false;
 
         if (this.isVoidCollapsed) {
-            showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+            showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
             return false;
         }
 
@@ -3837,6 +3747,7 @@ const Input = {
         switch (item.category) {
             case 'SWORD_ART':
                 this.unlockCultivationArt('DAI_CANH_KIEM_TRAN');
+                this.attackMode = 'SWORD';
                 syncSwordFormation();
                 showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: kiếm trận đã triển khai ${formatNumber(this.getUnlockedSwordTargetCount())} kiếm.`, qualityConfig.color);
                 this.refreshResourceUI();
@@ -3849,7 +3760,7 @@ const Input = {
             case 'INSECT_SKILL':
                 this.unlockCultivationArt('KHU_TRUNG_THUAT');
                 this.renderAttackModeUI();
-                showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: có thể dùng linh trùng làm công sát mới.`, qualityConfig.color);
+                showNotify(`Lĩnh ngộ ${this.getItemDisplayName(item)}: đã có thể điều linh trùng nhập trận.`, qualityConfig.color);
                 this.refreshResourceUI();
                 return true;
             case 'INSIGHT':
@@ -3920,7 +3831,7 @@ const Input = {
 
     executeBreakthrough(isForced = false) {
         if (this.isVoidCollapsed) {
-            showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+            showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
             return;
         }
 
@@ -6868,7 +6779,11 @@ SkillsUI = {
 
             e.stopPropagation();
             const skillKey = skillBtn.getAttribute('data-attack-skill');
-            if (Input.setAttackMode(skillKey)) {
+            const changed = Input.attackMode === skillKey
+                ? Input.clearAttackSkill()
+                : Input.setAttackMode(skillKey);
+
+            if (changed) {
                 this.render();
                 this.close();
             }
@@ -6885,7 +6800,7 @@ SkillsUI = {
         if (!skill.roster?.length) {
             return `
                 <div class="attack-skill-card__roster is-empty">
-                    <span>Chưa có linh trùng nào đã ấp nở để xuất chiến.</span>
+                    <span>Chưa có linh trùng nào đủ duyên nhập trận.</span>
                 </div>
             `;
         }
@@ -6893,7 +6808,7 @@ SkillsUI = {
         return `
             <div class="attack-skill-card__roster">
                 <div class="attack-skill-card__roster-head">
-                    <strong>Linh trùng tham chiến</strong>
+                    <strong>Trùng trận hiện có</strong>
                     <span>${escapeHtml(skill.rosterSummary || '')}</span>
                 </div>
                 <div class="insect-toggle-list">
@@ -6906,7 +6821,7 @@ SkillsUI = {
                             aria-pressed="${entry.enabled ? 'true' : 'false'}"
                         >
                             <span class="insect-toggle-chip__title">${escapeHtml(entry.name)}</span>
-                            <span class="insect-toggle-chip__meta">${formatNumber(entry.count)} con | ${escapeHtml(entry.modeLabel)}</span>
+                            <span class="insect-toggle-chip__meta">${formatNumber(entry.count)} linh trùng | ${escapeHtml(entry.modeLabel)}</span>
                             <span class="insect-toggle-chip__note">${escapeHtml(entry.note)}</span>
                         </button>
                     `).join('')}
@@ -6915,24 +6830,49 @@ SkillsUI = {
         `;
     },
 
+    renderCurrentStateMarkup() {
+        const currentMode = Input.attackMode;
+        const title = Input.getAttackModeDisplayName(currentMode);
+        const summary = currentMode === 'INSECT'
+            ? `${formatNumber(Input.getCombatReadyInsectCount())} linh trùng đang bày trùng trận.`
+            : currentMode === 'SWORD'
+                ? `${formatNumber(Input.getAliveSwordStats().alive)} kiếm đang hộ trận.`
+                : `${formatNumber(getBaseSwordCountBeforeFormation())} thanh bản mệnh kiếm đang hộ thân.`;
+        const description = currentMode === 'INSECT'
+            ? 'Bí pháp ngự trùng đang vận chuyển, lấy đàn trùng làm công sát chủ đạo.'
+            : currentMode === 'SWORD'
+                ? 'Kiếm ý đã khai trận, kiếm quang trấn thủ quanh thân.'
+                : 'Chưa vận chuyển bí pháp nào, kiếm tu đang trở về kiếm thế sơ khởi.';
+
+        return `
+            <article class="attack-skill-state" style="--skill-accent:${currentMode === 'INSECT' ? '#79ffd4' : '#8fffe0'}">
+                <span class="attack-skill-state__eyebrow">Đạo trạng hiện tại</span>
+                <strong class="attack-skill-state__title">${escapeHtml(title)}</strong>
+                <p class="attack-skill-state__description">${escapeHtml(description)}</p>
+                <span class="attack-skill-state__summary">${escapeHtml(summary)}</span>
+            </article>
+        `;
+    },
+
     render() {
         if (!this.list) return;
 
-        this.list.innerHTML = Input.getAttackSkillList().map(skill => `
+        this.list.innerHTML = this.renderCurrentStateMarkup() + Input.getAttackSkillList().map(skill => `
             <article class="attack-skill-card ${skill.active ? 'is-active' : ''} ${!skill.unlocked || !skill.ready ? 'is-disabled' : ''}" style="--skill-accent:${skill.accent}">
                 <div class="attack-skill-card__head">
                     <div>
                         <h4>${escapeHtml(skill.name)}</h4>
                         <p>${escapeHtml(skill.description)}</p>
                     </div>
-                    <span class="attack-skill-card__tag">${skill.active ? 'Đang dùng' : (skill.unlocked ? 'Đã học' : 'Chưa học')}</span>
+                    <span class="attack-skill-card__tag">${skill.active ? 'Đang vận chuyển' : (skill.unlocked ? 'Đã lĩnh ngộ' : 'Chưa lĩnh ngộ')}</span>
                 </div>
                 <div class="attack-skill-card__foot">
                     <span>${escapeHtml(skill.note)}</span>
                     <button class="btn-slot-action" type="button" data-attack-skill="${escapeHtml(skill.key)}" ${skill.unlocked && skill.ready ? '' : 'disabled'}>
-                        ${skill.active ? 'Đã chọn' : 'Chọn'}
+                        ${skill.active ? 'Thu hồi' : 'Khai triển'}
                     </button>
                 </div>
+                ${this.renderInsectRosterMarkup(skill)}
             </article>
         `).join('');
     },
@@ -6950,19 +6890,19 @@ SkillsUI = {
 SkillsUI.render = function () {
     if (!this.list) return;
 
-    this.list.innerHTML = Input.getAttackSkillList().map(skill => `
+    this.list.innerHTML = this.renderCurrentStateMarkup() + Input.getAttackSkillList().map(skill => `
         <article class="attack-skill-card ${skill.active ? 'is-active' : ''} ${!skill.unlocked || !skill.ready ? 'is-disabled' : ''}" style="--skill-accent:${skill.accent}">
             <div class="attack-skill-card__head">
                 <div>
                     <h4>${escapeHtml(skill.name)}</h4>
                     <p>${escapeHtml(skill.description)}</p>
                 </div>
-                <span class="attack-skill-card__tag">${skill.active ? 'Đang dùng' : (skill.unlocked ? 'Đã học' : 'Chưa học')}</span>
+                <span class="attack-skill-card__tag">${skill.active ? 'Đang vận chuyển' : (skill.unlocked ? 'Đã lĩnh ngộ' : 'Chưa lĩnh ngộ')}</span>
             </div>
             <div class="attack-skill-card__foot">
                 <span>${escapeHtml(skill.note)}</span>
                 <button class="btn-slot-action" type="button" data-attack-skill="${escapeHtml(skill.key)}" ${skill.unlocked && skill.ready ? '' : 'disabled'}>
-                    ${skill.active ? 'Đã chọn' : 'Chọn'}
+                    ${skill.active ? 'Thu hồi' : 'Khai triển'}
                 </button>
             </div>
             ${this.renderInsectRosterMarkup(skill)}
@@ -7111,6 +7051,8 @@ ProfileUI = {
         const accent = rank?.color || '#8fffe0';
         const accentLight = rank?.lightColor || '#ffffff';
         const rageLabel = Input.getUltimateResourceLabel();
+        const attackModeLabel = Input.getAttackModeDisplayName();
+        const swordMetricLabel = Input.attackMode === 'SWORD' ? 'Kiếm trận' : 'Bản mệnh kiếm';
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
             + (inventorySummary.categories.SHIELD_BREAK || 0)
             + (inventorySummary.categories.BERSERK || 0)
@@ -7142,7 +7084,7 @@ ProfileUI = {
                 <div class="profile-hero__chips">
                     <span class="profile-chip">Tu vi<strong>${formatNumber(Input.exp)}/${formatNumber(rank?.exp || 0)}</strong></span>
                     <span class="profile-chip">Đột phá<strong>${Math.round(breakthroughChance * 100)}%</strong></span>
-                    <span class="profile-chip">Kiếm trận<strong>${swordStats.alive}/${swordStats.total}</strong></span>
+                    <span class="profile-chip">${escapeHtml(swordMetricLabel)}<strong>${swordStats.alive}/${swordStats.total}</strong></span>
                     <span class="profile-chip">Linh trùng<strong>${formatNumber(beastSummary.totalBeasts)}</strong></span>
                 </div>
             </article>
@@ -7153,7 +7095,7 @@ ProfileUI = {
                     <span class="profile-chip is-soft">${escapeHtml(rageLabel)}<strong>${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}</strong></span>
                     <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
                     <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
-                    <span class="profile-chip is-soft">Kỹ năng<strong>${escapeHtml(Input.attackMode === 'INSECT' ? 'Khu Trùng Thuật' : 'Kiếm trận')}</strong></span>
+                    <span class="profile-chip is-soft">Bí pháp<strong>${escapeHtml(attackModeLabel)}</strong></span>
                 </div>
             </article>
         `;
@@ -7171,7 +7113,7 @@ ProfileUI = {
             { label: 'Hồi linh', value: `+${Math.round((Input.getManaRegenMultiplier() - 1) * 100)}%` },
             { label: 'Vận khí', value: `+${Math.round((Input.getDropRateMultiplier() - 1) * 100)}%` },
             { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
-            { label: 'Kiếm trận', value: `${swordStats.alive}/${swordStats.total}` },
+            { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total}` },
             { label: 'Kiếm hỏng', value: `${swordStats.broken}` },
             { label: 'Linh trùng', value: `${formatNumber(beastSummary.totalBeasts)}/${formatNumber(beastSummary.capacity)}` },
             { label: 'Trứng noãn', value: `${formatNumber(beastSummary.totalEggs)}` },
@@ -7255,7 +7197,7 @@ document.getElementById('btn-form').addEventListener('pointerdown', (e) => {
     e.preventDefault();
 
     if (Input.isVoidCollapsed) {
-        showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+        showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
         return;
     }
 
@@ -7329,7 +7271,7 @@ const startAttack = (e) => {
     Input.resetAttackState();
 
     if (Input.isVoidCollapsed) {
-        showNotify('Thân thể đã tan vào hư vô, cần reload web để hồi phục', '#a778ff');
+        showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
         return false;
     }
 
@@ -7437,7 +7379,7 @@ function getBaseSwordCountBeforeFormation() {
 }
 
 function getDesiredSwordCount() {
-    return Input.hasDaiCanhKiemTranUnlocked()
+    return Input.attackMode === 'SWORD' && Input.hasDaiCanhKiemTranUnlocked()
         ? getConfiguredSwordCount()
         : getBaseSwordCountBeforeFormation();
 }
