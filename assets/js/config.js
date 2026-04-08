@@ -204,8 +204,8 @@ const CONFIG = {
     },
     ITEMS: {
         INVENTORY_MIN_SLOTS: 16, // Số ô tối thiểu luôn hiển thị trong Túi không gian
-        INVENTORY_BASE_CAPACITY: 16,
-        SELLBACK_RATIO: 0.5,
+        INVENTORY_BASE_CAPACITY: 16, // Số ô tối đa luôn hiển thị trong Túi không gian
+        SELLBACK_RATIO: 0.5, // Tỉ lệ bán lại vật phẩm khi bán tất cả vật phẩm trong Túi
         STORAGE_BAGS: {
             LOW: {
                 fullName: "Thanh Mộc Trữ Vật Nang",
@@ -405,10 +405,10 @@ const CONFIG = {
             }
         },
         MATERIAL_DROP: {
-            NORMAL_CHANCE: 0.42,
-            ELITE_CHANCE: 0.88,
-            NORMAL_COUNT: { MIN: 1, MAX: 2 },
-            ELITE_COUNT: { MIN: 2, MAX: 4 }
+            NORMAL_CHANCE: 0.42, // Tỉ lệ rơi vật phẩm thường
+            ELITE_CHANCE: 0.88, // Tỉ lệ rơi vật phẩm tinh anh
+            NORMAL_COUNT: { MIN: 1, MAX: 2 }, // Số lượng vật phẩm thường
+            ELITE_COUNT: { MIN: 2, MAX: 4 } // Số lượng vật phẩm tinh anh
         }
     },
     MANA: {
@@ -565,34 +565,34 @@ const CONFIG = {
         },
     },
     PILL: {
-        CHANCE: 0.08,
-        ELITE_CHANCE: 0.65,
-        COLLECT_DELAY_MS: 600,
-        MAGNET_SPEED: 14,
-        TRAIL_LENGTH: 15,
+        CHANCE: 0.08, // Tỉ lệ rơi mặc định (8%)
+        ELITE_CHANCE: 0.65, // Tỉ lệ rơi của quái Tinh Anh (65%)
+        COLLECT_DELAY_MS: 600, // Thời gian chờ trước khi bay về người chơi
+        MAGNET_SPEED: 14, // Tốc độ bay về phía người chơi
+        TRAIL_LENGTH: 15, // Độ dài vệt sáng (số lượng node)
         DROP_COUNT: {
-            NORMAL: 1,
-            ELITE: 2
+            NORMAL: 1, // Quái thường rơi 1 viên
+            ELITE: 2 // Tinh Anh rơi 2 viên
         },
         CATEGORY_SORT: {
-            EXP: 0,
-            INSIGHT: 1,
-            BREAKTHROUGH: 2,
-            ATTACK: 3,
-            SHIELD_BREAK: 4,
-            BERSERK: 5,
-            RAGE: 6,
-            MANA: 7,
-            MAX_MANA: 8,
-            REGEN: 9,
-            SPEED: 10,
-            FORTUNE: 11,
-            SWORD_ART: 12,
-            FLAME_ART: 13,
-            ARTIFACT: 14,
-            INSECT_SKILL: 15,
-            INSECT_ARTIFACT: 16,
-            SPECIAL: 17
+            EXP: 0, // Loại thưởng EXP
+            INSIGHT: 1, // Loại thưởng INSIGHT
+            BREAKTHROUGH: 2, // Loại thưởng BREAKTHROUGH
+            ATTACK: 3, // Loại thưởng ATTACK
+            SHIELD_BREAK: 4, // Loại thưởng SHIELD_BREAK
+            BERSERK: 5, // Loại thưởng BERSERK
+            RAGE: 6, // Loại thưởng RAGE
+            MANA: 7, // Loại thưởng MANA
+            MAX_MANA: 8, // Loại thưởng MAX_MANA
+            REGEN: 9, // Loại thưởng REGEN
+            SPEED: 10, // Loại thưởng SPEED
+            FORTUNE: 11, // Loại thưởng FORTUNE
+            SWORD_ART: 12, // Loại thưởng SWORD_ART
+            FLAME_ART: 13, // Loại thưởng FLAME_ART
+            ARTIFACT: 14, // Loại thưởng ARTIFACT
+            INSECT_SKILL: 15, // Loại thưởng INSECT_SKILL
+            INSECT_ARTIFACT: 16, // Loại thưởng INSECT_ARTIFACT
+            SPECIAL: 17 // Loại thưởng SPECIAL
         },
         CATEGORY_RATES: {
             NORMAL: { EXP: 0.17, INSIGHT: 0.07, BREAKTHROUGH: 0.10, ATTACK: 0.12, SHIELD_BREAK: 0.05, BERSERK: 0.06, RAGE: 0.09, MANA: 0.08, MAX_MANA: 0.07, REGEN: 0.06, SPEED: 0.08, FORTUNE: 0.05 },
@@ -780,10 +780,10 @@ const CONFIG = {
             DE: { label: "Đế Trùng", color: "#ff7cc7", shortLabel: "Đế" }
         },
         EGG_DROP: {
-            NORMAL_CHANCE: 0.12,
-            ELITE_CHANCE: 0.34,
-            NORMAL_COUNT: 1,
-            ELITE_COUNT: 2
+            NORMAL_CHANCE: 0.12, // Tỉ lệ rơi trứng thường
+            ELITE_CHANCE: 0.34, // Tỉ lệ rơi trứng tinh anh
+            NORMAL_COUNT: 1, // Số lượng trứng thường
+            ELITE_COUNT: 2 // Số lượng trứng tinh anh
         },
         HATCH: {
             MIN_MANA_COST: 0,
