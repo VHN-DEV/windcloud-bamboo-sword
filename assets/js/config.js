@@ -268,6 +268,14 @@ const CONFIG = {
                 buyPriceLowStone: 18000
             }
         },
+        SEVEN_COLOR_BAG: {
+            fullName: "Thất Sắc Vô Tận Nang",
+            quality: "SUPREME",
+            color: "#fff1a8",
+            capacity: Number.POSITIVE_INFINITY,
+            buyPriceLowStone: 4800000,
+            buttonLabel: "Mua"
+        },
         MATERIALS: {
             YEU_GIAC: {
                 fullName: "Yêu giác",
@@ -797,6 +805,14 @@ const CONFIG = {
             buyPriceLowStone: 9600,
             buttonLabel: "Mua"
         },
+        SEVEN_COLOR_BEAST_BAG: {
+            fullName: "Thất Sắc Linh Thú Đại",
+            quality: "SUPREME",
+            color: "#ffe38b",
+            capacity: Number.POSITIVE_INFINITY,
+            buyPriceLowStone: 5600000,
+            buttonLabel: "Mua"
+        },
         TIERS: {
             PHAM: { label: "Phàm Trùng", color: "#85ffb8", shortLabel: "Phàm" },
             LINH: { label: "Linh Trùng", color: "#78d8ff", shortLabel: "Linh" },
@@ -819,6 +835,7 @@ const CONFIG = {
             FOOD_PER_INSECT: 1,
             STARVATION_DEATH_CHANCE: 0.24,
             WRONG_HABITAT_DEATH_CHANCE: 0.18,
+            BREED_CHANCE_PER_CYCLE: 0.26,
             MAX_CYCLES_PER_UPDATE: 5,
             ALERT_COOLDOWN_MS: 12000
         },

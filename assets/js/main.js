@@ -1,4 +1,4 @@
-const random = (min, max) => Math.random() * (max - min) + min;
+﻿const random = (min, max) => Math.random() * (max - min) + min;
 const canvas = document.getElementById("c");
 const enemyIcons = {};
 const ctx = canvas.getContext("2d", { alpha: false });
@@ -277,7 +277,7 @@ function drawInsectTrail(ctx, node, color, baseWidth, alpha = 0.22) {
 function normalizeSearchText(value) {
     return String(value || '')
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\p{M}/gu, '')
         .toLowerCase()
         .trim();
 }
@@ -305,17 +305,17 @@ function getStartingSpiritStoneCounts() {
 }
 
 const ITEM_COLLECTION_TABS = Object.freeze([
-    { key: 'DAN_DUOC', label: '\u0110an d\u01b0\u1ee3c' },
-    { key: 'TRUNG_NOAN', label: 'Tr\u00f9ng no\u00e3n' },
-    { key: 'NGUYEN_LIEU', label: 'Nguy\u00ean li\u1ec7u' },
-    { key: 'TUI', label: 'T\u00fai' },
-    { key: 'BI_PHAP', label: 'B\u00ed ph\u00e1p' },
-    { key: 'PHAP_BAO', label: 'Ph\u00e1p b\u1ea3o' },
-    { key: 'KHAC', label: 'Kh\u00e1c' }
+    { key: 'DAN_DUOC', label: 'Đan dược' },
+    { key: 'TRUNG_NOAN', label: 'Trùng noãn' },
+    { key: 'NGUYEN_LIEU', label: 'Nguyên liệu' },
+    { key: 'TUI', label: 'Túi' },
+    { key: 'BI_PHAP', label: 'Bí pháp' },
+    { key: 'PHAP_BAO', label: 'Pháp bảo' },
+    { key: 'KHAC', label: 'Khác' }
 ]);
 
 function getItemCollectionTabLabel(tabKey) {
-    return ITEM_COLLECTION_TABS.find(tab => tab.key === tabKey)?.label || 'Kh\u00e1c';
+    return ITEM_COLLECTION_TABS.find(tab => tab.key === tabKey)?.label || 'Khác';
 }
 
 function getItemCollectionTabKey(item) {
@@ -328,7 +328,7 @@ function getItemCollectionTabKey(item) {
     if (category === 'SPECIAL') return 'DAN_DUOC';
     if (category === 'INSECT_EGG') return 'TRUNG_NOAN';
     if (category === 'MATERIAL') return 'NGUYEN_LIEU';
-    if (['BAG', 'SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(category)) return 'TUI';
+    if (['BAG', 'RAINBOW_BAG', 'SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(category)) return 'TUI';
     if (category === 'FLAME_ART' && item?.uniqueKey === 'CAN_LAM_BANG_DIEM') return 'KHAC';
     if (['SWORD_ART', 'FLAME_ART', 'INSECT_SKILL'].includes(category)) return 'BI_PHAP';
     if (['ARTIFACT', 'INSECT_ARTIFACT'].includes(category)) return 'PHAP_BAO';
@@ -397,14 +397,16 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         REGEN: { className: 'is-regen', aura: 'rgba(89, 226, 219, 0.30)' },
         SPEED: { className: 'is-speed', aura: 'rgba(149, 255, 186, 0.30)' },
         FORTUNE: { className: 'is-fortune', aura: 'rgba(255, 214, 102, 0.32)' },
-        BAG: { className: 'is-bag', aura: 'rgba(151, 197, 255, 0.26)' },
+        BAG: { className: 'is-bag', aura: 'rgba(151, 197, 255, 0.26)', isBagLike: true },
+        RAINBOW_BAG: { className: 'is-bag', aura: 'rgba(255, 240, 170, 0.34)', isBagLike: true, rainbow: true },
         SWORD_ART: { className: 'is-sword-art', aura: 'rgba(121, 255, 212, 0.32)' },
         FLAME_ART: { className: 'is-flame-art', aura: 'rgba(104, 217, 255, 0.34)' },
         ARTIFACT: { className: 'is-artifact', aura: 'rgba(159, 232, 255, 0.34)' },
         INSECT_SKILL: { className: 'is-insect-skill', aura: 'rgba(121, 255, 212, 0.32)' },
         INSECT_ARTIFACT: { className: 'is-insect-artifact', aura: 'rgba(255, 216, 113, 0.34)' },
-        SPIRIT_BAG: { className: 'is-spirit-bag', aura: 'rgba(142, 191, 255, 0.30)' },
-        SPIRIT_HABITAT: { className: 'is-habitat', aura: 'rgba(142, 191, 255, 0.34)' },
+        SPIRIT_BAG: { className: 'is-spirit-bag', aura: 'rgba(142, 191, 255, 0.30)', isBagLike: true },
+        RAINBOW_SPIRIT_BAG: { className: 'is-spirit-bag', aura: 'rgba(255, 231, 130, 0.36)', isBagLike: true, rainbow: true },
+        SPIRIT_HABITAT: { className: 'is-habitat', aura: 'rgba(142, 191, 255, 0.34)', isBagLike: true },
         INSECT_EGG: { className: 'is-insect-egg', aura: 'rgba(255, 240, 195, 0.32)' },
         MATERIAL: { className: 'is-material', aura: 'rgba(255, 176, 130, 0.30)' },
         CHUNG_CUC_DAO_NGUYEN_DAN: { className: 'is-special-rainbow', aura: 'rgba(255, 255, 255, 0.40)' },
@@ -423,6 +425,9 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     if (isPhongLoiArtifact) {
         visualClasses.push('is-artifact-phong-loi');
     }
+    if (visual.rainbow) {
+        visualClasses.push('is-rainbow-bag');
+    }
 
     const centerMarkup = isPhongLoiArtifact
         ? buildPhongLoiArtifactVisualMarkup()
@@ -434,7 +439,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         `
         : visual.className === 'is-material'
             ? buildMaterialArtMarkup(item.materialKey)
-        : (visual.className === 'is-bag' || visual.className === 'is-spirit-bag' || visual.className === 'is-habitat')
+        : visual.isBagLike
         ? `
             <span class="pill-visual__core pill-visual__core--bag"></span>
             <img src="./assets/images/bag.svg" class="pill-visual__item-icon" alt="">
@@ -658,13 +663,16 @@ const Input = {
     playerAvatarInitials: 'TT',
     attackMode: 'BASE',
     selectedInventoryTab: 'items',
+    selectedBeastBagTab: 'all',
     uniquePurchases: {
         DAI_CANH_KIEM_TRAN: false,
         CAN_LAM_BANG_DIEM: false,
         KHU_TRUNG_THUAT: false,
         PHONG_LOI_SI: false,
         KY_TRUNG_BANG: false,
-        LINH_THU_DAI: false
+        LINH_THU_DAI: false,
+        THAT_SAC_TRU_VAT_NANG: false,
+        THAT_SAC_LINH_THU_DAI: false
     },
     cultivationArts: {
         DAI_CANH_KIEM_TRAN: false,
@@ -677,10 +685,15 @@ const Input = {
     },
     insectEggs: {},
     tamedInsects: {},
+    insectColonies: {},
+    insectSatiety: {},
     discoveredInsects: {},
     insectCombatRoster: {},
     insectHabitats: {},
+    insectHabitatCapacities: {},
+    beastFoodStorage: {},
     beastBagCapacity: Math.max(1, parseInt(CONFIG.INSECT?.STARTING_BEAST_BAG_CAPACITY, 10) || 6),
+    beastBagCapacityMigrated: false,
     beastCare: {
         lastTickAt: performance.now(),
         lastAlertAt: 0
@@ -1198,13 +1211,13 @@ const Input = {
 
         let costTick = 0;
 
-        // 1. TÍNH TOÁN CHI PHÍ DI CHUYỂN
+        // 1. T??NH TO??N CHI PH?? DI CHUYỂN
         // Nếu tốc độ > 1 (tránh nhiễu khi chuột rung nhẹ)
         if (this.speed > 1) {
             costTick += CONFIG.MANA.COST_MOVE_PER_SEC * dt;
         }
 
-        // 2. TÍNH TOÁN CHI PHÍ TẤN CÔNG
+        // 2. T??NH TO??N CHI PH?? TẤN CÔNG
         if (this.isAttacking) {
             costTick += CONFIG.MANA.COST_ATTACK_PER_SEC * dt;
         }
@@ -1883,6 +1896,10 @@ const Input = {
     },
 
     getInventoryCapacity() {
+        if (this.hasSevenColorInventoryBag()) {
+            return Number.POSITIVE_INFINITY;
+        }
+
         const baseCapacity = Math.max(
             parseInt(CONFIG.ITEMS.INVENTORY_BASE_CAPACITY, 10) || 0,
             parseInt(CONFIG.ITEMS.INVENTORY_MIN_SLOTS, 10) || 16
@@ -1891,7 +1908,19 @@ const Input = {
         return Math.max(baseCapacity, Math.floor(this.inventoryCapacity || 0));
     },
 
+    hasSevenColorInventoryBag() {
+        return this.hasUniquePurchase('THAT_SAC_TRU_VAT_NANG');
+    },
+
+    hasSevenColorSpiritBag() {
+        return this.hasUniquePurchase('THAT_SAC_LINH_THU_DAI');
+    },
+
     hasInventorySpaceForSpec(spec) {
+        if (this.hasSevenColorInventoryBag()) {
+            return true;
+        }
+
         const itemKey = this.buildInventoryKey(spec);
         const existingItem = this.inventory[itemKey];
 
@@ -1903,14 +1932,30 @@ const Input = {
     },
 
     canUpgradeInventoryCapacity(item) {
-        if (!item || item.category !== 'BAG') return false;
+        if (!item) return false;
+
+        if (item.category === 'RAINBOW_BAG') {
+            return !this.hasSevenColorInventoryBag();
+        }
+
+        if (this.hasSevenColorInventoryBag() || item.category !== 'BAG') return false;
 
         const qualityConfig = this.getItemQualityConfig(item);
         return Math.max(0, Math.floor(qualityConfig.capacity || 0)) > 0;
     },
 
     canUpgradeBeastBagCapacity(item) {
-        if (!item || item.category !== 'SPIRIT_BAG') return false;
+        if (!item) return false;
+
+        if (item.category === 'RAINBOW_SPIRIT_BAG') {
+            return !this.hasSevenColorSpiritBag();
+        }
+
+        if (item.category === 'SPIRIT_HABITAT') {
+            return !this.hasSevenColorSpiritBag() && Boolean(item.speciesKey && this.getInsectSpecies(item.speciesKey));
+        }
+
+        if (this.hasSevenColorSpiritBag() || item.category !== 'SPIRIT_BAG') return false;
 
         const qualityConfig = this.getItemQualityConfig(item);
         return Math.max(0, Math.floor(qualityConfig.capacity || 0)) > 0;
@@ -1940,7 +1985,7 @@ const Input = {
             categories,
             capacity,
             freeSlots: Math.max(0, capacity - uniqueCount),
-            usageRatio: capacity > 0 ? (uniqueCount / capacity) : 0
+            usageRatio: Number.isFinite(capacity) && capacity > 0 ? (uniqueCount / capacity) : 0
         };
     },
 
@@ -2369,20 +2414,125 @@ const Input = {
             fullName: species ? `Linh Thú Đại ${species.name}` : 'Linh Thú Đại',
             quality: shopInfo.quality || 'LOW',
             color: species?.color || tierInfo.color || '#8ebfff',
-            capacity: 0,
+            capacity: this.getBeastBagUpgradeCapacity(),
             buyPriceLowStone: Math.max(0, Math.floor(shopInfo.habitatBuyPriceLowStone || 0)),
-            buttonLabel: 'An trí'
+            buttonLabel: 'Mua'
         };
     },
 
+    getBeastBagUpgradeCapacity() {
+        return Math.max(
+            1,
+            Math.floor(
+                CONFIG.INSECT?.BEAST_BAG?.capacity
+                || CONFIG.INSECT?.STARTING_BEAST_BAG_CAPACITY
+                || 1
+            )
+        );
+    },
+
+    ensureInsectHabitatCapacities() {
+        if (!this.insectHabitatCapacities || typeof this.insectHabitatCapacities !== 'object' || Array.isArray(this.insectHabitatCapacities)) {
+            this.insectHabitatCapacities = {};
+        }
+
+        if (this.beastBagCapacityMigrated) {
+            return this.insectHabitatCapacities;
+        }
+
+        const purchasedSpeciesKeys = Object.keys(this.insectHabitats || {})
+            .filter(speciesKey => this.insectHabitats[speciesKey] && this.getInsectSpecies(speciesKey));
+        const migratedBaseCapacity = (() => {
+            const legacyCapacity = Math.max(0, Math.floor(this.beastBagCapacity || 0));
+            if (!purchasedSpeciesKeys.length || legacyCapacity <= 0) {
+                return this.getBeastBagUpgradeCapacity();
+            }
+
+            return Math.max(
+                this.getBeastBagUpgradeCapacity(),
+                Math.ceil(legacyCapacity / purchasedSpeciesKeys.length)
+            );
+        })();
+
+        purchasedSpeciesKeys.forEach(speciesKey => {
+            const currentCapacity = Math.max(0, Math.floor(this.insectHabitatCapacities[speciesKey] || 0));
+            if (currentCapacity <= 0) {
+                this.insectHabitatCapacities[speciesKey] = migratedBaseCapacity;
+            }
+        });
+
+        this.beastBagCapacityMigrated = true;
+        return this.insectHabitatCapacities;
+    },
+
+    getInsectHabitatCapacity(speciesKey) {
+        if (!speciesKey) return 0;
+
+        const habitatKey = this.getSpeciesHabitatKey(speciesKey);
+        if (habitatKey === 'RAINBOW') {
+            return Number.POSITIVE_INFINITY;
+        }
+
+        if (!this.insectHabitats?.[speciesKey]) {
+            return 0;
+        }
+
+        const capacities = this.ensureInsectHabitatCapacities();
+        return Math.max(0, Math.floor(capacities[speciesKey] || 0));
+    },
+
+    upgradeInsectHabitatCapacity(speciesKey, extraCapacity = this.getBeastBagUpgradeCapacity(), { unlock = true } = {}) {
+        if (!this.getInsectSpecies(speciesKey)) return 0;
+
+        const safeExtraCapacity = Math.max(0, Math.floor(extraCapacity || 0));
+        if (!this.insectHabitats) this.insectHabitats = {};
+        if (unlock) this.insectHabitats[speciesKey] = true;
+
+        const capacities = this.ensureInsectHabitatCapacities();
+        const currentCapacity = Math.max(0, Math.floor(capacities[speciesKey] || 0));
+        const nextCapacity = currentCapacity + safeExtraCapacity;
+        capacities[speciesKey] = nextCapacity;
+        this.markDiscoveredInsect(speciesKey);
+        return nextCapacity;
+    },
+
+    getInsectHabitatOccupancy(speciesKey) {
+        return Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+    },
+
+    getInsectHabitatFreeSlots(speciesKey) {
+        const capacity = this.getInsectHabitatCapacity(speciesKey);
+        if (!Number.isFinite(capacity)) return Number.POSITIVE_INFINITY;
+        return Math.max(0, capacity - this.getInsectHabitatOccupancy(speciesKey));
+    },
+
+    getSpeciesHabitatKey(speciesKey) {
+        if (this.insectHabitats?.[speciesKey]) return speciesKey;
+        if (this.hasSevenColorSpiritBag()) return 'RAINBOW';
+        return null;
+    },
+
+    isSpeciesInRainbowHabitat(speciesKey) {
+        return this.getSpeciesHabitatKey(speciesKey) === 'RAINBOW';
+    },
+
+    needsSpeciesManualFeeding(speciesKey) {
+        const habitatKey = this.getSpeciesHabitatKey(speciesKey);
+        return Boolean(habitatKey && habitatKey !== 'RAINBOW');
+    },
+
     hasInsectHabitat(speciesKey) {
-        return Boolean(this.insectHabitats?.[speciesKey]);
+        return Boolean(this.getSpeciesHabitatKey(speciesKey));
     },
 
     unlockInsectHabitat(speciesKey) {
         if (!this.getInsectSpecies(speciesKey)) return false;
         if (!this.insectHabitats) this.insectHabitats = {};
         this.insectHabitats[speciesKey] = true;
+        this.ensureInsectHabitatCapacities();
+        if (Math.max(0, Math.floor(this.insectHabitatCapacities?.[speciesKey] || 0)) <= 0) {
+            this.insectHabitatCapacities[speciesKey] = this.getBeastBagUpgradeCapacity();
+        }
         this.markDiscoveredInsect(speciesKey);
         return true;
     },
@@ -2448,6 +2598,344 @@ const Input = {
         return true;
     },
 
+    ensureBeastFoodStorageShape() {
+        if (!this.beastFoodStorage || typeof this.beastFoodStorage !== 'object' || Array.isArray(this.beastFoodStorage)) {
+            this.beastFoodStorage = {};
+            return this.beastFoodStorage;
+        }
+
+        const values = Object.values(this.beastFoodStorage);
+        const hasNestedBuckets = values.some(value => value && typeof value === 'object' && !Array.isArray(value));
+        if (!hasNestedBuckets && values.length > 0) {
+            const sharedBucket = {};
+            Object.entries(this.beastFoodStorage).forEach(([materialKey, count]) => {
+                const safeCount = Math.max(0, Math.floor(count || 0));
+                if (safeCount > 0) sharedBucket[materialKey] = safeCount;
+            });
+            this.beastFoodStorage = Object.keys(sharedBucket).length ? { _SHARED: sharedBucket } : {};
+        }
+
+        return this.beastFoodStorage;
+    },
+
+    getFoodStorageBucket(habitatKey = '_SHARED', { create = false } = {}) {
+        const storage = this.ensureBeastFoodStorageShape();
+        const safeHabitatKey = habitatKey || '_SHARED';
+        const existing = storage[safeHabitatKey];
+
+        if (existing && typeof existing === 'object' && !Array.isArray(existing)) {
+            return existing;
+        }
+
+        if (!create) return null;
+        storage[safeHabitatKey] = {};
+        return storage[safeHabitatKey];
+    },
+
+    getFoodStorageCount(materialKey, habitatKey = '_SHARED', { includeShared = true } = {}) {
+        const readCount = (bucketKey) => {
+            const bucket = this.getFoodStorageBucket(bucketKey);
+            return Math.max(0, Math.floor(bucket?.[materialKey] || 0));
+        };
+
+        const safeHabitatKey = habitatKey || '_SHARED';
+        let total = readCount(safeHabitatKey);
+        if (includeShared && safeHabitatKey !== '_SHARED') {
+            total += readCount('_SHARED');
+        }
+
+        return total;
+    },
+
+    getFoodStorageEntries(habitatKey = null, { includeShared = true } = {}) {
+        const storage = this.ensureBeastFoodStorageShape();
+        const mergedCounts = {};
+
+        const mergeBucket = (bucketKey) => {
+            const bucket = storage[bucketKey];
+            if (!bucket || typeof bucket !== 'object' || Array.isArray(bucket)) return;
+
+            Object.entries(bucket).forEach(([materialKey, count]) => {
+                const safeCount = Math.max(0, Math.floor(count || 0));
+                if (safeCount <= 0) return;
+                mergedCounts[materialKey] = (mergedCounts[materialKey] || 0) + safeCount;
+            });
+        };
+
+        if (habitatKey) {
+            mergeBucket(habitatKey);
+            if (includeShared && habitatKey !== '_SHARED') mergeBucket('_SHARED');
+        } else {
+            Object.keys(storage).forEach(mergeBucket);
+        }
+
+        return Object.entries(mergedCounts)
+            .map(([materialKey, count]) => ({
+                materialKey,
+                count,
+                materialConfig: this.getMaterialConfig(materialKey)
+            }))
+            .filter(entry => entry.materialConfig && entry.count > 0)
+            .sort((a, b) => {
+                const qualityDiff = QUALITY_ORDER.indexOf(b.materialConfig.quality || 'LOW') - QUALITY_ORDER.indexOf(a.materialConfig.quality || 'LOW');
+                if (qualityDiff !== 0) return qualityDiff;
+                return (a.materialConfig.fullName || a.materialKey).localeCompare(b.materialConfig.fullName || b.materialKey, 'vi');
+            });
+    },
+
+    getHabitatFoodNutritionAvailable(habitatKey = null, { includeShared = true } = {}) {
+        return this.getFoodStorageEntries(habitatKey, { includeShared }).reduce((total, entry) => {
+            const nutrition = Math.max(0, Number(entry.materialConfig?.nutrition) || 0);
+            return total + (entry.count * nutrition);
+        }, 0);
+    },
+
+    storeMaterialAsFood(materialKey, count = 1, habitatKey = '_SHARED') {
+        const safeCount = Math.max(0, Math.floor(count || 0));
+        if (safeCount <= 0) return 0;
+
+        const materialConfig = this.getMaterialConfig(materialKey);
+        if (!materialConfig || Math.max(0, Number(materialConfig.nutrition) || 0) <= 0) return 0;
+
+        const transferred = this.consumeMaterial(materialKey, safeCount);
+        if (transferred <= 0) return 0;
+
+        const bucket = this.getFoodStorageBucket(habitatKey, { create: true });
+        bucket[materialKey] = Math.max(0, Math.floor(bucket[materialKey] || 0)) + transferred;
+        return transferred;
+    },
+
+    consumeStoredFood(materialKey, count = 1, habitatKey = '_SHARED', { allowSharedFallback = true } = {}) {
+        const safeCount = Math.max(0, Math.floor(count || 0));
+        if (safeCount <= 0) return 0;
+
+        const consumeFromBucket = (bucketKey, neededCount) => {
+            if (neededCount <= 0) return 0;
+            const bucket = this.getFoodStorageBucket(bucketKey);
+            const currentCount = Math.max(0, Math.floor(bucket?.[materialKey] || 0));
+            if (currentCount <= 0) return 0;
+
+            const consumed = Math.min(currentCount, neededCount);
+            const nextCount = currentCount - consumed;
+
+            if (nextCount <= 0) delete bucket[materialKey];
+            else bucket[materialKey] = nextCount;
+
+            return consumed;
+        };
+
+        const safeHabitatKey = habitatKey || '_SHARED';
+        let consumed = consumeFromBucket(safeHabitatKey, safeCount);
+
+        if (allowSharedFallback && safeHabitatKey !== '_SHARED' && consumed < safeCount) {
+            consumed += consumeFromBucket('_SHARED', safeCount - consumed);
+        }
+
+        return consumed;
+    },
+
+    createDefaultInsectColony(speciesKey, count = 0) {
+        const safeCount = Math.max(0, Math.floor(count || 0));
+        if (safeCount <= 0) return null;
+
+        const species = this.getInsectSpecies(speciesKey);
+        let male = 0;
+        let female = 0;
+
+        if (safeCount === 1) {
+            const preferFemale = (species?.fertility || 1) >= (species?.attackFactor || 1);
+            male = preferFemale ? 0 : 1;
+            female = preferFemale ? 1 : 0;
+        } else {
+            male = Math.max(1, Math.floor(safeCount / 2));
+            female = safeCount - male;
+            if (female <= 0) {
+                female = 1;
+                male = Math.max(1, safeCount - female);
+            }
+        }
+
+        const leaderGender = female > male ? 'FEMALE' : 'MALE';
+
+        return {
+            male,
+            female,
+            leaderGender,
+            leaderPower: this.rollInsectPower(speciesKey, 'leader')
+        };
+    },
+
+    rollInsectPower(speciesKey, source = 'wild') {
+        const species = this.getInsectSpecies(speciesKey);
+        const attack = Number(species?.attackFactor) || 1;
+        const vitality = Number(species?.vitality) || 1;
+        const fertility = Number(species?.fertility) || 1;
+        const sourceBonus = source === 'breed' ? 0.08 : (source === 'leader' ? 0.12 : 0);
+        const variance = 0.82 + (Math.random() * 0.58);
+        return Number((((attack * 1.4) + (vitality * 0.95) + (fertility * 0.7)) * variance + sourceBonus).toFixed(3));
+    },
+
+    ensureInsectColony(speciesKey, targetCount = null) {
+        const safeTargetCount = Math.max(0, Math.floor(
+            targetCount === null
+                ? (this.tamedInsects?.[speciesKey] || 0)
+                : targetCount
+        ));
+
+        if (safeTargetCount <= 0) {
+            if (this.insectColonies?.[speciesKey]) delete this.insectColonies[speciesKey];
+            if (this.insectSatiety?.[speciesKey]) delete this.insectSatiety[speciesKey];
+            return null;
+        }
+
+        if (!this.insectColonies) this.insectColonies = {};
+        const existing = this.insectColonies[speciesKey];
+
+        if (!existing) {
+            const colony = this.createDefaultInsectColony(speciesKey, safeTargetCount);
+            this.insectColonies[speciesKey] = colony;
+            return colony;
+        }
+
+        existing.male = Math.max(0, Math.floor(existing.male || 0));
+        existing.female = Math.max(0, Math.floor(existing.female || 0));
+
+        let total = existing.male + existing.female;
+        while (total < safeTargetCount) {
+            if (existing.male <= existing.female) existing.male += 1;
+            else existing.female += 1;
+            total++;
+        }
+
+        while (total > safeTargetCount) {
+            if (existing.leaderGender === 'MALE' && existing.male <= 1 && existing.female > 0) {
+                existing.female -= 1;
+            } else if (existing.leaderGender === 'FEMALE' && existing.female <= 1 && existing.male > 0) {
+                existing.male -= 1;
+            } else if (existing.male >= existing.female && existing.male > 0) {
+                existing.male -= 1;
+            } else if (existing.female > 0) {
+                existing.female -= 1;
+            }
+            total--;
+        }
+
+        if (!existing.leaderGender || (existing.leaderGender === 'MALE' && existing.male <= 0) || (existing.leaderGender === 'FEMALE' && existing.female <= 0)) {
+            existing.leaderGender = existing.female > existing.male ? 'FEMALE' : 'MALE';
+            existing.leaderPower = this.rollInsectPower(speciesKey, 'leader');
+        }
+
+        return existing;
+    },
+
+    updateInsectColonyPopulation(speciesKey, previousCount, nextCount, options = {}) {
+        const safePreviousCount = Math.max(0, Math.floor(previousCount || 0));
+        const safeNextCount = Math.max(0, Math.floor(nextCount || 0));
+        const delta = safeNextCount - safePreviousCount;
+
+        if (safeNextCount <= 0) {
+            if (this.insectColonies?.[speciesKey]) delete this.insectColonies[speciesKey];
+            if (this.insectSatiety?.[speciesKey]) delete this.insectSatiety[speciesKey];
+            return null;
+        }
+
+        if (!this.insectColonies) this.insectColonies = {};
+        const colony = this.ensureInsectColony(speciesKey, safePreviousCount) || {
+            male: 0,
+            female: 0,
+            leaderGender: null,
+            leaderPower: 0
+        };
+        this.insectColonies[speciesKey] = colony;
+
+        if (delta > 0) {
+            const source = options.source || 'hatch';
+            for (let i = 0; i < delta; i++) {
+                const sex = Math.random() < 0.5 ? 'MALE' : 'FEMALE';
+                if (sex === 'MALE') colony.male += 1;
+                else colony.female += 1;
+
+                const power = this.rollInsectPower(speciesKey, source);
+                if (!colony.leaderGender || power >= Math.max(0, Number(colony.leaderPower) || 0)) {
+                    colony.leaderGender = sex;
+                    colony.leaderPower = power;
+                }
+            }
+        } else if (delta < 0) {
+            for (let i = 0; i < Math.abs(delta); i++) {
+                const removeGender = (() => {
+                    if (colony.male <= 0) return 'FEMALE';
+                    if (colony.female <= 0) return 'MALE';
+                    if (colony.leaderGender === 'MALE' && colony.male <= 1) return 'FEMALE';
+                    if (colony.leaderGender === 'FEMALE' && colony.female <= 1) return 'MALE';
+                    return colony.male >= colony.female ? 'MALE' : 'FEMALE';
+                })();
+
+                if (removeGender === 'MALE' && colony.male > 0) colony.male -= 1;
+                else if (colony.female > 0) colony.female -= 1;
+            }
+
+            if ((colony.leaderGender === 'MALE' && colony.male <= 0) || (colony.leaderGender === 'FEMALE' && colony.female <= 0)) {
+                colony.leaderGender = colony.female > colony.male ? 'FEMALE' : 'MALE';
+                colony.leaderPower = this.rollInsectPower(speciesKey, 'leader');
+            }
+        }
+
+        return this.ensureInsectColony(speciesKey, safeNextCount);
+    },
+
+    getSpeciesSexSummary(speciesKey) {
+        const colony = this.ensureInsectColony(speciesKey);
+        return {
+            male: Math.max(0, Math.floor(colony?.male || 0)),
+            female: Math.max(0, Math.floor(colony?.female || 0))
+        };
+    },
+
+    getSpeciesLeaderInfo(speciesKey) {
+        const colony = this.ensureInsectColony(speciesKey);
+        if (!colony) return null;
+
+        const gender = colony.leaderGender === 'FEMALE' ? 'FEMALE' : 'MALE';
+        return {
+            gender,
+            power: Math.max(0, Number(colony.leaderPower) || 0),
+            title: gender === 'FEMALE' ? 'Trùng Hậu' : 'Trùng Vương'
+        };
+    },
+
+    getSpeciesSatiety(speciesKey) {
+        return Math.max(0, Math.floor(this.insectSatiety?.[speciesKey] || 0));
+    },
+
+    changeSpeciesSatiety(speciesKey, delta = 0) {
+        const safeDelta = Math.trunc(delta || 0);
+        if (!safeDelta) return this.getSpeciesSatiety(speciesKey);
+
+        if (!this.insectSatiety) this.insectSatiety = {};
+        const nextValue = Math.max(0, this.getSpeciesSatiety(speciesKey) + safeDelta);
+        if (nextValue <= 0) delete this.insectSatiety[speciesKey];
+        else this.insectSatiety[speciesKey] = nextValue;
+        return nextValue;
+    },
+
+    consumeSpeciesSatiety(speciesKey, nutritionNeeded = 0) {
+        const safeNeed = Math.max(0, Math.ceil(nutritionNeeded || 0));
+        if (safeNeed <= 0) {
+            return { met: true, consumedNutrition: 0, shortage: 0 };
+        }
+
+        const availableNutrition = this.getSpeciesSatiety(speciesKey);
+        const consumedNutrition = Math.min(availableNutrition, safeNeed);
+        this.changeSpeciesSatiety(speciesKey, -consumedNutrition);
+
+        return {
+            met: consumedNutrition >= safeNeed,
+            consumedNutrition,
+            shortage: Math.max(0, safeNeed - consumedNutrition)
+        };
+    },
+
     getSpeciesHatchRequirements(speciesKey) {
         return (INSECT_HATCH_REQUIREMENTS[speciesKey] || []).map(requirement => ({
             materialKey: requirement.materialKey,
@@ -2478,6 +2966,8 @@ const Input = {
     },
 
     getSpeciesFoodDemand(speciesKey) {
+        if (!this.needsSpeciesManualFeeding(speciesKey)) return 0;
+
         const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
         const careConfig = CONFIG.INSECT?.CARE || {};
         const foodPerInsect = Math.max(1, Math.floor(careConfig.FOOD_PER_INSECT || 1));
@@ -2485,14 +2975,15 @@ const Input = {
     },
 
     getTotalFoodNutritionAvailable() {
-        return Object.entries(CONFIG.ITEMS?.MATERIALS || {}).reduce((total, [materialKey, materialConfig]) => {
-            const nutrition = Math.max(0, Number(materialConfig?.nutrition) || 0);
-            if (nutrition <= 0) return total;
-            return total + (this.getMaterialInventoryCount(materialKey) * nutrition);
-        }, 0);
+        return this.getHabitatFoodNutritionAvailable();
     },
 
     getAvailableFoodNutritionForSpecies(speciesKey) {
+        if (!this.needsSpeciesManualFeeding(speciesKey)) {
+            return Number.POSITIVE_INFINITY;
+        }
+
+        const habitatKey = this.getSpeciesHabitatKey(speciesKey);
         const preferredKeys = this.getSpeciesPreferredFoodKeys(speciesKey);
         const allFoodKeys = Object.entries(CONFIG.ITEMS?.MATERIALS || {})
             .filter(([, materialConfig]) => (Number(materialConfig?.nutrition) || 0) > 0)
@@ -2503,11 +2994,16 @@ const Input = {
             const materialConfig = this.getMaterialConfig(materialKey);
             const nutrition = Math.max(0, Number(materialConfig?.nutrition) || 0);
             if (nutrition <= 0) return total;
-            return total + (this.getMaterialInventoryCount(materialKey) * nutrition);
+            return total + (this.getFoodStorageCount(materialKey, habitatKey) * nutrition);
         }, 0);
     },
 
     consumeFoodForSpecies(speciesKey, nutritionNeeded = 0) {
+        if (!this.needsSpeciesManualFeeding(speciesKey)) {
+            return { met: true, consumedNutrition: 0, consumedItems: [], shortage: 0 };
+        }
+
+        const habitatKey = this.getSpeciesHabitatKey(speciesKey);
         let remainingNutrition = Math.max(0, Math.ceil(nutritionNeeded || 0));
         const consumedItems = [];
         let consumedNutrition = 0;
@@ -2529,9 +3025,9 @@ const Input = {
             const nutrition = Math.max(0, Number(materialConfig?.nutrition) || 0);
             if (nutrition <= 0) return;
 
-            let availableCount = this.getMaterialInventoryCount(materialKey);
+            let availableCount = this.getFoodStorageCount(materialKey, habitatKey);
             while (availableCount > 0 && remainingNutrition > 0) {
-                if (this.consumeMaterial(materialKey, 1) <= 0) break;
+                if (this.consumeStoredFood(materialKey, 1, habitatKey) <= 0) break;
                 availableCount--;
                 remainingNutrition -= nutrition;
                 consumedNutrition += nutrition;
@@ -2550,20 +3046,92 @@ const Input = {
         };
     },
 
-    getSpeciesCareStatus(speciesKey) {
+    feedSpeciesNow(speciesKey, cycles = 1) {
         const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
-        const foodDemand = this.getSpeciesFoodDemand(speciesKey);
-        const availableFood = this.getAvailableFoodNutritionForSpecies(speciesKey);
-        const habitatConfig = this.getInsectHabitatConfig(speciesKey);
+        if (count <= 0) {
+            return { success: false, reason: 'empty', consumedNutrition: 0, shortage: 0 };
+        }
+
+        if (!this.needsSpeciesManualFeeding(speciesKey)) {
+            return { success: false, reason: 'rainbow', consumedNutrition: 0, shortage: 0 };
+        }
+
+        const nutritionNeeded = this.getSpeciesFoodDemand(speciesKey) * Math.max(1, Math.floor(cycles || 1));
+        const feedResult = this.consumeFoodForSpecies(speciesKey, nutritionNeeded);
+        if (feedResult.consumedNutrition > 0) {
+            this.changeSpeciesSatiety(speciesKey, feedResult.consumedNutrition);
+        }
 
         return {
+            ...feedResult,
+            success: feedResult.consumedNutrition > 0,
+            reason: feedResult.met ? 'fed' : (feedResult.consumedNutrition > 0 ? 'partial' : 'no-food')
+        };
+    },
+
+    feedAllSpeciesNow(cycles = 1) {
+        const result = {
+            fedSpecies: [],
+            partialSpecies: [],
+            totalNutrition: 0
+        };
+
+        this.getActiveInsectSpeciesKeys().forEach(speciesKey => {
+            const feedResult = this.feedSpeciesNow(speciesKey, cycles);
+            if (!feedResult.success) return;
+
+            result.totalNutrition += feedResult.consumedNutrition || 0;
+            if (feedResult.met) result.fedSpecies.push(speciesKey);
+            else result.partialSpecies.push(speciesKey);
+        });
+
+        return result;
+    },
+
+    getSpeciesCareStatus(speciesKey) {
+        const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+        const habitatKey = this.getSpeciesHabitatKey(speciesKey);
+        const isRainbowHabitat = habitatKey === 'RAINBOW';
+        const needsManualFeeding = this.needsSpeciesManualFeeding(speciesKey);
+        const habitatCapacity = this.getBeastBagCapacity(speciesKey);
+        const habitatFreeSlots = this.getInsectHabitatFreeSlots(speciesKey);
+        const foodDemand = this.getSpeciesFoodDemand(speciesKey);
+        const availableFood = isRainbowHabitat
+            ? Number.POSITIVE_INFINITY
+            : (needsManualFeeding ? this.getAvailableFoodNutritionForSpecies(speciesKey) : 0);
+        const habitatConfig = this.getInsectHabitatConfig(speciesKey);
+        const sexSummary = this.getSpeciesSexSummary(speciesKey);
+        const leaderInfo = this.getSpeciesLeaderInfo(speciesKey);
+        const storedSatiety = this.getSpeciesSatiety(speciesKey);
+        const preferredFoodKeys = this.getSpeciesPreferredFoodKeys(speciesKey);
+        const hasBreedingPair = count >= 2 && sexSummary.male > 0 && sexSummary.female > 0;
+        const foodStorageNutrition = isRainbowHabitat
+            ? Number.POSITIVE_INFINITY
+            : (needsManualFeeding ? this.getHabitatFoodNutritionAvailable(habitatKey) : 0);
+
+        return {
+            speciesKey,
             count,
-            hasHabitat: this.hasInsectHabitat(speciesKey),
+            habitatKey,
+            hasHabitat: Boolean(habitatKey),
             habitatName: habitatConfig.fullName,
+            isRainbowHabitat,
+            habitatCapacity,
+            habitatFreeSlots,
             foodDemand,
             availableFood,
-            hasFood: availableFood >= foodDemand,
-            canReproduce: count > 0 && this.hasInsectHabitat(speciesKey) && this.hasBeastCapacity(1)
+            foodStorageNutrition,
+            storedSatiety,
+            sexSummary,
+            leaderInfo,
+            preferredFoodKeys,
+            hasFood: isRainbowHabitat || foodDemand <= 0 || storedSatiety >= foodDemand,
+            canFeed: needsManualFeeding && availableFood > 0,
+            needsManualFeeding,
+            canReproduce: hasBreedingPair
+                && Boolean(habitatKey)
+                && this.hasBeastCapacity(1, speciesKey)
+                && (isRainbowHabitat || storedSatiety >= foodDemand || availableFood >= foodDemand)
         };
     },
 
@@ -2571,7 +3139,9 @@ const Input = {
         const species = this.getInsectSpecies(speciesKey);
         const requestedCount = Math.max(1, Math.floor(count || 1));
         const availableEggs = Math.max(0, Math.floor(this.insectEggs?.[speciesKey] || 0));
-        const freeSlots = Math.max(0, this.getBeastBagCapacity() - this.getTotalTamedInsectCount());
+        const freeSlots = this.hasInsectHabitat(speciesKey)
+            ? this.getInsectHabitatFreeSlots(speciesKey)
+            : 0;
         const requirements = this.getSpeciesHatchRequirements(speciesKey).map(requirement => {
             const owned = this.getMaterialInventoryCount(requirement.materialKey);
             return {
@@ -2612,17 +3182,20 @@ const Input = {
         const careConfig = CONFIG.INSECT?.CARE || {};
         const starvationDeathChance = Math.max(0, Math.min(1, Number(careConfig.STARVATION_DEATH_CHANCE) || 0));
         const wrongHabitatDeathChance = Math.max(0, Math.min(1, Number(careConfig.WRONG_HABITAT_DEATH_CHANCE) || 0));
+        const breedChance = Math.max(0, Math.min(1, Number(careConfig.BREED_CHANCE_PER_CYCLE) || 0));
         const result = {
             consumedNutrition: 0,
             hungerLosses: [],
-            habitatLosses: []
+            habitatLosses: [],
+            births: []
         };
 
         this.getActiveInsectSpeciesKeys().forEach(speciesKey => {
             const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
             if (count <= 0) return;
 
-            const feedResult = this.consumeFoodForSpecies(speciesKey, this.getSpeciesFoodDemand(speciesKey));
+            const careStatus = this.getSpeciesCareStatus(speciesKey);
+            const feedResult = this.consumeSpeciesSatiety(speciesKey, careStatus.foodDemand);
             result.consumedNutrition += feedResult.consumedNutrition || 0;
 
             if (!feedResult.met && Math.random() < starvationDeathChance) {
@@ -2635,6 +3208,11 @@ const Input = {
                 if (this.changeTamedInsects(speciesKey, -1) < 0) {
                     result.habitatLosses.push(speciesKey);
                 }
+            }
+
+            if (this.getSpeciesCareStatus(speciesKey).canReproduce && Math.random() < breedChance) {
+                this.changeTamedInsects(speciesKey, 1, { source: 'breed' });
+                result.births.push(speciesKey);
             }
         });
 
@@ -2663,7 +3241,8 @@ const Input = {
         const aggregate = {
             consumedNutrition: 0,
             hungerLosses: [],
-            habitatLosses: []
+            habitatLosses: [],
+            births: []
         };
 
         for (let cycleIndex = 0; cycleIndex < cycleCount; cycleIndex++) {
@@ -2671,6 +3250,7 @@ const Input = {
             aggregate.consumedNutrition += cycleResult.consumedNutrition || 0;
             aggregate.hungerLosses.push(...(cycleResult.hungerLosses || []));
             aggregate.habitatLosses.push(...(cycleResult.habitatLosses || []));
+            aggregate.births.push(...(cycleResult.births || []));
         }
 
         this.beastCare.lastTickAt += cycleCount * intervalMs;
@@ -2678,12 +3258,12 @@ const Input = {
             this.beastCare.lastTickAt = now;
         }
 
-        if (aggregate.consumedNutrition > 0 || aggregate.hungerLosses.length || aggregate.habitatLosses.length) {
+        if (aggregate.consumedNutrition > 0 || aggregate.hungerLosses.length || aggregate.habitatLosses.length || aggregate.births.length) {
             this.refreshResourceUI();
         }
 
         const canAlert = (now - Math.max(0, Number(this.beastCare.lastAlertAt) || 0)) >= Math.max(0, Math.floor(careConfig.ALERT_COOLDOWN_MS || 0));
-        if (!canAlert || (!aggregate.hungerLosses.length && !aggregate.habitatLosses.length)) return;
+        if (!canAlert || (!aggregate.hungerLosses.length && !aggregate.habitatLosses.length && !aggregate.births.length)) return;
 
         const formatLossSummary = (speciesKeys) => {
             const counts = speciesKeys.reduce((summary, speciesKey) => {
@@ -2703,14 +3283,29 @@ const Input = {
         if (aggregate.habitatLosses.length) {
             notices.push(`Sai Linh Thú Đại: ${formatLossSummary(aggregate.habitatLosses)}`);
         }
+        if (aggregate.births.length) {
+            notices.push(`Sinh nở: ${formatLossSummary(aggregate.births)}`);
+        }
 
-        showNotify(notices.join(' | '), '#ff8a80');
+        showNotify(
+            notices.join(' | '),
+            aggregate.hungerLosses.length || aggregate.habitatLosses.length ? '#ff8a80' : '#79ffd4'
+        );
         this.beastCare.lastAlertAt = now;
     },
 
-    getBeastBagCapacity() {
-        const baseCapacity = Math.max(1, parseInt(CONFIG.INSECT?.STARTING_BEAST_BAG_CAPACITY, 10) || 1);
-        return Math.max(baseCapacity, Math.floor(this.beastBagCapacity || 0));
+    getBeastBagCapacity(speciesKey = null) {
+        if (speciesKey) {
+            return this.getInsectHabitatCapacity(speciesKey);
+        }
+
+        if (this.hasSevenColorSpiritBag()) {
+            return Number.POSITIVE_INFINITY;
+        }
+
+        return Object.keys(this.insectHabitats || {})
+            .filter(key => this.insectHabitats[key] && this.getInsectSpecies(key))
+            .reduce((total, key) => total + this.getInsectHabitatCapacity(key), 0);
     },
 
     getTotalEggCount() {
@@ -2804,10 +3399,10 @@ const Input = {
         const discoveredCount = Object.keys(this.discoveredInsects || {}).filter(key => this.discoveredInsects[key]).length;
         const speciesTotal = this.getInsectSpeciesEntries().length;
         const activeSpeciesKeys = this.getActiveInsectSpeciesKeys();
+        const manualCareSpeciesKeys = activeSpeciesKeys.filter(speciesKey => this.needsSpeciesManualFeeding(speciesKey));
         const safeSpeciesCount = activeSpeciesKeys.filter(speciesKey => this.hasInsectHabitat(speciesKey)).length;
-        const careConfig = CONFIG.INSECT?.CARE || {};
         const foodStock = this.getTotalFoodNutritionAvailable();
-        const foodDemand = totalBeasts * Math.max(1, Math.floor(careConfig.FOOD_PER_INSECT || 1));
+        const foodDemand = manualCareSpeciesKeys.reduce((total, speciesKey) => total + this.getSpeciesFoodDemand(speciesKey), 0);
         const foodCycles = foodDemand > 0 ? Math.floor(foodStock / foodDemand) : Number.POSITIVE_INFINITY;
         const reproductiveSpeciesCount = activeSpeciesKeys.filter(speciesKey => this.getSpeciesCareStatus(speciesKey).canReproduce).length;
 
@@ -2818,13 +3413,96 @@ const Input = {
             freeSlots: Math.max(0, capacity - totalBeasts),
             discoveredCount,
             speciesTotal,
-            usageRatio: capacity > 0 ? (totalBeasts / capacity) : 0,
+            usageRatio: Number.isFinite(capacity) && capacity > 0 ? (totalBeasts / capacity) : 0,
             foodStock,
             foodDemand,
             foodCycles,
             safeSpeciesCount,
-            reproductiveSpeciesCount
+            reproductiveSpeciesCount,
+            manualCareSpeciesCount: manualCareSpeciesKeys.length,
+            rainbowSpeciesCount: Math.max(0, activeSpeciesKeys.length - manualCareSpeciesKeys.length)
         };
+    },
+
+    getBeastBagTabs() {
+        const tabs = [
+            {
+                key: 'all',
+                label: 'Tổng đàn',
+                note: `${formatNumber(this.getTotalTamedInsectCount())} linh trùng`
+            }
+        ];
+
+        if (this.hasSevenColorSpiritBag()) {
+            return tabs;
+        }
+
+        const dedicatedSpeciesKeys = Object.keys(this.insectHabitats || {})
+            .filter(speciesKey => this.insectHabitats[speciesKey] && this.getInsectSpecies(speciesKey));
+
+        dedicatedSpeciesKeys
+            .sort((a, b) => {
+                const speciesA = this.getInsectSpecies(a);
+                const speciesB = this.getInsectSpecies(b);
+                return (speciesA?.name || a).localeCompare(speciesB?.name || b, 'vi');
+            })
+            .forEach(speciesKey => {
+                const species = this.getInsectSpecies(speciesKey);
+                const count = Math.max(0, Math.floor(this.tamedInsects?.[speciesKey] || 0));
+                const eggCount = Math.max(0, Math.floor(this.insectEggs?.[speciesKey] || 0));
+                const capacity = this.getBeastBagCapacity(speciesKey);
+                const capacityText = Number.isFinite(capacity)
+                    ? `${formatNumber(count)}/${formatNumber(capacity)} ô`
+                    : `${formatNumber(count)}/&infin; ô`;
+                const noteParts = [capacityText, 'Ô thức ăn riêng'];
+                if (eggCount > 0) noteParts.push(`${formatNumber(eggCount)} trứng`);
+                tabs.push({
+                    key: `species:${speciesKey}`,
+                    label: species?.name || speciesKey,
+                    note: noteParts.join(' | ')
+                });
+            });
+
+        return tabs;
+    },
+
+    getBeastTabSpeciesKeys(tabKey = this.selectedBeastBagTab || 'all') {
+        const safeTabKey = tabKey || 'all';
+        if (safeTabKey === 'all') {
+            return this.getInsectSpeciesEntries().map(([speciesKey]) => speciesKey);
+        }
+
+        if (safeTabKey === 'rainbow') {
+            return this.getInsectSpeciesEntries()
+                .map(([speciesKey]) => speciesKey)
+                .filter(speciesKey => this.getSpeciesHabitatKey(speciesKey) === 'RAINBOW');
+        }
+
+        if (safeTabKey.startsWith('species:')) {
+            const speciesKey = safeTabKey.split(':')[1] || '';
+            return speciesKey && this.getInsectSpecies(speciesKey) ? [speciesKey] : [];
+        }
+
+        return [];
+    },
+
+    shouldShowBeastFeedPanel(tabKey = this.selectedBeastBagTab || 'all') {
+        if (this.hasSevenColorSpiritBag()) return true;
+        return tabKey === 'rainbow' || String(tabKey || '').startsWith('species:');
+    },
+
+    ensureValidBeastBagTab() {
+        if (this.hasSevenColorSpiritBag()) {
+            this.selectedBeastBagTab = 'all';
+            return this.selectedBeastBagTab;
+        }
+
+        const tabs = this.getBeastBagTabs();
+        if (!tabs.some(tab => tab.key === this.selectedBeastBagTab)) {
+            this.selectedBeastBagTab = 'all';
+        }
+
+        return this.selectedBeastBagTab;
     },
 
     hasUniquePurchase(key) {
@@ -3141,9 +3819,17 @@ const Input = {
         return true;
     },
 
-    hasBeastCapacity(amount = 1) {
+    hasBeastCapacity(amount = 1, speciesKey = null) {
         const safeAmount = Math.max(0, Math.floor(amount || 0));
-        return (this.getTotalTamedInsectCount() + safeAmount) <= this.getBeastBagCapacity();
+        if (speciesKey) {
+            const capacity = this.getBeastBagCapacity(speciesKey);
+            if (!Number.isFinite(capacity)) return true;
+            return (this.getInsectHabitatOccupancy(speciesKey) + safeAmount) <= capacity;
+        }
+
+        const capacity = this.getBeastBagCapacity();
+        if (!Number.isFinite(capacity)) return true;
+        return (this.getTotalTamedInsectCount() + safeAmount) <= capacity;
     },
 
     addInsectEgg(speciesKey, count = 1) {
@@ -3156,7 +3842,7 @@ const Input = {
         return safeCount;
     },
 
-    changeTamedInsects(speciesKey, delta = 0) {
+    changeTamedInsects(speciesKey, delta = 0, options = {}) {
         const species = this.getInsectSpecies(speciesKey);
         const safeDelta = Math.trunc(delta || 0);
         if (!species || safeDelta === 0) return 0;
@@ -3170,6 +3856,8 @@ const Input = {
             this.tamedInsects[speciesKey] = nextCount;
             this.markDiscoveredInsect(speciesKey);
         }
+
+        this.updateInsectColonyPopulation(speciesKey, currentCount, nextCount, options);
 
         this.ensureValidAttackMode();
         return nextCount - currentCount;
@@ -3203,7 +3891,7 @@ const Input = {
         this.insectEggs[speciesKey] = hatchPreview.availableEggs - hatchCount;
         if (this.insectEggs[speciesKey] <= 0) delete this.insectEggs[speciesKey];
 
-        this.changeTamedInsects(speciesKey, hatchCount);
+        this.changeTamedInsects(speciesKey, hatchCount, { source: 'hatch' });
         showNotify(`Ấp nở ${formatNumber(hatchCount)} ${species.name}`, CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color);
         this.refreshResourceUI();
         return { success: true, reason: 'hatched', count: hatchCount };
@@ -3233,9 +3921,9 @@ const Input = {
         const pool = Array.isArray(speciesPool) && speciesPool.length
             ? speciesPool
             : this.getActiveInsectSpeciesKeys();
-        const candidates = pool.filter(speciesKey => this.hasInsectHabitat(speciesKey));
+        const candidates = pool.filter(speciesKey => this.getSpeciesCareStatus(speciesKey).canReproduce);
 
-        if (!candidates.length || !this.hasBeastCapacity(1) || Math.random() >= chance) return null;
+        if (!candidates.length || Math.random() >= chance) return null;
 
         const weighted = {};
         candidates.forEach(speciesKey => {
@@ -3245,7 +3933,7 @@ const Input = {
         });
 
         const chosenKey = pickWeightedKey(weighted, candidates[0]);
-        this.changeTamedInsects(chosenKey, 1);
+        this.changeTamedInsects(chosenKey, 1, { source: 'breed' });
         return chosenKey;
     },
 
@@ -3453,12 +4141,14 @@ const Input = {
             SPEED: CONFIG.PILL.SPEED_QUALITIES,
             FORTUNE: CONFIG.PILL.FORTUNE_QUALITIES,
             BAG: CONFIG.ITEMS.STORAGE_BAGS,
+            RAINBOW_BAG: { SUPREME: CONFIG.ITEMS.SEVEN_COLOR_BAG },
             SWORD_ART: CONFIG.SECRET_ARTS,
             FLAME_ART: CONFIG.SECRET_ARTS,
             ARTIFACT: CONFIG.ARTIFACTS,
             INSECT_SKILL: CONFIG.INSECT.UNIQUE_ITEMS,
             INSECT_ARTIFACT: CONFIG.INSECT.UNIQUE_ITEMS,
-            SPIRIT_BAG: { HIGH: CONFIG.INSECT.BEAST_BAG }
+            SPIRIT_BAG: { HIGH: CONFIG.INSECT.BEAST_BAG },
+            RAINBOW_SPIRIT_BAG: { SUPREME: CONFIG.INSECT.SEVEN_COLOR_BEAST_BAG }
         };
 
         if (item.specialKey) {
@@ -3486,6 +4176,14 @@ const Input = {
             return CONFIG.INSECT.BEAST_BAG;
         }
 
+        if (item.category === 'RAINBOW_BAG') {
+            return CONFIG.ITEMS.SEVEN_COLOR_BAG;
+        }
+
+        if (item.category === 'RAINBOW_SPIRIT_BAG') {
+            return CONFIG.INSECT.SEVEN_COLOR_BEAST_BAG;
+        }
+
         const defs = categoryMap[item.category] || CONFIG.PILL.EXP_QUALITIES;
         return defs[item.quality] || defs.LOW;
     },
@@ -3510,11 +4208,11 @@ const Input = {
         }
 
         if (item.category === 'BREAKTHROUGH') {
-            const realmName = item.realmName || this.getNextMajorRealmInfo()?.name || "đột phá";
+            const realmName = item.realmName || this.getNextMajorRealmInfo()?.name || 'đột phá';
             return `${qualityConfig.label} ${realmName} đan`;
         }
 
-        if (item.category === 'BAG' || item.category === 'SPIRIT_BAG' || item.category === 'SPIRIT_HABITAT') {
+        if (['BAG', 'RAINBOW_BAG', 'SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(item.category)) {
             return qualityConfig.fullName;
         }
 
@@ -3524,13 +4222,13 @@ const Input = {
     _getItemCategoryLabelLegacy(item) {
         const staticLabels = {
             MATERIAL: 'Nguyên liệu',
-            SPIRIT_HABITAT: 'Linh thú đại',
+            SPIRIT_HABITAT: 'Linh thú Đại',
             BAG: 'Túi trữ vật',
-            SPIRIT_BAG: 'Linh thú đại',
+            SPIRIT_BAG: 'Linh thú Đại',
             ARTIFACT: 'Pháp bảo',
             INSECT_SKILL: 'Trùng đạo bí pháp',
             INSECT_ARTIFACT: 'Kỳ trùng bảo vật',
-            INSECT_EGG: 'Trùng noãn'
+            INSECT_EGG: 'Trứng noãn'
         };
         if (staticLabels[item.category]) return staticLabels[item.category];
         if (item.category === 'BAG') return 'Túi trữ vật';
@@ -3557,18 +4255,19 @@ const Input = {
     getItemDescription(item) {
         const qualityConfig = this.getItemQualityConfig(item);
         if (item.specialKey === 'CHUNG_CUC_DAO_NGUYEN_DAN') {
-            return 'Cực phẩm đạo đan bảy sắc, lập tức đưa tu vi lên Đạo tổ đỉnh phong, mở thất sắc đạo quang và để lại trạng thái vô hạn.';
+            return 'Cực phẩm đạo đan bảy sắc, lập tức đưa tu vi lên Đạo Tổ đỉnh phong, mở thất sắc đạo quang và để lại trạng thái vô hạn.';
         }
 
         if (item.specialKey === 'TAN_DAO_DIET_NGUYEN_DAN') {
-            return 'Cấm kị hắc đan, cưỡng ép bước vào Đạo tổ đỉnh phong trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
+            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Đạo Tổ đỉnh phong trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
         }
 
         if (item.category === 'SPIRIT_HABITAT') {
             const species = this.getInsectSpecies(item.speciesKey);
+            const extraSlots = Math.max(0, Math.floor(qualityConfig.capacity || 0));
             return species
-                ? `Linh Thú Đại riêng dành cho ${species.name}. Có nơi ở đúng mới có thể sinh nở ổn định, nếu nuôi sai sẽ có tỷ lệ tử vong.`
-                : 'Linh Thú Đại riêng giúp kỳ trùng sinh nở an toàn.';
+                ? `Linh Thú Đại riêng dành cho ${species.name}. Lần mua đầu tiên sẽ khai mở tab riêng, mỗi lần mua sau mở rộng thêm ${formatNumber(extraSlots)} ô sức chứa cho chính loài này.`
+                : `Linh Thú Đại riêng giúp kỳ trùng sinh nở an toàn và mỗi lần mua tăng thêm ${formatNumber(extraSlots)} ô sức chứa.`;
         }
 
         if (item.category === 'MATERIAL') {
@@ -3592,6 +4291,10 @@ const Input = {
         }
 
         switch (item.category) {
+            case 'RAINBOW_BAG':
+                return 'Thất sắc trữ vật nang mở ra không gian vô hạn, có thể dung nạp mọi loại vật phẩm. Chỉ có thể mua một lần nhưng giá cực cao.';
+            case 'RAINBOW_SPIRIT_BAG':
+                return 'Thất sắc Linh thú Đại có thể chứa mọi loài kỳ trùng với dung lượng vô hạn. Sau khi sở hữu, mọi loài đều được xem như có chỗ an trí phù hợp.';
             case 'BAG': {
                 const extraSlots = Math.max(0, Math.floor(qualityConfig.capacity || 0));
                 return `Mở rộng túi trữ vật thêm ${formatNumber(extraSlots)} ô. Có thể mua nhiều lần để cộng dồn dung lượng.`;
@@ -3601,9 +4304,9 @@ const Input = {
                 return `Mở rộng Linh Thú Đại thêm ${formatNumber(extraSlots)} ô, tăng chỗ cho linh trùng đã nở. Có thể mua nhiều lần để cộng dồn dung lượng.`;
             }
             case 'SWORD_ART':
-                return 'Kiếm đạo bí pháp chỉ truyền một lần. Sau khi lĩnh ngộ mới từ một thanh bản mệnh kiếm hóa thành Đại Canh Kiếm Trận hộ thân như hiện tại.';
+                return 'Kiếm đạo bí pháp chỉ truyền một lần. Sau khi lĩnh ngộ, một thanh bản mệnh kiếm sẽ hóa thành Đại Canh Kiếm Trận hộ thân.';
             case 'FLAME_ART':
-                return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiển hóa thành lam diễm, trước đó chỉ là một điểm sáng nhỏ.';
+                return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiện hóa thành lam diễm.';
             case 'ARTIFACT':
                 return qualityConfig.description || 'Pháp bảo hộ thân sau khi luyện hóa có thể khai triển quanh tâm ấn trong Bảng Bí Pháp.';
             case 'INSECT_SKILL':
@@ -3620,8 +4323,8 @@ const Input = {
             case 'INSIGHT':
                 return `Tăng vĩnh viễn ${Math.round((qualityConfig.expGainPct || 0) * 100)}% tu vi nhận từ chiến đấu và đan tu vi.`;
             case 'BREAKTHROUGH': {
-                const realmName = item.realmName || "cảnh giới kế tiếp";
-                return `Tăng ${Math.round(qualityConfig.breakthroughBoost * 100)}% tỉ lệ đột phá tới ${realmName}.`;
+                const realmName = item.realmName || 'cảnh giới kế tiếp';
+                return `Tăng ${Math.round(qualityConfig.breakthroughBoost * 100)}% tỷ lệ đột phá tới ${realmName}.`;
             }
             case 'ATTACK':
                 return `Tăng vĩnh viễn ${Math.round((qualityConfig.attackPct || 0) * 100)}% lực công kích.`;
@@ -3648,7 +4351,7 @@ const Input = {
             case 'SPEED':
                 return `Tăng vĩnh viễn ${Math.round((qualityConfig.speedPct || 0) * 100)}% tốc độ vận chuyển kiếm trận.`;
             case 'FORTUNE':
-                return `Tăng vĩnh viễn ${Math.round((qualityConfig.dropRatePct || 0) * 100)}% tỉ lệ rơi đan dược và linh thạch.`;
+                return `Tăng vĩnh viễn ${Math.round((qualityConfig.dropRatePct || 0) * 100)}% tỷ lệ rơi đan dược và linh thạch.`;
             case 'EXP':
             default:
                 return `Tăng ${Math.round(qualityConfig.expFactor * 100)}% tu vi của cảnh giới hiện tại.`;
@@ -3677,17 +4380,19 @@ const Input = {
     },
 
     getItemCategoryLabel(item) {
+        if (item.category === 'RAINBOW_BAG') return 'Túi trữ vật';
+        if (item.category === 'RAINBOW_SPIRIT_BAG') return 'Linh thú Đại';
         const staticLabels = {
             MATERIAL: 'Nguyên liệu',
-            SPIRIT_HABITAT: 'Linh thú đại',
+            SPIRIT_HABITAT: 'Linh thú Đại',
             BAG: 'Túi trữ vật',
-            SPIRIT_BAG: 'Linh thú đại',
+            SPIRIT_BAG: 'Linh thú Đại',
             ARTIFACT: 'Pháp bảo',
             SWORD_ART: 'Kiếm đạo bí pháp',
             FLAME_ART: 'Thiên địa linh hỏa',
             INSECT_SKILL: 'Trùng đạo bí pháp',
             INSECT_ARTIFACT: 'Kỳ trùng bảo vật',
-            INSECT_EGG: 'Trùng noãn'
+            INSECT_EGG: 'Trứng noãn'
         };
 
         if (staticLabels[item.category]) return staticLabels[item.category];
@@ -3952,6 +4657,18 @@ const Input = {
             });
         });
 
+        if (CONFIG.ITEMS?.SEVEN_COLOR_BAG) {
+            items.push({
+                id: 'RAINBOW_BAG:SUPREME',
+                kind: 'UPGRADE',
+                category: 'RAINBOW_BAG',
+                quality: CONFIG.ITEMS.SEVEN_COLOR_BAG.quality || 'SUPREME',
+                uniqueKey: 'THAT_SAC_TRU_VAT_NANG',
+                priceLowStone: CONFIG.ITEMS.SEVEN_COLOR_BAG.buyPriceLowStone || 0,
+                isOneTime: true
+            });
+        }
+
         Object.entries(CONFIG.INSECT?.UNIQUE_ITEMS || {}).forEach(([uniqueKey, uniqueConfig]) => {
             items.push({
                 id: `UNIQUE:${uniqueKey}`,
@@ -3999,13 +4716,15 @@ const Input = {
             });
         });
 
-        if (CONFIG.INSECT?.BEAST_BAG) {
+        if (CONFIG.INSECT?.SEVEN_COLOR_BEAST_BAG) {
             items.push({
-                id: 'SPIRIT_BAG:HIGH',
+                id: 'RAINBOW_SPIRIT_BAG:SUPREME',
                 kind: 'UPGRADE',
-                category: 'SPIRIT_BAG',
-                quality: CONFIG.INSECT.BEAST_BAG.quality || 'HIGH',
-                priceLowStone: CONFIG.INSECT.BEAST_BAG.buyPriceLowStone || 0
+                category: 'RAINBOW_SPIRIT_BAG',
+                quality: CONFIG.INSECT.SEVEN_COLOR_BEAST_BAG.quality || 'SUPREME',
+                uniqueKey: 'THAT_SAC_LINH_THU_DAI',
+                priceLowStone: CONFIG.INSECT.SEVEN_COLOR_BEAST_BAG.buyPriceLowStone || 0,
+                isOneTime: true
             });
         }
 
@@ -4015,9 +4734,10 @@ const Input = {
             ARTIFACT: -3.5,
             INSECT_SKILL: -3,
             INSECT_ARTIFACT: -2,
-            SPIRIT_BAG: -1.5,
+            RAINBOW_SPIRIT_BAG: -1.6,
             SPIRIT_HABITAT: -1.25,
             INSECT_EGG: -1.1,
+            RAINBOW_BAG: -1.05,
             BAG: -1,
             MATERIAL: -0.5,
             EXP: 0,
@@ -4080,6 +4800,10 @@ const Input = {
             InventoryUI.render();
         }
 
+        if (BeastBagUI && typeof BeastBagUI.isOpen === 'function' && BeastBagUI.isOpen()) {
+            BeastBagUI.render();
+        }
+
         if (ProfileUI && typeof ProfileUI.render === 'function') {
             ProfileUI.render();
         }
@@ -4110,13 +4834,13 @@ const Input = {
             return false;
         }
 
-        if (item.category === 'SPIRIT_HABITAT' && this.hasInsectHabitat(item.speciesKey)) {
-            showNotify('Linh Thú Đại này đã an trí xong.', qualityConfig.color || '#8ebfff');
+        if (item.category === 'BAG' && !this.canUpgradeInventoryCapacity(item)) {
+            showNotify('Túi trữ vật này chưa thể gia tăng dung lượng.', '#ffd36b');
             return false;
         }
 
-        if (item.category === 'BAG' && !this.canUpgradeInventoryCapacity(item)) {
-            showNotify('Túi trữ vật này chưa thể gia tăng dung lượng.', '#ffd36b');
+        if (item.category === 'RAINBOW_BAG' && !this.canUpgradeInventoryCapacity(item)) {
+            showNotify('Thất Sắc Trữ Vật Nang đã được khai mở.', qualityConfig.color || '#ffd36b');
             return false;
         }
 
@@ -4125,14 +4849,29 @@ const Input = {
             return false;
         }
 
-        const requiresInventorySpace = !['BAG', 'SPIRIT_BAG', 'SPIRIT_HABITAT', 'INSECT_EGG'].includes(item.category);
+        if (item.category === 'RAINBOW_SPIRIT_BAG' && !this.canUpgradeBeastBagCapacity(item)) {
+            showNotify('Thất Sắc Linh Thú Đại đã được khai mở.', qualityConfig.color || '#ffd36b');
+            return false;
+        }
+
+        if (item.category === 'SPIRIT_HABITAT' && !this.canUpgradeBeastBagCapacity(item)) {
+            showNotify(
+                this.hasSevenColorSpiritBag()
+                    ? 'Thất Sắc Linh Thú Đại đã khai mở, không cần mua thêm Linh Thú Đại riêng.'
+                    : 'Linh Thú Đại này chưa thể khai mở.',
+                qualityConfig.color || '#8ebfff'
+            );
+            return false;
+        }
+
+        const requiresInventorySpace = !['BAG', 'RAINBOW_BAG', 'SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT', 'INSECT_EGG'].includes(item.category);
         if (requiresInventorySpace && !this.hasInventorySpaceForSpec(item)) {
             showNotify('Túi trữ vật đã đầy, không thể mua thêm vật phẩm mới.', '#ff8a80');
             return false;
         }
 
         if (!this.spendSpiritStones(item.priceLowStone)) {
-            showNotify("Linh thạch không đủ để giao dịch", "#ff8a80");
+            showNotify('Linh thạch không đủ để giao dịch', '#ff8a80');
             return false;
         }
 
@@ -4162,9 +4901,37 @@ const Input = {
             return true;
         }
 
+        if (item.category === 'RAINBOW_BAG') {
+            this.markUniquePurchase(item.uniqueKey);
+            showNotify(
+                'Thất Sắc Trữ Vật Nang đã khai mở, túi trữ vật đạt dung lượng vô hạn.',
+                qualityConfig.color || '#fff1a8'
+            );
+            this.refreshResourceUI();
+            return true;
+        }
+
+        if (item.category === 'RAINBOW_SPIRIT_BAG') {
+            this.markUniquePurchase(item.uniqueKey);
+            showNotify(
+                'Thất Sắc Linh Thú Đại đã khai mở, mọi kỳ trùng đều có thể an trí trong không gian vô hạn.',
+                qualityConfig.color || '#ffe38b'
+            );
+            this.refreshResourceUI();
+            return true;
+        }
+
         if (item.category === 'SPIRIT_HABITAT') {
-            this.unlockInsectHabitat(item.speciesKey);
-            showNotify(`Đã an trí ${this.getItemDisplayName(item)}`, qualityConfig.color || '#8ebfff');
+            const hadDedicatedHabitat = Boolean(this.insectHabitats?.[item.speciesKey]);
+            const extraSlots = Math.max(0, Math.floor(qualityConfig.capacity || 0));
+            const nextCapacity = this.upgradeInsectHabitatCapacity(item.speciesKey, extraSlots, { unlock: true });
+            const actionText = hadDedicatedHabitat ? 'mở rộng lên' : 'đã khai mở với sức chứa';
+            const deltaText = hadDedicatedHabitat ? ` (+${formatNumber(extraSlots)} ô)` : '';
+
+            showNotify(
+                `${this.getItemDisplayName(item)} ${actionText} ${formatNumber(nextCapacity)} ô${deltaText}`,
+                qualityConfig.color || '#8ebfff'
+            );
             this.refreshResourceUI();
             return true;
         }
@@ -4416,7 +5183,7 @@ const Input = {
                 this.syncDerivedStats();
 
                 if (isForced) {
-                    showNotify(`CƯỜNG ÉP ĐỘT PHÁ THÀNH CÔNG: ${nextRank.name.toUpperCase()}`, "#ff8800");
+                    showNotify(`CƯỠNG ÉP ĐỘT PHÁ THÀNH CÔNG: ${nextRank.name.toUpperCase()}`, "#ff8800");
                 } else {
                     this.mana = this.maxMana;
                     showNotify(`ĐỘT PHÁ THÀNH CÔNG: ${nextRank.name.toUpperCase()}`, "#ffcc00");
@@ -4685,6 +5452,7 @@ const Input = {
             node.y = centerY + swirlY + chaosY;
         });
 
+        markLeaderInsectVisuals(visuals);
         this.insectCombat.visuals = visuals;
 
         if (!this.isAttacking) return;
@@ -4765,7 +5533,7 @@ const Input = {
             const secondaryColor = species?.secondaryColor || color;
             const auraColor = species?.auraColor || secondaryColor;
             const trailColor = species?.auraColor || secondaryColor;
-            const size = Math.max(1.8, node.size * scaleFactor);
+            const size = Math.max(1.8, node.size * scaleFactor * (node.isLeader ? 1.8 : 1));
 
             if (index > 0) {
                 const prev = this.insectCombat.visuals[index - 1];
@@ -5291,7 +6059,7 @@ const Input = {
         this.insectCombat.visuals.forEach(node => {
             const species = this.getInsectSpecies(node.speciesKey);
             const palette = getInsectCombatPalette(species);
-            const size = Math.max(1.8, node.size * scaleFactor);
+            const size = Math.max(1.8, node.size * scaleFactor * (node.isLeader ? 1.8 : 1));
 
             drawInsectTrail(
                 ctx,
@@ -5428,6 +6196,7 @@ const Input = {
             );
         });
 
+        markLeaderInsectVisuals(visuals);
         this.insectUltimate.visuals = visuals;
         this.insectUltimate.focusTargets = focusTargets;
 
@@ -6353,6 +7122,49 @@ function syncPopupCursorState() {
     document.body.classList.toggle('popup-cursor-active', hasVisiblePopupOverlay());
 }
 
+function setTextIfPresent(selector, text) {
+    const node = document.querySelector(selector);
+    if (node) node.textContent = text;
+}
+
+function setAttrIfPresent(selector, attribute, value) {
+    const node = document.querySelector(selector);
+    if (node) node.setAttribute(attribute, value);
+}
+
+function repairLegacyUiText() {
+    if (document?.title != null) {
+        document.title = 'Đại Canh Kiếm Trận - 72 Thanh Trúc Phong Vân Kiếm';
+    }
+
+    [
+        ['#settings-popup .popup-header h3', 'THIÊN ĐẠO QUY TẮC'],
+        ['#shop-popup .popup-header h3', 'LINH THỊ CỬA HÀNG'],
+        ['#inventory-popup .popup-header h3', 'TÚI KHÔNG GIAN TRỮ VẬT'],
+        ['#skills-popup .popup-header h3', 'BẢNG BÍ PHÁP'],
+        ['#insect-book-popup .popup-header h3', 'KỲ TRÙNG BẢNG'],
+        ['#profile-popup .popup-header h3', 'HỒ SƠ KIẾM TU'],
+        ['#inventory-tabs [data-inventory-tab="items"]', 'Vật phẩm'],
+        ['#inventory-tabs [data-inventory-tab="stones"]', 'Linh thạch'],
+        ['#inventory-panel-items h4', 'Vật phẩm'],
+        ['#inventory-panel-stones h4', 'Linh thạch']
+    ].forEach(([selector, text]) => setTextIfPresent(selector, text));
+
+    [
+        ['#btn-profile', 'aria-label', 'Mở hồ sơ kiếm tu'],
+        ['#btn-settings img', 'alt', 'Thiên đạo quy tắc'],
+        ['#btn-shop img', 'alt', 'Linh thị'],
+        ['#btn-inventory img', 'alt', 'Túi trữ vật'],
+        ['#btn-beast-bag img', 'alt', 'Linh thú đại'],
+        ['#btn-breakthrough img', 'alt', 'Độ kiếp đột phá'],
+        ['#btn-move', 'aria-label', 'Luân bàn thân pháp'],
+        ['#btn-ultimate img', 'alt', 'Tuyệt kỹ'],
+        ['#btn-form img', 'alt', 'Đổi kiếm thức'],
+        ['#btn-skill-list', 'title', 'Bảng bí pháp'],
+        ['#btn-attack img', 'alt', 'Xuất kiếm']
+    ].forEach(([selector, attribute, value]) => setAttrIfPresent(selector, attribute, value));
+}
+
 const SettingsUI = {
     overlay: document.getElementById('settings-popup'),
     btnOpen: document.getElementById('btn-settings'),
@@ -6652,20 +7464,30 @@ function buildWalletMarkup() {
 
 function buildInventoryCapacityMarkup() {
     const summary = Input.getInventorySummary();
-    const usagePct = Math.max(0, Math.min(100, Math.round((summary.usageRatio || 0) * 100)));
+    const isInfinite = !Number.isFinite(summary.capacity);
+    const usagePct = isInfinite ? 100 : Math.max(0, Math.min(100, Math.round((summary.usageRatio || 0) * 100)));
+    const capacityLabel = isInfinite
+        ? `${formatNumber(summary.uniqueCount)}/&infin; ô`
+        : `${formatNumber(summary.uniqueCount)}/${formatNumber(summary.capacity)} ô`;
+    const freeSlotText = isInfinite
+        ? 'Sức chứa không giới hạn'
+        : `Còn trống ${formatNumber(summary.freeSlots)} ô`;
+    const stateText = isInfinite
+        ? 'Đã khai mở Thất Sắc Trữ Vật Nang'
+        : (summary.freeSlots > 0 ? 'Có thể nhận thêm vật phẩm mới' : 'Túi đã đầy');
 
     return `
         <div class="inventory-capacity-card">
             <div class="inventory-capacity-card__row">
                 <span class="inventory-capacity-card__label">Túi trữ vật</span>
-                <strong class="inventory-capacity-card__value">${formatNumber(summary.uniqueCount)}/${formatNumber(summary.capacity)} ô</strong>
+                <strong class="inventory-capacity-card__value">${capacityLabel}</strong>
             </div>
-            <div class="inventory-capacity-card__track">
+            <div class="inventory-capacity-card__track ${isInfinite ? 'is-infinite' : ''}">
                 <span style="width:${usagePct}%"></span>
             </div>
             <div class="inventory-capacity-card__meta">
-                <span>Còn trống ${formatNumber(summary.freeSlots)} ô</span>
-                <span>${summary.freeSlots > 0 ? 'Có thể nhận thêm vật phẩm mới' : 'Túi đã đầy'}</span>
+                <span>${freeSlotText}</span>
+                <span>${stateText}</span>
             </div>
         </div>
     `;
@@ -6673,26 +7495,64 @@ function buildInventoryCapacityMarkup() {
 
 function buildBeastWalletMarkup() {
     const summary = Input.getBeastSummary();
-    const usagePct = Math.max(0, Math.min(100, Math.round((summary.usageRatio || 0) * 100)));
+    const isInfinite = !Number.isFinite(summary.capacity);
+    const usagePct = isInfinite ? 100 : Math.max(0, Math.min(100, Math.round((summary.usageRatio || 0) * 100)));
+    const capacityLabel = isInfinite
+        ? `${formatNumber(summary.totalBeasts)}/&infin; linh trùng đã nở`
+        : `${formatNumber(summary.totalBeasts)}/${formatNumber(summary.capacity)} linh trùng đã nở`;
+    const freeSlotText = isInfinite
+        ? 'Thất Sắc Linh Thú Đại chứa mọi loài không giới hạn'
+        : (summary.freeSlots > 0 ? `Còn ${formatNumber(summary.freeSlots)} ô cho linh trùng mới` : 'Linh Thú Đại đã đầy');
+    const masteryText = Input.hasKhuTrungThuatUnlocked()
+        ? 'Đã lĩnh ngộ Khu Trùng Thuật'
+        : 'Chưa lĩnh ngộ Khu Trùng Thuật';
+    const foodCycleText = summary.foodDemand > 0
+        ? (Number.isFinite(summary.foodCycles)
+            ? `Kho thức ăn duy trì ${formatNumber(summary.foodCycles)} chu kỳ`
+            : 'Kho thức ăn dư dả cho cả đàn')
+        : (summary.totalBeasts > 0 && summary.manualCareSpeciesCount <= 0
+            ? 'Bầy trong Thất Sắc đang được dưỡng đàn, không cần cho ăn'
+            : 'Chưa có linh trùng cần chăm');
+    const breedingText = summary.reproductiveSpeciesCount > 0
+        ? `${formatNumber(summary.reproductiveSpeciesCount)} bầy có thể sinh nở`
+        : 'Chưa có bầy sẵn sàng sinh nở';
+    const habitatModeText = Input.hasSevenColorSpiritBag()
+        ? 'Không gian Thất Sắc hợp nhất cho mọi loài'
+        : 'Mỗi Linh Thú Đại vẫn được quản theo từng đàn riêng';
 
     return `
         <div class="beast-wallet">
             <div class="beast-wallet__header">
                 <div>
                     <span class="beast-wallet__eyebrow">Linh Thú Đại</span>
-                    <strong>${formatNumber(summary.totalBeasts)}/${formatNumber(summary.capacity)} linh trùng đã nở</strong>
+                    <strong>${capacityLabel}</strong>
                 </div>
-                <div class="beast-wallet__meta">
-                    <span>${formatNumber(summary.totalEggs)} trứng noãn</span>
-                    <span>${formatNumber(summary.discoveredCount)}/${formatNumber(summary.speciesTotal)} loài đã mở</span>
-                </div>
+                <div class="beast-wallet__state">${freeSlotText}</div>
             </div>
-            <div class="inventory-capacity-card__track beast-wallet__track">
+            <div class="inventory-capacity-card__track beast-wallet__track ${isInfinite ? 'is-infinite' : ''}">
                 <span style="width:${usagePct}%"></span>
             </div>
+            <div class="beast-wallet__stats">
+                <article class="beast-wallet__stat">
+                    <span>Trứng noãn</span>
+                    <strong>${formatNumber(summary.totalEggs)}</strong>
+                </article>
+                <article class="beast-wallet__stat">
+                    <span>Loài đã mở</span>
+                    <strong>${formatNumber(summary.discoveredCount)}/${formatNumber(summary.speciesTotal)}</strong>
+                </article>
+                <article class="beast-wallet__stat">
+                    <span>Sinh nở</span>
+                    <strong>${breedingText}</strong>
+                </article>
+                <article class="beast-wallet__stat">
+                    <span>Dưỡng đàn</span>
+                    <strong>${foodCycleText}</strong>
+                </article>
+            </div>
             <div class="beast-wallet__footer">
-                <span>${summary.freeSlots > 0 ? `Còn ${formatNumber(summary.freeSlots)} ô cho linh trùng mới` : 'Linh Thú Đại đã đầy'}</span>
-                <span>${Input.hasKhuTrungThuatUnlocked() ? 'Đã lĩnh ngộ Khu Trùng Thuật' : 'Chưa lĩnh ngộ Khu Trùng Thuật'}</span>
+                <span>${masteryText}</span>
+                <span>${habitatModeText}</span>
             </div>
         </div>
     `;
@@ -7000,20 +7860,37 @@ function buildInsectEggCardMarkup(speciesKey, count) {
         : 'Không cần nguyên liệu';
 
     return `
-        <article class="inventory-slot beast-slot egg-slot" style="--slot-accent:${species.eggColor || species.color};${buildInsectVisualVars(species, { egg: true })}">
-            <div class="slot-badge">${escapeHtml(tier.label)}</div>
-            <div class="beast-card-visual beast-card-visual--egg" style="${buildInsectVisualVars(species, { egg: true })}">
-                ${buildInsectArtMarkup(speciesKey, { egg: true })}
+        <article class="inventory-slot beast-slot beast-slot--egg" style="--slot-accent:${species.eggColor || species.color};${buildInsectVisualVars(species, { egg: true })}">
+            <div class="beast-slot__head">
+                <div class="beast-card-visual beast-card-visual--egg" style="${buildInsectVisualVars(species, { egg: true })}">
+                    ${buildInsectArtMarkup(speciesKey, { egg: true })}
+                </div>
+                <div class="beast-slot__info">
+                    <div class="beast-slot__title-row">
+                        <div class="beast-slot__title-block">
+                            <div class="slot-badge">${escapeHtml(tier.label)}</div>
+                            <h4>Trứng ${escapeHtml(species.name)}</h4>
+                        </div>
+                        <div class="beast-slot__count">
+                            <span>Số lượng</span>
+                            <strong>${formatNumber(count)}</strong>
+                        </div>
+                    </div>
+                    ${styleLabel ? `<div class="beast-slot__tags"><div class="beast-slot__style">${escapeHtml(styleLabel)}</div></div>` : ''}
+                    <p class="beast-slot__summary">${escapeHtml(styleHint)}</p>
+                </div>
             </div>
-            <h4>Trứng ${escapeHtml(species.name)}</h4>
-            ${styleLabel ? `<div class="beast-slot__style">${escapeHtml(styleLabel)}</div>` : ''}
-            <p>${escapeHtml(styleHint)}</p>
-            <div class="beast-slot__stats">
-                <span>${escapeHtml(requirementText)}</span>
-                <span>${escapeHtml(hatchPreview.hasHabitat ? `Đã có ${hatchPreview.habitatName}` : `Cần ${hatchPreview.habitatName} để ấp nở`)}</span>
+            <div class="beast-slot__details">
+                <div class="beast-slot__detail">
+                    <span>Không gian</span>
+                    <strong>${escapeHtml(hatchPreview.hasHabitat ? `Đã có ${hatchPreview.habitatName}` : `Cần ${hatchPreview.habitatName} để ấp nở`)}</strong>
+                </div>
+                <div class="beast-slot__detail beast-slot__detail--wide">
+                    <span>Nguyên liệu</span>
+                    <strong>${escapeHtml(requirementText)}</strong>
+                </div>
             </div>
-            <div class="slot-count">${formatNumber(count)}</div>
-            <div class="slot-actions">
+            <div class="beast-slot__actions">
                 <button class="btn-slot-action" data-beast-action="hatch" data-species-key="${escapeHtml(speciesKey)}">Ấp nở</button>
             </div>
         </article>
@@ -7028,31 +7905,282 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
     const styleLabel = getInsectStyleLabel(species);
     const styleHint = getInsectStyleHint(species);
     const careStatus = Input.getSpeciesCareStatus(speciesKey);
-    const foodStatusText = careStatus.hasFood
-        ? `Thức ăn đủ (${formatNumber(careStatus.availableFood)})`
-        : `Thiếu thức ăn (${formatNumber(careStatus.availableFood)}/${formatNumber(careStatus.foodDemand)})`;
+    const leaderLabel = careStatus.leaderInfo?.title || 'Thủ lĩnh';
+    const sexStatusText = `Đực ${formatNumber(careStatus.sexSummary.male)} | Cái ${formatNumber(careStatus.sexSummary.female)}`;
+    const satietyText = careStatus.isRainbowHabitat
+        ? 'Thất Sắc dưỡng đàn, không bị đói'
+        : careStatus.hasFood
+            ? `No bụng sẵn sàng ${formatNumber(careStatus.storedSatiety)}/${formatNumber(careStatus.foodDemand)}`
+            : `Dự trữ no bụng ${formatNumber(careStatus.storedSatiety)}/${formatNumber(careStatus.foodDemand)}`;
+    const preferredFoodText = careStatus.preferredFoodKeys.length
+        ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
+        : 'Mọi loại thức ăn có linh dưỡng';
+    const foodStatusText = careStatus.isRainbowHabitat
+        ? 'Không cần ô thức ăn riêng'
+        : !careStatus.hasHabitat
+            ? `Thiếu ${careStatus.habitatName}`
+            : careStatus.foodStorageNutrition > 0
+                ? `Ô thức ăn ${formatNumber(careStatus.foodStorageNutrition)} linh dưỡng`
+                : 'Ô thức ăn đang trống';
+    const hasBreedingPair = count >= 2 && careStatus.sexSummary.male > 0 && careStatus.sexSummary.female > 0;
+    const breedingText = careStatus.canReproduce
+        ? 'Có thể sinh nở'
+        : !hasBreedingPair
+            ? 'Cần ít nhất 1 cặp đực - cái'
+            : !careStatus.hasHabitat
+                ? `Cần ${careStatus.habitatName}`
+                : !Input.hasBeastCapacity(1, speciesKey)
+                    ? 'Linh Thú Đại đã đầy'
+                    : 'Chưa đủ thức ăn để sinh nở';
+    const habitatText = careStatus.hasHabitat
+        ? `Đúng ${careStatus.habitatName}`
+        : `Thiếu ${careStatus.habitatName}`;
+    const habitatCapacityText = Number.isFinite(careStatus.habitatCapacity)
+        ? `${formatNumber(count)}/${formatNumber(careStatus.habitatCapacity)} ô`
+        : `${formatNumber(count)}/∞ ô`;
 
     return `
-        <article class="inventory-slot beast-slot" style="--slot-accent:${species.color};${buildInsectVisualVars(species)}">
-            <div class="slot-badge">${escapeHtml(tier.label)}</div>
-            <div class="beast-card-visual" style="${buildInsectVisualVars(species)}">
-                ${buildInsectArtMarkup(speciesKey)}
+        <article class="inventory-slot beast-slot beast-slot--tamed" style="--slot-accent:${species.color};${buildInsectVisualVars(species)}">
+            <div class="beast-slot__head">
+                <div class="beast-card-visual" style="${buildInsectVisualVars(species)}">
+                    ${buildInsectArtMarkup(speciesKey)}
+                </div>
+                <div class="beast-slot__info">
+                    <div class="beast-slot__title-row">
+                        <div class="beast-slot__title-block">
+                            <div class="slot-badge">${escapeHtml(tier.label)}</div>
+                            <h4>${escapeHtml(species.name)}</h4>
+                        </div>
+                        <div class="beast-slot__count">
+                            <span>Đàn trùng</span>
+                            <strong>${formatNumber(count)}</strong>
+                        </div>
+                    </div>
+                    <div class="beast-slot__tags">
+                        <div class="beast-slot__style">${escapeHtml(leaderLabel)}</div>
+                        ${styleLabel ? `<div class="beast-slot__style">${escapeHtml(styleLabel)}</div>` : ''}
+                    </div>
+                    <p class="beast-slot__summary">${escapeHtml(styleHint)}</p>
+                </div>
             </div>
-            <h4>${escapeHtml(species.name)}</h4>
-            ${styleLabel ? `<div class="beast-slot__style">${escapeHtml(styleLabel)}</div>` : ''}
-            <p>${escapeHtml(styleHint)}</p>
-            <div class="beast-slot__stats">
-                <span>Công sát ${attackPct}%</span>
-                <span>Đàn trùng ${formatNumber(count)}</span>
+            <div class="beast-slot__metrics">
+                <div class="beast-slot__metric">
+                    <span>Công sát</span>
+                    <strong>${attackPct}%</strong>
+                </div>
+                <div class="beast-slot__metric">
+                    <span>Giới tính</span>
+                    <strong>${escapeHtml(sexStatusText)}</strong>
+                </div>
+                <div class="beast-slot__metric">
+                    <span>Không gian</span>
+                    <strong>${escapeHtml(`${habitatText} • ${habitatCapacityText}`)}</strong>
+                </div>
+                <div class="beast-slot__metric">
+                    <span>Sinh nở</span>
+                    <strong>${escapeHtml(breedingText)}</strong>
+                </div>
             </div>
-            <div class="slot-count">${formatNumber(count)}</div>
-            <div class="beast-slot__stats">
-                <span>${escapeHtml(careStatus.hasHabitat ? 'Đúng Linh thú đại' : 'Sai Linh thú đại')}</span>
-                <span>${escapeHtml(foodStatusText)}</span>
-                <span>${escapeHtml(careStatus.canReproduce ? 'Có thể ấp nở' : 'Chưa thể ấp nở')}</span>
+            <div class="beast-slot__details">
+                <div class="beast-slot__detail">
+                    <span>No bụng</span>
+                    <strong>${escapeHtml(satietyText)}</strong>
+                </div>
+                <div class="beast-slot__detail">
+                    <span>Ô thức ăn</span>
+                    <strong>${escapeHtml(foodStatusText)}</strong>
+                </div>
+                <div class="beast-slot__detail beast-slot__detail--wide">
+                    <span>Mồi ưa thích</span>
+                    <strong>${escapeHtml(preferredFoodText)}</strong>
+                </div>
             </div>
         </article>
     `;
+}
+
+function buildBeastTabsMarkup(currentTab = 'all') {
+    return Input.getBeastBagTabs().map(tab => `
+        <button
+            class="panel-tab ${tab.key === currentTab ? 'is-active' : ''}"
+            type="button"
+            data-beast-tab="${escapeHtml(tab.key)}"
+            title="${escapeHtml(tab.note || tab.label)}"
+        >${escapeHtml(tab.label)}</button>
+    `).join('');
+}
+
+function getInsectBreedingStatusText(careStatus) {
+    const hasBreedingPair = careStatus.count >= 2 && careStatus.sexSummary.male > 0 && careStatus.sexSummary.female > 0;
+    if (careStatus.canReproduce) return 'Có thể sinh nở';
+    if (!hasBreedingPair) return 'Cần ít nhất 1 cặp đực - cái';
+    if (!careStatus.hasHabitat) return `Cần ${careStatus.habitatName}`;
+    if (!Input.hasBeastCapacity(1, careStatus.speciesKey)) return 'Linh Thú Đại đã đầy';
+    return 'Chưa đủ thức ăn để sinh nở';
+}
+
+function getInsectPreferredFoodText(careStatus) {
+    return careStatus.preferredFoodKeys.length
+        ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
+        : 'Mọi loại thức ăn có linh dưỡng';
+}
+
+function getBeastFoodMaterialEntries(speciesKey) {
+    const preferredSet = new Set(Input.getSpeciesPreferredFoodKeys(speciesKey));
+    return Object.entries(CONFIG.ITEMS?.MATERIALS || {})
+        .filter(([, materialConfig]) => (Number(materialConfig?.nutrition) || 0) > 0)
+        .map(([materialKey, materialConfig]) => ({
+            materialKey,
+            materialConfig,
+            inventoryCount: Input.getMaterialInventoryCount(materialKey),
+            nutrition: Math.max(0, Number(materialConfig?.nutrition) || 0),
+            preferred: preferredSet.has(materialKey)
+        }))
+        .sort((a, b) => {
+            if (a.preferred !== b.preferred) return a.preferred ? -1 : 1;
+            const qualityDiff = QUALITY_ORDER.indexOf(b.materialConfig.quality || 'LOW') - QUALITY_ORDER.indexOf(a.materialConfig.quality || 'LOW');
+            if (qualityDiff !== 0) return qualityDiff;
+            return (a.materialConfig.fullName || a.materialKey).localeCompare(b.materialConfig.fullName || b.materialKey, 'vi');
+        });
+}
+
+function buildSpeciesBeastFoodPanelMarkup(speciesKey) {
+    const species = Input.getInsectSpecies(speciesKey);
+    if (!species) return '';
+
+    const careStatus = Input.getSpeciesCareStatus(speciesKey);
+    const habitatKey = careStatus.habitatKey || speciesKey;
+    const preferredFoodText = getInsectPreferredFoodText(careStatus);
+    const breedingText = getInsectBreedingStatusText(careStatus);
+    const feedButtonLabel = careStatus.hasFood ? 'Bồi thực đàn này' : 'Cho ăn đàn này';
+    const satietySummaryText = careStatus.count > 0
+        ? `No bụng dự trữ: ${formatNumber(careStatus.storedSatiety)}/${formatNumber(careStatus.foodDemand)}`
+        : 'Ô này chưa có linh trùng đang dưỡng';
+    const colonySummaryText = careStatus.count > 0
+        ? `Đực ${formatNumber(careStatus.sexSummary.male)} | Cái ${formatNumber(careStatus.sexSummary.female)}`
+        : 'Đã sẵn sàng nuôi bầy mới';
+    const habitatCapacityText = Number.isFinite(careStatus.habitatCapacity)
+        ? `${formatNumber(careStatus.count)}/${formatNumber(careStatus.habitatCapacity)} ô`
+        : `${formatNumber(careStatus.count)}/∞ ô`;
+    const foodMaterials = getBeastFoodMaterialEntries(speciesKey);
+    const selectableFoods = foodMaterials.filter(entry => entry.inventoryCount > 0);
+    const storedEntries = Input.getFoodStorageEntries(habitatKey, { includeShared: false });
+    const storedSummaryText = storedEntries.length
+        ? storedEntries.map(entry => `${entry.materialConfig?.fullName || entry.materialKey} x${formatNumber(entry.count)}`).join(', ')
+        : 'Ô thức ăn đang trống';
+    const foodOptionsMarkup = foodMaterials.length
+        ? foodMaterials.map((entry, index) => `
+            <option
+                value="${escapeHtml(entry.materialKey)}"
+                ${index === 0 ? 'selected' : ''}
+            >${escapeHtml(`${entry.materialConfig.fullName} | trong túi ${formatNumber(entry.inventoryCount)} | +${formatNumber(entry.nutrition)} linh dưỡng${entry.preferred ? ' | mồi ưa thích' : ''}`)}</option>
+        `).join('')
+        : '<option value="">Chưa có thức ăn phù hợp</option>';
+    const accentColor = selectableFoods[0]?.materialConfig?.color || species.color;
+
+    return `
+        <div class="beast-food-panel">
+            <div class="beast-food-summary">
+                <div class="inventory-capacity-card">
+                    <div class="inventory-capacity-card__row">
+                        <span class="inventory-capacity-card__label">Ô thức ăn ${escapeHtml(species.name)}</span>
+                        <strong class="inventory-capacity-card__value">${formatNumber(careStatus.foodStorageNutrition)} linh dưỡng</strong>
+                    </div>
+                    <div class="inventory-capacity-card__meta">
+                        <span>${escapeHtml(satietySummaryText)}</span>
+                        <span>${escapeHtml(`${colonySummaryText} | Sức chứa ${habitatCapacityText}`)}</span>
+                    </div>
+                    <div class="inventory-capacity-card__meta">
+                        <span>${escapeHtml(`Mồi ưa thích: ${preferredFoodText}`)}</span>
+                        <span>${escapeHtml(`Sinh nở: ${breedingText}`)}</span>
+                    </div>
+                </div>
+                <div class="slot-actions beast-food-summary__actions">
+                    <button class="btn-slot-action" data-beast-action="feed-tab" data-species-key="${escapeHtml(speciesKey)}" ${(careStatus.count > 0 && careStatus.canFeed) ? '' : 'disabled'}>${feedButtonLabel}</button>
+                </div>
+            </div>
+            <article class="inventory-slot stone-slot beast-food-slot" style="--slot-accent:${accentColor}">
+                <div class="slot-badge">Ô cho ăn</div>
+                <h4>Nạp thức ăn</h4>
+                <p>Chọn một loại mồi, nhập số lượng rồi nạp vào ô của ${escapeHtml(species.name)}.</p>
+                <div class="slot-meta">${escapeHtml(`Mồi ưa thích: ${preferredFoodText}`)}</div>
+                <div class="slot-meta">${escapeHtml(`Thức ăn đang dự trữ: ${storedSummaryText}`)}</div>
+                <div class="beast-food-slot__controls">
+                    <select class="shop-control-input beast-food-slot__select" data-food-select ${foodMaterials.length ? '' : 'disabled'}>
+                        ${foodOptionsMarkup}
+                    </select>
+                    <input
+                        class="shop-control-input beast-food-slot__input"
+                        type="number"
+                        min="1"
+                        step="1"
+                        value="${selectableFoods.length ? 1 : 0}"
+                        ${selectableFoods.length ? '' : 'disabled'}
+                        data-food-amount
+                    >
+                    <button
+                        class="btn-slot-action"
+                        data-food-action="store-selected"
+                        data-species-key="${escapeHtml(speciesKey)}"
+                        ${selectableFoods.length ? '' : 'disabled'}
+                    >Nạp vào ô</button>
+                </div>
+            </article>
+        </div>
+    `;
+}
+
+function buildRainbowBeastFoodPanelMarkup() {
+    const rainbowSpeciesKeys = Input.getBeastTabSpeciesKeys('rainbow');
+    const rainbowBeastCount = rainbowSpeciesKeys.reduce((total, speciesKey) => total + Math.max(0, Math.floor(Input.tamedInsects?.[speciesKey] || 0)), 0);
+    const rainbowEggCount = rainbowSpeciesKeys.reduce((total, speciesKey) => total + Math.max(0, Math.floor(Input.insectEggs?.[speciesKey] || 0)), 0);
+    const reproductiveCount = rainbowSpeciesKeys.filter(speciesKey => Input.getSpeciesCareStatus(speciesKey).canReproduce).length;
+
+    return `
+        <div class="beast-food-panel">
+            <div class="inventory-capacity-card">
+                <div class="inventory-capacity-card__row">
+                    <span class="inventory-capacity-card__label">Thất Sắc Linh Thú Đại</span>
+                    <strong class="inventory-capacity-card__value">Miễn đói</strong>
+                </div>
+                <div class="inventory-capacity-card__meta">
+                    <span>Không cần nạp thức ăn thủ công</span>
+                    <span>Sức chứa không giới hạn cho mọi loài</span>
+                </div>
+                <div class="inventory-capacity-card__meta">
+                    <span>${formatNumber(rainbowBeastCount)} linh trùng | ${formatNumber(rainbowEggCount)} trứng</span>
+                    <span>${reproductiveCount > 0 ? `${formatNumber(reproductiveCount)} bầy có thể sinh nở` : 'Bầy trong Thất Sắc đang ổn định'}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function buildBeastFoodPanelMarkup(currentTab = 'all') {
+    if (Input.hasSevenColorSpiritBag()) {
+        return buildRainbowBeastFoodPanelMarkup();
+    }
+
+    if (currentTab === 'rainbow') {
+        return buildRainbowBeastFoodPanelMarkup();
+    }
+
+    if (String(currentTab || '').startsWith('species:')) {
+        return buildSpeciesBeastFoodPanelMarkup(currentTab.split(':')[1] || '');
+    }
+
+    return '';
+}
+
+function markLeaderInsectVisuals(visuals = []) {
+    const assignedSpecies = new Set();
+    visuals.forEach(node => {
+        node.isLeader = false;
+        if (!node?.speciesKey || assignedSpecies.has(node.speciesKey)) return;
+        if (!Input.getSpeciesLeaderInfo(node.speciesKey)) return;
+        node.isLeader = true;
+        assignedSpecies.add(node.speciesKey);
+    });
 }
 
 function openPopup(overlay) {
@@ -7197,7 +8325,7 @@ ShopUI = {
     },
 
     getCategoryOptions() {
-        return ['ALL', 'SWORD_ART', 'FLAME_ART', 'ARTIFACT', 'INSECT_SKILL', 'INSECT_ARTIFACT', 'SPIRIT_BAG', 'SPIRIT_HABITAT', 'INSECT_EGG', 'MATERIAL', 'EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'BAG', 'SPECIAL'];
+        return ['ALL', 'SWORD_ART', 'FLAME_ART', 'ARTIFACT', 'INSECT_SKILL', 'INSECT_ARTIFACT', 'SPIRIT_HABITAT', 'INSECT_EGG', 'MATERIAL', 'EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'BAG', 'SPECIAL'];
     },
 
     ensureToolbar() {
@@ -7246,7 +8374,7 @@ ShopUI = {
         const nextRealm = Input.getNextMajorRealmInfo();
         const tip = nextRealm
             ? `Đang bày bán đủ loại đan tu vi, cường hóa, vận khí và cả ${escapeHtml(nextRealm.name)} đan cho lần đột phá kế tiếp.`
-            : 'Đã ở cảnh giới tối cao, cửa hàng vẫn còn nhiều đan cường hóa và hai viên cấm kị đặc biệt.';
+            : 'Đã ở cảnh giới tối cao, cửa hàng vẫn còn nhiều đan cường hóa và hai viên cấm kỵ đặc biệt.';
 
         const tipEl = this.toolbar.querySelector('#shop-tip');
         const searchEl = this.toolbar.querySelector('#shop-search');
@@ -7364,13 +8492,18 @@ ShopUI = {
         const cards = items.map(item => {
             const qualityConfig = Input.getItemQualityConfig(item);
             const isOwnedUnique = Boolean(item.isOneTime && item.uniqueKey && Input.hasUniquePurchase(item.uniqueKey));
-            const isOwnedHabitat = item.category === 'SPIRIT_HABITAT' && Input.hasInsectHabitat(item.speciesKey);
+            const hasDedicatedHabitat = item.category === 'SPIRIT_HABITAT' && Boolean(Input.insectHabitats?.[item.speciesKey]);
+            const hasRainbowHabitat = item.category === 'SPIRIT_HABITAT' && Input.hasSevenColorSpiritBag();
             const canStoreOrUpgrade = item.category === 'BAG'
                 ? Input.canUpgradeInventoryCapacity(item)
+                : item.category === 'RAINBOW_BAG'
+                    ? Input.canUpgradeInventoryCapacity(item)
                 : item.category === 'SPIRIT_BAG'
                     ? Input.canUpgradeBeastBagCapacity(item)
+                    : item.category === 'RAINBOW_SPIRIT_BAG'
+                        ? Input.canUpgradeBeastBagCapacity(item)
                     : item.category === 'SPIRIT_HABITAT'
-                        ? !isOwnedHabitat
+                        ? Input.canUpgradeBeastBagCapacity(item)
                         : item.category === 'INSECT_EGG'
                             ? true
                             : (!isOwnedUnique && Input.hasInventorySpaceForSpec(item));
@@ -7386,10 +8519,14 @@ ShopUI = {
                 actionLabel = isOwnedUnique
                     ? 'Đã mua'
                     : (canStoreOrUpgrade ? (CONFIG.ARTIFACTS?.[item.uniqueKey]?.buttonLabel || 'Mua') : 'Túi đầy');
+            } else if (item.category === 'RAINBOW_BAG') {
+                actionLabel = isOwnedUnique ? 'Đã khai mở' : (canStoreOrUpgrade ? 'Mua' : 'Không hợp lệ');
             } else if (item.category === 'SPIRIT_BAG') {
                 actionLabel = canStoreOrUpgrade ? 'Mở rộng' : 'Không hợp lệ';
+            } else if (item.category === 'RAINBOW_SPIRIT_BAG') {
+                actionLabel = isOwnedUnique ? 'Đã khai mở' : (canStoreOrUpgrade ? 'Mua' : 'Không hợp lệ');
             } else if (item.category === 'SPIRIT_HABITAT') {
-                actionLabel = isOwnedHabitat ? 'Đã an trí' : 'Mua';
+                actionLabel = hasRainbowHabitat ? 'Không cần' : (hasDedicatedHabitat ? 'Mở rộng' : 'Mua');
             } else if (item.category === 'INSECT_EGG') {
                 actionLabel = 'Mua';
             } else if (item.category === 'INSECT_SKILL') {
@@ -7438,7 +8575,6 @@ ShopUI = {
         this.renderItems(pagedItems);
         this.renderPagination(filteredItems.length, totalPages);
     },
-
     open() {
         this.render();
         openPopup(this.overlay);
@@ -7453,7 +8589,7 @@ ShopUI.ensureToolbar = function () {
     if (!this.toolbar || this.toolbar.dataset.ready === 'true') return;
 
     const qualityOptions = ['ALL', ...QUALITY_ORDER].map(quality => {
-        const label = quality === 'ALL' ? 'T\u1ea5t c\u1ea3 ph\u1ea9m ch\u1ea5t' : getQualityLabel(quality);
+        const label = quality === 'ALL' ? 'Tất cả phẩm chất' : getQualityLabel(quality);
         return `<option value="${quality}">${escapeHtml(label)}</option>`;
     }).join('');
 
@@ -7468,19 +8604,19 @@ ShopUI.ensureToolbar = function () {
         </div>
         <div class="shop-toolbar-row">
             <label class="shop-field shop-field-search">
-                <span>T\u00ecm ki\u1ebfm</span>
-                <input id="shop-search" class="shop-control-input" type="search" placeholder="T\u00ean \u0111an, t\u00fai, c\u00f4ng d\u1ee5ng, ph\u1ea9m ch\u1ea5t...">
+                <span>Tìm kiếm</span>
+                <input id="shop-search" class="shop-control-input" type="search" placeholder="Tên đan, túi, công dụng, phẩm chất...">
             </label>
             <div class="shop-filter-group">
                 <label class="shop-field">
-                    <span>Ph\u1ea9m ch\u1ea5t</span>
+                    <span>Phẩm chất</span>
                     <select id="shop-filter-quality" class="shop-control-input">${qualityOptions}</select>
                 </label>
             </div>
         </div>
         <div class="shop-toolbar-meta">
             <div id="shop-summary" class="shop-summary"></div>
-            <button type="button" class="btn-shop-reset" data-shop-action="reset-filters">X\u00f3a l\u1ecdc</button>
+            <button type="button" class="btn-shop-reset" data-shop-action="reset-filters">Xóa lọc</button>
         </div>
     `;
 
@@ -7492,8 +8628,8 @@ ShopUI.syncToolbar = function (totalCount, filteredCount) {
 
     const nextRealm = Input.getNextMajorRealmInfo();
     const tip = nextRealm
-        ? `\u0110ang b\u00e0y b\u00e1n \u0111\u1ee7 lo\u1ea1i \u0111an d\u01b0\u1ee3c, b\u00ed ph\u00e1p v\u00e0 v\u1eadt t\u01b0 cho l\u1ea7n \u0111\u1ed9t ph\u00e1 t\u1edbi ${escapeHtml(nextRealm.name)}.`
-        : '\u0110\u00e3 \u1edf c\u1ea3nh gi\u1edbi t\u1ed1i cao, c\u1eeda h\u00e0ng v\u1eabn c\u00f2n \u0111an c\u01b0\u1eddng h\u00f3a v\u00e0 v\u1eadt ph\u1ea9m \u0111\u1eb7c bi\u1ec7t.';
+        ? `Đang bày bán đủ loại đan dược, bí pháp và vật tư cho lần đột phá tới ${escapeHtml(nextRealm.name)}.`
+        : 'Đã ở cảnh giới tối cao, cửa hàng vẫn còn đan cường hóa và vật phẩm đặc biệt.';
 
     const tipEl = this.toolbar.querySelector('#shop-tip');
     const searchEl = this.toolbar.querySelector('#shop-search');
@@ -7510,7 +8646,7 @@ ShopUI.syncToolbar = function (totalCount, filteredCount) {
     });
 
     if (summaryEl) {
-        summaryEl.innerHTML = `${escapeHtml(getItemCollectionTabLabel(this.categoryFilter))}: <strong>${formatNumber(filteredCount)}</strong> / ${formatNumber(totalCount)} v\u1eadt ph\u1ea9m`;
+        summaryEl.innerHTML = `${escapeHtml(getItemCollectionTabLabel(this.categoryFilter))}: <strong>${formatNumber(filteredCount)}</strong> / ${formatNumber(totalCount)} vật phẩm`;
     }
 
     if (resetBtn) {
@@ -7553,12 +8689,8 @@ InventoryUI = {
     tabs: document.getElementById('inventory-tabs'),
     itemPanel: document.getElementById('inventory-panel-items'),
     stonePanel: document.getElementById('inventory-panel-stones'),
-    beastPanel: document.getElementById('inventory-panel-beasts'),
     pillGrid: document.getElementById('inventory-pill-grid'),
     stoneGrid: document.getElementById('inventory-stone-grid'),
-    beastWallet: document.getElementById('inventory-beast-wallet'),
-    eggGrid: document.getElementById('inventory-egg-grid'),
-    beastGrid: document.getElementById('inventory-beast-grid'),
     currentTab: 'items',
 
     init() {
@@ -7610,28 +8742,19 @@ InventoryUI = {
             });
         }
 
-        if (this.eggGrid) {
-            this.eggGrid.addEventListener('pointerdown', (e) => {
-                const hatchBtn = e.target.closest('[data-beast-action="hatch"]');
-                if (!hatchBtn) return;
-
-                e.stopPropagation();
-                const speciesKey = hatchBtn.getAttribute('data-species-key');
-                if (speciesKey) {
-                Input.hatchInsectEgg(speciesKey, 1);
-            }
-        });
-        }
-
         this.overlay.addEventListener('pointerdown', (e) => {
             if (e.target === this.overlay) this.close();
         });
     },
 
     render() {
-        if (!this.wallet || !this.pillGrid || !this.stoneGrid || !this.beastWallet || !this.eggGrid || !this.beastGrid) return;
+        if (!this.wallet || !this.pillGrid || !this.stoneGrid) return;
 
         this.currentTab = Input.selectedInventoryTab || this.currentTab || 'items';
+        if (!['items', 'stones'].includes(this.currentTab)) {
+            this.currentTab = 'items';
+            Input.selectedInventoryTab = 'items';
+        }
         this.wallet.innerHTML = buildWalletMarkup() + buildInventoryCapacityMarkup();
 
         if (this.tabs) {
@@ -7642,8 +8765,7 @@ InventoryUI = {
 
         [
             { panel: this.itemPanel, key: 'items' },
-            { panel: this.stonePanel, key: 'stones' },
-            { panel: this.beastPanel, key: 'beasts' }
+            { panel: this.stonePanel, key: 'stones' }
         ].forEach(entry => {
             if (!entry.panel) return;
             entry.panel.classList.toggle('is-active', entry.key === this.currentTab);
@@ -7707,22 +8829,6 @@ InventoryUI = {
                 </article>
             `;
         }).join('');
-
-        this.beastWallet.innerHTML = buildBeastWalletMarkup();
-
-        const eggCards = Input.getInsectSpeciesEntries()
-            .filter(([speciesKey]) => (Input.insectEggs[speciesKey] || 0) > 0)
-            .map(([speciesKey]) => buildInsectEggCardMarkup(speciesKey, Input.insectEggs[speciesKey]));
-        this.eggGrid.innerHTML = eggCards.length
-            ? eggCards.join('')
-            : '<article class="inventory-slot is-empty"><span>Chưa có trứng kỳ trùng.</span></article>';
-
-        const beastCards = Input.getInsectSpeciesEntries()
-            .filter(([speciesKey]) => (Input.tamedInsects[speciesKey] || 0) > 0)
-            .map(([speciesKey]) => buildTamedInsectCardMarkup(speciesKey, Input.tamedInsects[speciesKey]));
-        this.beastGrid.innerHTML = beastCards.length
-            ? beastCards.join('')
-            : '<article class="inventory-slot is-empty"><span>Chưa có linh trùng đã nở.</span></article>';
     },
 
     open() {
@@ -7731,6 +8837,310 @@ InventoryUI = {
     },
 
     close() {
+        closePopup(this.overlay);
+    }
+};
+
+const BeastBagUI = {
+    overlay: null,
+    btnOpen: document.getElementById('btn-beast-bag'),
+    btnClose: null,
+    panel: null,
+    beastWallet: null,
+    beastTabs: null,
+    beastFeedPanel: null,
+    eggSection: null,
+    beastSection: null,
+    eggGrid: null,
+    beastGrid: null,
+    initialized: false,
+
+    ensureStructure() {
+        this.btnOpen = document.getElementById('btn-beast-bag');
+        if (!this.btnOpen) return false;
+
+        let overlay = document.getElementById('beast-popup');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'beast-popup';
+            overlay.className = 'popup-overlay';
+            overlay.innerHTML = `
+                <div class="popup-content popup-content-wide">
+                    <div class="popup-header">
+                        <h3>LINH THÚ ĐẠI</h3>
+                        <span id="close-beast-bag" class="close-btn">&times;</span>
+                    </div>
+                    <div id="beast-popup-body" class="popup-body popup-panel-body"></div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        const body = overlay.querySelector('#beast-popup-body') || overlay.querySelector('.popup-body');
+        const content = overlay.querySelector('.popup-content');
+        const inventoryBeastTab = document.querySelector('#inventory-tabs [data-inventory-tab="beasts"]');
+        const sourcePanel = document.getElementById('inventory-panel-beasts');
+
+        const wallet = document.getElementById('inventory-beast-wallet');
+        const tabs = document.getElementById('inventory-beast-tabs');
+        const feedPanel = document.getElementById('inventory-beast-feed-panel');
+        const eggSection = document.getElementById('inventory-beast-egg-section');
+        const beastSection = document.getElementById('inventory-beast-grid-section');
+        const eggGrid = document.getElementById('inventory-egg-grid');
+        const beastGrid = document.getElementById('inventory-beast-grid');
+
+        [wallet, tabs, feedPanel, eggSection, beastSection].forEach(node => {
+            if (node && body && node.parentElement !== body) {
+                body.appendChild(node);
+            }
+        });
+
+        if (content) content.classList.add('popup-content-beast');
+        if (body) body.classList.add('beast-popup-body');
+        if (tabs) tabs.classList.add('beast-tab-strip');
+        if (feedPanel) feedPanel.classList.add('beast-feed-panel-host');
+        if (eggSection) eggSection.classList.add('beast-panel-section', 'beast-panel-section--eggs');
+        if (beastSection) beastSection.classList.add('beast-panel-section', 'beast-panel-section--tamed');
+        if (eggGrid) eggGrid.classList.add('beast-collection-grid', 'beast-collection-grid--eggs');
+        if (beastGrid) beastGrid.classList.add('beast-collection-grid', 'beast-collection-grid--tamed');
+
+        if (inventoryBeastTab) inventoryBeastTab.remove();
+        if (sourcePanel) sourcePanel.remove();
+
+        setTextIfPresent('#beast-popup .popup-header h3', 'LINH THÚ ĐẠI');
+        setTextIfPresent('#inventory-beast-egg-section h4', 'Trùng noãn');
+        setTextIfPresent('#inventory-beast-grid-section h4', 'Linh trùng đã ấp');
+
+        this.overlay = overlay;
+        this.btnClose = document.getElementById('close-beast-bag');
+        this.panel = body;
+        this.beastWallet = wallet;
+        this.beastTabs = tabs;
+        this.beastFeedPanel = feedPanel;
+        this.eggSection = eggSection;
+        this.beastSection = beastSection;
+        this.eggGrid = eggGrid;
+        this.beastGrid = beastGrid;
+
+        return Boolean(this.overlay && this.panel && this.beastWallet && this.eggGrid && this.beastGrid);
+    },
+
+    isOpen() {
+        return Boolean(this.overlay && this.overlay.classList.contains('show'));
+    },
+
+    init() {
+        if (!this.ensureStructure() || this.initialized) return;
+
+        const content = this.overlay.querySelector('.popup-content');
+        if (content) {
+            content.addEventListener('pointerdown', (e) => e.stopPropagation());
+        }
+
+        this.btnOpen.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            this.open();
+        });
+
+        if (this.btnClose) {
+            this.btnClose.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.close();
+            });
+        }
+
+        if (this.panel) {
+            this.panel.addEventListener('pointerdown', (e) => {
+                const tabBtn = e.target.closest('[data-beast-tab]');
+                if (tabBtn) {
+                    e.stopPropagation();
+                    Input.selectedBeastBagTab = tabBtn.getAttribute('data-beast-tab') || 'all';
+                    this.render();
+                    return;
+                }
+
+                const foodBtn = e.target.closest('[data-food-action]');
+                if (foodBtn) {
+                    e.stopPropagation();
+                    const speciesKey = foodBtn.getAttribute('data-species-key');
+                    const action = foodBtn.getAttribute('data-food-action');
+                    const habitatKey = speciesKey ? Input.getSpeciesHabitatKey(speciesKey) : '_SHARED';
+                    if (action !== 'store-selected' || !speciesKey || !habitatKey) return;
+
+                    const foodSlot = foodBtn.closest('.beast-food-slot, .beast-food-card');
+                    const foodSelect = foodSlot?.querySelector('[data-food-select]');
+                    const amountInput = foodSlot?.querySelector('[data-food-amount]');
+                    const materialKey = foodBtn.getAttribute('data-material-key') || foodSelect?.value || '';
+                    const requestedCount = Math.max(0, Math.floor(Number(amountInput?.value) || 0));
+
+                    if (!materialKey) {
+                        showNotify('Hãy chọn loại thức ăn phù hợp.', '#ffb86c');
+                        return;
+                    }
+
+                    if (requestedCount <= 0) {
+                        showNotify('Hãy nhập số lượng thức ăn hợp lệ.', '#ffb86c');
+                        return;
+                    }
+
+                    const movedCount = Input.storeMaterialAsFood(materialKey, requestedCount, habitatKey);
+                    const materialConfig = Input.getMaterialConfig(materialKey);
+
+                    if (movedCount > 0) {
+                        const habitatName = Input.getInsectHabitatConfig(speciesKey)?.fullName || Input.getInsectSpecies(speciesKey)?.name || 'Linh Thú Đại';
+                        showNotify(
+                            `Đã nạp ${formatNumber(movedCount)} ${materialConfig?.fullName || materialKey} vào ${habitatName}.`,
+                            materialConfig?.color || '#79ffd4'
+                        );
+                        Input.refreshResourceUI();
+                    } else {
+                        showNotify('Không đủ thức ăn này trong túi trữ vật.', '#ffb86c');
+                    }
+                    return;
+                }
+
+                const actionBtn = e.target.closest('[data-beast-action]');
+                if (!actionBtn) return;
+
+                e.stopPropagation();
+                const speciesKey = actionBtn.getAttribute('data-species-key');
+                const action = actionBtn.getAttribute('data-beast-action');
+
+                if (action === 'hatch' && speciesKey) {
+                    Input.hatchInsectEgg(speciesKey, 1);
+                    return;
+                }
+
+                if (action === 'feed-tab' && speciesKey) {
+                    const feedResult = Input.feedSpeciesNow(speciesKey, 1);
+                    if (feedResult.success) {
+                        const species = Input.getInsectSpecies(speciesKey);
+                        showNotify(
+                            `Đã cho ${species?.name || 'kỳ trùng'} ăn (${formatNumber(feedResult.consumedNutrition)} linh dưỡng).`,
+                            species?.color || '#79ffd4'
+                        );
+                        Input.refreshResourceUI();
+                    } else if (feedResult.reason === 'rainbow') {
+                        showNotify('Thất Sắc Linh Thú Đại không cần cho ăn.', '#79ffd4');
+                    } else {
+                        showNotify('Ô thức ăn của tab này chưa đủ linh dưỡng.', '#ffb86c');
+                    }
+                }
+            });
+        }
+
+        this.overlay.addEventListener('pointerdown', (e) => {
+            if (e.target === this.overlay) this.close();
+        });
+
+        this.initialized = true;
+    },
+
+    getScopeLabel(currentBeastTab = 'all') {
+        if (Input.hasSevenColorSpiritBag()) {
+            return 'Không gian chung Thất Sắc';
+        }
+
+        const activeTab = Input.getBeastBagTabs().find(tab => tab.key === currentBeastTab);
+        return activeTab?.label || 'Tổng đàn';
+    },
+
+    ensureSectionMeta(section) {
+        if (!section) return null;
+
+        let meta = section.querySelector('.beast-section-meta');
+        if (meta) return meta;
+
+        const heading = section.querySelector('h4');
+        if (!heading) return null;
+
+        meta = document.createElement('div');
+        meta.className = 'beast-section-meta';
+        heading.insertAdjacentElement('afterend', meta);
+        return meta;
+    },
+
+    renderSectionMeta(section, chips = []) {
+        const meta = this.ensureSectionMeta(section);
+        if (!meta) return;
+
+        meta.innerHTML = chips
+            .filter(Boolean)
+            .map(chip => `<span>${escapeHtml(chip)}</span>`)
+            .join('');
+    },
+
+    render() {
+        if (!this.ensureStructure()) return;
+
+        const currentBeastTab = Input.ensureValidBeastBagTab();
+        const tabSpeciesKeys = new Set(Input.getBeastTabSpeciesKeys(currentBeastTab));
+        const showFoodPanel = Input.shouldShowBeastFeedPanel(currentBeastTab);
+        const isFilteredBeastTab = currentBeastTab !== 'all';
+        const useSharedRainbowHabitat = Input.hasSevenColorSpiritBag();
+        const scopeLabel = this.getScopeLabel(currentBeastTab);
+
+        this.beastWallet.innerHTML = buildBeastWalletMarkup();
+
+        if (this.beastTabs) {
+            this.beastTabs.style.display = useSharedRainbowHabitat ? 'none' : '';
+            this.beastTabs.innerHTML = useSharedRainbowHabitat ? '' : buildBeastTabsMarkup(currentBeastTab);
+        }
+
+        if (this.beastFeedPanel) {
+            this.beastFeedPanel.style.display = showFoodPanel ? '' : 'none';
+            this.beastFeedPanel.innerHTML = showFoodPanel ? buildBeastFoodPanelMarkup(currentBeastTab) : '';
+        }
+
+        if (this.eggSection) this.eggSection.style.display = '';
+        if (this.beastSection) this.beastSection.style.display = '';
+
+        const filteredEggEntries = Input.getInsectSpeciesEntries()
+            .filter(([speciesKey]) => (Input.insectEggs[speciesKey] || 0) > 0)
+            .filter(([speciesKey]) => !isFilteredBeastTab || tabSpeciesKeys.has(speciesKey));
+        const filteredEggCards = filteredEggEntries
+            .map(([speciesKey]) => buildInsectEggCardMarkup(speciesKey, Input.insectEggs[speciesKey]));
+        const totalEggCount = filteredEggEntries.reduce((total, [speciesKey]) => {
+            return total + Math.max(0, Math.floor(Input.insectEggs?.[speciesKey] || 0));
+        }, 0);
+        this.renderSectionMeta(this.eggSection, [
+            `${formatNumber(filteredEggEntries.length)} loài`,
+            `${formatNumber(totalEggCount)} trứng`,
+            scopeLabel
+        ]);
+        this.eggGrid.innerHTML = filteredEggCards.length
+            ? filteredEggCards.join('')
+            : `<article class="inventory-slot is-empty"><span>${isFilteredBeastTab ? 'Chưa có trứng trong Linh Thú Đại này.' : 'Chưa có trứng kỳ trùng.'}</span></article>`;
+
+        const filteredBeastEntries = Input.getInsectSpeciesEntries()
+            .filter(([speciesKey]) => (Input.tamedInsects[speciesKey] || 0) > 0)
+            .filter(([speciesKey]) => !isFilteredBeastTab || tabSpeciesKeys.has(speciesKey));
+        const filteredBeastCards = filteredBeastEntries
+            .map(([speciesKey]) => buildTamedInsectCardMarkup(speciesKey, Input.tamedInsects[speciesKey]));
+        const totalBeastCount = filteredBeastEntries.reduce((total, [speciesKey]) => {
+            return total + Math.max(0, Math.floor(Input.tamedInsects?.[speciesKey] || 0));
+        }, 0);
+        const breedingReadyCount = filteredBeastEntries.reduce((total, [speciesKey]) => {
+            return total + (Input.getSpeciesCareStatus(speciesKey).canReproduce ? 1 : 0);
+        }, 0);
+        this.renderSectionMeta(this.beastSection, [
+            `${formatNumber(filteredBeastEntries.length)} loài`,
+            `${formatNumber(totalBeastCount)} linh trùng`,
+            breedingReadyCount > 0 ? `${formatNumber(breedingReadyCount)} bầy sinh nở` : scopeLabel
+        ]);
+        this.beastGrid.innerHTML = filteredBeastCards.length
+            ? filteredBeastCards.join('')
+            : `<article class="inventory-slot is-empty"><span>${isFilteredBeastTab ? 'Chưa có linh trùng trong Linh Thú Đại này.' : 'Chưa có linh trùng đã nở.'}</span></article>`;
+    },
+
+    open() {
+        if (!this.ensureStructure()) return;
+        this.render();
+        openPopup(this.overlay);
+    },
+
+    close() {
+        if (!this.overlay) return;
         closePopup(this.overlay);
     }
 };
@@ -8515,6 +9925,7 @@ function init() {
     document.body.classList.toggle('is-touch-device', Input.isTouchDevice);
     Input.syncLandscapeMode();
     syncPopupCursorState();
+    repairLegacyUiText();
 
     SettingsUI.init();
     Input.spiritStones = getStartingSpiritStoneCounts();
@@ -8523,6 +9934,7 @@ function init() {
     Input.renderRageUI();
     if (ShopUI) ShopUI.init();
     if (InventoryUI) InventoryUI.init();
+    if (BeastBagUI) BeastBagUI.init();
     if (SkillsUI) SkillsUI.init();
     if (InsectBookUI) InsectBookUI.init();
     if (ProfileUI) ProfileUI.init();
@@ -8743,3 +10155,5 @@ function animate() {
     animate();
 })();
 // <!-- Create By: Vũ Hoài Nam -->
+
+

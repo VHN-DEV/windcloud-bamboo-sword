@@ -318,6 +318,17 @@ canvas {
                 height: 30%;
             }
         }
+
+        .btn-beast-bag {
+            border-color: rgba(#79ffd4, 0.45);
+            box-shadow: 0 4px 0 $shadow-color, 0 0 12px rgba(#79ffd4, 0.24);
+
+            .sword-icon {
+                width: 30%;
+                height: 30%;
+                filter: hue-rotate(-22deg) saturate(1.25);
+            }
+        }
     }
 }
 
@@ -1167,6 +1178,10 @@ body.is-touch-device {
     max-width: 980px;
 }
 
+.popup-content-beast {
+    max-width: 1020px;
+}
+
 .popup-panel-body {
     display: flex;
     flex-direction: column;
@@ -1240,6 +1255,11 @@ body.is-touch-device {
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba($primary-color, 0.14);
+
+    @media (max-width: 640px) {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
 .panel-tab {
@@ -1279,13 +1299,14 @@ body.is-touch-device {
 .beast-wallet {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-    border-radius: 16px;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 18px;
     border: 1px solid rgba(#79ffd4, 0.16);
     background:
         radial-gradient(circle at top right, rgba(#79ffd4, 0.12), transparent 30%),
         linear-gradient(180deg, rgba(11, 20, 30, 0.96), rgba(8, 13, 20, 0.94));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 18px 30px rgba(0, 0, 0, 0.16);
 }
 
 .beast-wallet__header,
@@ -1294,6 +1315,7 @@ body.is-touch-device {
     justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
+    align-items: flex-start;
 }
 
 .beast-wallet__eyebrow {
@@ -1305,10 +1327,169 @@ body.is-touch-device {
     letter-spacing: 1px;
 }
 
-.beast-wallet__meta,
+.beast-wallet__state,
 .beast-wallet__footer {
     color: rgba(240, 255, 249, 0.72);
     font-size: 12px;
+}
+
+.beast-wallet__state {
+    max-width: min(100%, 360px);
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(#79ffd4, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+    line-height: 1.5;
+}
+
+.beast-wallet__stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.beast-wallet__stat {
+    min-width: 0;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+
+    span {
+        display: block;
+        color: rgba(240, 255, 249, 0.54);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.9px;
+        text-transform: uppercase;
+    }
+
+    strong {
+        display: block;
+        margin-top: 6px;
+        color: #f7fffc;
+        font-size: 13px;
+        line-height: 1.45;
+        word-break: break-word;
+    }
+}
+
+.beast-wallet__track {
+    margin-top: -2px;
+}
+
+.beast-popup-body {
+    gap: 16px;
+}
+
+.inventory-beast-tabs {
+    width: 100%;
+}
+
+.beast-tab-strip {
+    width: 100%;
+}
+
+.beast-feed-panel-host {
+    display: grid;
+    gap: 14px;
+}
+
+.beast-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(#79ffd4, 0.12);
+    background:
+        radial-gradient(circle at top left, rgba(#79ffd4, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(12, 20, 30, 0.96), rgba(8, 13, 20, 0.94));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 24px rgba(0, 0, 0, 0.12);
+}
+
+.beast-section-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    span {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(#79ffd4, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(240, 255, 249, 0.72);
+        font-size: 11px;
+        line-height: 1.4;
+    }
+}
+
+.beast-food-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.beast-food-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.beast-food-summary__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.beast-food-slot {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.beast-food-slot__controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.beast-food-slot__select {
+    min-width: min(100%, 360px);
+    flex: 1 1 240px;
+}
+
+.beast-food-slot__input {
+    width: 96px;
+    flex: 0 0 96px;
+}
+
+.beast-food-slot__controls .btn-slot-action {
+    flex: 0 0 auto;
+}
+
+.inventory-capacity-card__meta {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+    .beast-food-slot__controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .beast-food-slot__select,
+    .beast-food-slot__input {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+
+    .beast-food-slot__controls .btn-slot-action {
+        width: 100%;
+    }
 }
 
 #sword-counter.is-hidden {
@@ -1360,6 +1541,12 @@ body.is-touch-device {
         background: linear-gradient(90deg, rgba($primary-color, 0.55), rgba(#ffd86b, 0.92));
         box-shadow: 0 0 14px rgba($primary-color, 0.22);
     }
+}
+
+.inventory-capacity-card__track.is-infinite span {
+    background: linear-gradient(90deg, rgba(#79ffd4, 0.92), rgba(#ffd86b, 0.92), rgba(#ff8ae2, 0.9));
+    background-size: 180% 100%;
+    box-shadow: 0 0 18px rgba(#79ffd4, 0.28);
 }
 
 .popup-content-profile {
@@ -1786,14 +1973,142 @@ select.shop-control-input {
     line-height: 1.35;
 }
 
+.beast-slot {
+    gap: 12px;
+    min-height: 0;
+}
+
+.beast-slot__head {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+}
+
+.beast-slot__info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.beast-slot__title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.beast-slot__title-block {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.beast-slot__count {
+    flex: 0 0 auto;
+    min-width: 102px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--slot-accent) 34%, rgba(255, 255, 255, 0.08));
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--slot-accent) 12%, transparent), transparent 52%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    text-align: right;
+
+    span {
+        color: rgba(240, 255, 249, 0.54);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.9px;
+        text-transform: uppercase;
+    }
+
+    strong {
+        color: #f7fffc;
+        font-size: 18px;
+        line-height: 1;
+    }
+}
+
+.beast-slot__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.beast-slot__summary {
+    flex: 0 0 auto !important;
+}
+
+.beast-slot__metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.beast-slot__metric,
+.beast-slot__detail {
+    min-width: 0;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    span {
+        color: rgba(240, 255, 249, 0.52);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.9px;
+        text-transform: uppercase;
+    }
+
+    strong {
+        color: #f7fffc;
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 600;
+        word-break: break-word;
+    }
+}
+
+.beast-slot__details {
+    display: grid;
+    gap: 8px;
+}
+
+.beast-slot__detail--wide {
+    grid-column: 1 / -1;
+}
+
+.beast-slot__actions {
+    display: flex;
+    margin-top: auto;
+
+    .btn-slot-action {
+        width: 100%;
+        margin-top: 0;
+    }
+}
+
 .beast-card-visual {
     --beast-secondary: var(--beast-accent);
     --beast-aura: var(--beast-accent);
     --beast-glow: var(--beast-aura);
     position: relative;
-    width: 76px;
-    height: 76px;
-    margin: 0 auto 4px;
+    width: 84px;
+    height: 84px;
+    margin: 0;
+    flex: 0 0 84px;
+    align-self: flex-start;
     border-radius: 50%;
     background:
         radial-gradient(circle at 35% 32%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.08) 20%, transparent 26%),
@@ -1818,8 +2133,15 @@ select.shop-control-input {
     }
 
     &--egg {
+        width: 82px;
+        height: 90px;
         border-radius: 42% 42% 48% 48% / 44% 44% 54% 54%;
     }
+}
+
+.inventory-grid.beast-collection-grid {
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 14px;
 }
 
 .attack-skill-list {
@@ -3559,6 +3881,25 @@ select.shop-control-input {
     }
 }
 
+.pill-visual.is-rainbow-bag {
+    --pill-aura: rgba(255, 244, 188, 0.62);
+
+    .pill-visual__backdrop {
+        background:
+            radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.4), transparent 18%),
+            conic-gradient(from 160deg, rgba(#ff8a80, 0.3), rgba(#ffd86b, 0.34), rgba(#79ffd4, 0.3), rgba(#77d8ff, 0.3), rgba(#c090ff, 0.34), rgba(#ff8a80, 0.3));
+    }
+
+    .pill-visual__orbit {
+        border-color: rgba(255, 244, 188, 0.54);
+    }
+
+    .pill-visual__spark {
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 0 10px rgba(255, 241, 168, 0.58);
+    }
+}
+
 .phong-loi-art {
     position: absolute;
     inset: 2px;
@@ -4554,7 +4895,10 @@ select.shop-control-input {
         align-items: flex-start;
     }
 
-    .panel-tabs,
+    .beast-wallet__stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .beast-wallet__header,
     .beast-wallet__footer,
     .attack-skill-card__head,
@@ -4571,6 +4915,32 @@ select.shop-control-input {
 
     .btn-slot-action {
         min-height: 42px;
+    }
+
+    .beast-panel-section {
+        padding: 14px;
+    }
+
+    .inventory-grid.beast-collection-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .beast-slot__head {
+        grid-template-columns: 1fr;
+    }
+
+    .beast-slot__count {
+        width: 100%;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .beast-slot__metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .beast-slot__detail--wide {
+        grid-column: auto;
     }
 
     .shop-pagination {
@@ -4646,6 +5016,10 @@ select.shop-control-input {
     .slot-meta,
     .slot-count {
         font-size: 10px;
+    }
+
+    .beast-wallet__stats {
+        grid-template-columns: 1fr;
     }
 
     .slot-count {
