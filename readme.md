@@ -208,6 +208,133 @@ Ngoài gameplay, dự án còn có nhiều chi tiết chăm sóc trải nghiệm
 - Danh sách vật phẩm được chia cột đều, dễ nhìn hơn trên desktop và mobile.
 - Hình vật phẩm được tách rõ giữa đan dược, nguyên liệu, trùng noãn, túi và bí pháp để tránh nhầm lẫn.
 
+### 16. Cảnh giới
+```text
+PHÀM GIỚI
+━━━━━━━━━━━━━━━━━━
+Luyện Khí
+├─ Tầng 1–3  (Nhập môn)
+├─ Tầng 4–6  (Ổn định linh lực)
+├─ Tầng 7–9  (Tăng trưởng)
+├─ Tầng 10–12 (Đỉnh cao)
+└─ Tầng 13   (Đại viên mãn / Chuẩn bị Trúc Cơ)
+
+Trúc Cơ
+├─ Sơ kỳ
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn (→ Kết Đan thất bại có thể phế)
+
+Kết Đan
+├─ Sơ kỳ (Kim Đan chưa ổn định)
+├─ Trung kỳ (Đan thành hình)
+├─ Hậu kỳ (Đan vững chắc)
+└─ Đại viên mãn (→ Ngưng Anh)
+
+Nguyên Anh
+├─ Sơ kỳ (Anh non)
+├─ Trung kỳ (Anh trưởng thành)
+├─ Hậu kỳ (Anh ổn định)
+└─ Đại viên mãn (→ Hóa Thần)
+
+Hóa Thần
+├─ Sơ kỳ (Thần thức mạnh)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn (→ Phi thăng Linh giới)
+
+━━━━━━━━━━━━━━━━━━
+LINH GIỚI
+━━━━━━━━━━━━━━━━━━
+Luyện Hư
+├─ Sơ kỳ (tiếp xúc không gian)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn
+
+Hợp Thể
+├─ Sơ kỳ (nhục thân + nguyên thần hợp nhất)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn
+
+Đại Thừa
+├─ Sơ kỳ (chuẩn bị độ kiếp)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn (→ mở thiên kiếp)
+
+━━━━━━━━━━━━━━━━━━
+ĐỘ KIẾP (EVENT SYSTEM)
+━━━━━━━━━━━━━━━━━━
+├─ Chuẩn bị độ kiếp (tích lũy pháp lực + bảo vật)
+├─ Tiểu thiên kiếp
+├─ Trung thiên kiếp
+├─ Đại thiên kiếp
+├─ Thành công → Phi thăng
+└─ Thất bại:
+   ├─ Trực tiếp tử vong
+   └─ → Tán Tiên (nhánh phụ)
+
+━━━━━━━━━━━━━━━━━━
+TIÊN GIỚI – NHÁNH PHỤ (TRẠNG THÁI)
+━━━━━━━━━━━━━━━━━━
+Ngụy Tiên (fake ascension)
+Tán Tiên (độ kiếp thất bại, tồn tại bán tiên)
+Huyền Tiên (thiên lệch hệ tu riêng)
+Địa Tiên (tu theo địa mạch / ngoại đạo)
+
+━━━━━━━━━━━━━━━━━━
+TIÊN GIỚI – MAIN PROGRESSION
+━━━━━━━━━━━━━━━━━━
+
+Chân Tiên
+├─ Sơ kỳ (tiên linh lực hình thành)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn
+   └─ Unlock: Pháp tắc sơ cấp + Tiên khiếu
+
+Kim Tiên
+├─ Sơ kỳ (ngưng tụ pháp tắc)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn
+   └─ Unlock: Linh Vực (Domain Lv1)
+
+Thái Ất (Ngọc Tiên)
+├─ Sơ kỳ (hiểu sâu pháp tắc)
+├─ Trung kỳ
+├─ Hậu kỳ
+└─ Đại viên mãn
+   └─ Unlock:
+      ├─ Linh Vực tiến hóa
+      ├─ Điều khiển đa pháp tắc
+
+Đại La
+├─ Sơ kỳ
+├─ Trung kỳ
+├─ Hậu kỳ
+├─ Đại viên mãn
+└─ Điều kiện đặc biệt:
+   ├─ Trảm Nhất Thi
+   ├─ Trảm Nhị Thi
+   └─ Trảm Tam Thi (full power)
+   └─ Unlock:
+      ├─ Bất tử gần như tuyệt đối
+      ├─ Tồn tại ngoài dòng thời gian
+
+Đạo Tổ (MAX)
+├─ Sơ cảnh (Hợp đạo chưa ổn định)
+├─ Ổn định đạo (control law hoàn chỉnh)
+├─ Trung tầng Đạo Tổ
+├─ Đỉnh phong Đạo Tổ
+└─ Cơ chế:
+   ├─ Hợp nhất với Đại Đạo
+   ├─ Không chịu nhân quả thông thường
+   └─ Không thể tùy tiện ra tay
+```
+
 ## ✦ Vòng chơi ngắn gọn
 
 1. Di chuyển tâm trận để tiếp cận quái.
