@@ -948,10 +948,10 @@ const CONFIG = {
         MAGNET_SPEED: 16,
         TRAIL_LENGTH: 12,
         STARTING_COUNTS: {
-            LOW: 100,      // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
+            LOW: 100,     // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
             MEDIUM: 50,   // Số lượng trung phẩm linh thạch ban đầu
             HIGH: 25,     // Số lượng thượng phẩm linh thạch ban đầu
-            SUPREME: 10   // Số lượng cực phẩm linh thạch ban đầu
+            SUPREME: 12   // Số lượng cực phẩm linh thạch ban đầu
         },
         DROP_COUNT: {
             NORMAL: 1,
