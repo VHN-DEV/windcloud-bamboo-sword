@@ -2115,7 +2115,9 @@ select.shop-control-input {
 .beast-slot__count {
     flex: 0 0 auto;
     min-width: 102px;
+    max-width: 100%;
     padding: 10px 12px;
+    box-sizing: border-box;
     border-radius: 14px;
     border: 1px solid color-mix(in srgb, var(--slot-accent) 34%, rgba(255, 255, 255, 0.08));
     background:
@@ -2133,12 +2135,14 @@ select.shop-control-input {
         font-weight: 700;
         letter-spacing: 0.9px;
         text-transform: uppercase;
+        word-break: break-word;
     }
 
     strong {
         color: #f7fffc;
         font-size: 18px;
         line-height: 1;
+        word-break: break-word;
     }
 }
 
@@ -4803,6 +4807,11 @@ select.shop-control-input {
         max-height: 88vh;
     }
 
+    .popup-content-beast {
+        width: calc(100% - 16px);
+        max-height: 88vh;
+    }
+
     .popup-header {
         padding: 14px;
 
@@ -5031,19 +5040,34 @@ select.shop-control-input {
     }
 
     .beast-panel-section {
+        gap: 12px;
         padding: 14px;
     }
 
     .inventory-grid.beast-collection-grid {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
 
     .beast-slot__head {
         grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .beast-slot__title-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .beast-slot__title-block {
+        gap: 6px;
     }
 
     .beast-slot__count {
+        min-width: 0;
         width: 100%;
+        padding: 8px 10px;
         align-items: flex-start;
         text-align: left;
     }
@@ -5054,6 +5078,36 @@ select.shop-control-input {
 
     .beast-slot__detail--wide {
         grid-column: auto;
+    }
+
+    .beast-card-visual {
+        width: 72px;
+        height: 72px;
+        flex: 0 0 72px;
+        align-self: center;
+
+        &::before {
+            inset: 12px;
+        }
+
+        &::after {
+            inset: 20px;
+        }
+
+        &--egg {
+            width: 68px;
+            height: 76px;
+        }
+    }
+
+    .beast-card-visual .insect-art {
+        width: 52px;
+        height: 42px;
+    }
+
+    .beast-card-visual--egg .insect-art {
+        width: 38px;
+        height: 48px;
     }
 
     .shop-pagination {
@@ -5126,6 +5180,19 @@ select.shop-control-input {
 }
 
 @media (max-width: 420px) {
+    .popup-content-beast {
+        width: calc(100% - 12px);
+        border-radius: 14px;
+    }
+
+    #beast-popup .popup-header {
+        padding: 12px;
+    }
+
+    #beast-popup .popup-body {
+        padding: 10px;
+    }
+
     .slot-actions {
         grid-template-columns: 1fr;
     }
@@ -5138,6 +5205,69 @@ select.shop-control-input {
 
     .beast-wallet__stats {
         grid-template-columns: 1fr;
+    }
+
+    .beast-popup-body {
+        gap: 10px;
+    }
+
+    .beast-panel-section {
+        gap: 10px;
+        padding: 10px;
+        border-radius: 14px;
+    }
+
+    .inventory-grid.beast-collection-grid {
+        gap: 8px;
+    }
+
+    .beast-slot {
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .beast-slot h4 {
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .beast-slot__metric,
+    .beast-slot__detail {
+        padding: 8px 10px;
+    }
+
+    .beast-slot__summary {
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .beast-card-visual {
+        width: 64px;
+        height: 64px;
+        flex: 0 0 64px;
+
+        &::before {
+            inset: 10px;
+        }
+
+        &::after {
+            inset: 18px;
+        }
+
+        &--egg {
+            width: 60px;
+            height: 68px;
+        }
+    }
+
+    .beast-card-visual .insect-art {
+        width: 46px;
+        height: 38px;
+    }
+
+    .beast-card-visual--egg .insect-art {
+        width: 34px;
+        height: 44px;
     }
 
     .slot-count {

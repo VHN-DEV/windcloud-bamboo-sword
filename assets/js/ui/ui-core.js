@@ -1,5 +1,6 @@
 let ShopUI = null;
 let InventoryUI = null;
+let BeastBagUI = null;
 let ProfileUI = null;
 let SkillsUI = null;
 let InsectBookUI = null;

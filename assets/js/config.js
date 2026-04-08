@@ -1097,7 +1097,7 @@ const CONFIG = {
             LOW: 100,     // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
             MEDIUM: 50,   // Số lượng trung phẩm linh thạch ban đầu
             HIGH: 25,     // Số lượng thượng phẩm linh thạch ban đầu
-            SUPREME: 12   // Số lượng cực phẩm linh thạch ban đầu
+            SUPREME: 13   // Số lượng cực phẩm linh thạch ban đầu
         },
         DROP_COUNT: {
             NORMAL: 1,

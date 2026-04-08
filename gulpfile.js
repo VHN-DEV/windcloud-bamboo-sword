@@ -25,6 +25,8 @@ gulp.task('build-js', function () {
     'assets/js/classes/camera.js',
     'assets/js/ui/ui-core.js',
     'assets/js/ui/shop-ui.js',
+    'assets/js/ui/inventory-ui.js',
+    'assets/js/ui/beast-bag-ui.js',
     'assets/js/main.js'
   ])
     .pipe(concat('scripts.js'))
