@@ -116,6 +116,106 @@ function hslaColor(h, s, l, a = 1) {
     return `hsla(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%, ${a})`;
 }
 
+function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function withAlpha(color, alpha = 1) {
+    const safeAlpha = clampNumber(Number(alpha) || 0, 0, 1);
+    const normalized = String(color || '').trim();
+
+    if (!normalized) {
+        return `rgba(121, 255, 212, ${safeAlpha})`;
+    }
+
+    const hexMatch = normalized.match(/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
+    if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3 || hex.length === 4) {
+            hex = hex.split('').map(char => char + char).join('');
+        }
+
+        const baseHex = hex.length === 8 ? hex.slice(0, 6) : hex;
+        const baseAlpha = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+        const r = parseInt(baseHex.slice(0, 2), 16);
+        const g = parseInt(baseHex.slice(2, 4), 16);
+        const b = parseInt(baseHex.slice(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${(baseAlpha * safeAlpha).toFixed(3)})`;
+    }
+
+    const rgbMatch = normalized.match(/^rgba?\(([^)]+)\)$/i);
+    if (rgbMatch) {
+        const parts = rgbMatch[1].split(',').map(part => part.trim());
+        if (parts.length >= 3) {
+            const baseAlpha = parts[3] != null ? clampNumber(Number(parts[3]) || 0, 0, 1) : 1;
+            return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${(baseAlpha * safeAlpha).toFixed(3)})`;
+        }
+    }
+
+    const hslMatch = normalized.match(/^hsla?\(([^)]+)\)$/i);
+    if (hslMatch) {
+        const parts = hslMatch[1].split(',').map(part => part.trim());
+        if (parts.length >= 3) {
+            const baseAlpha = parts[3] != null ? clampNumber(Number(parts[3]) || 0, 0, 1) : 1;
+            return `hsla(${parts[0]}, ${parts[1]}, ${parts[2]}, ${(baseAlpha * safeAlpha).toFixed(3)})`;
+        }
+    }
+
+    return normalized;
+}
+
+function getInsectCombatPalette(species) {
+    const primary = species?.color || '#79ffd4';
+    const secondary = species?.secondaryColor || primary;
+    const aura = species?.auraColor || secondary;
+
+    return { primary, secondary, aura };
+}
+
+function syncInsectVisualMotion(node, desiredX, desiredY, dt, followSpeed = 8, trailLimit = 4) {
+    if (!node) return;
+
+    const safeDt = Math.max(0.001, Number(dt) || 0);
+    const step = clampNumber((Number(followSpeed) || 8) * safeDt, 0.08, 0.42);
+    const currentX = Number.isFinite(node.x) ? node.x : desiredX;
+    const currentY = Number.isFinite(node.y) ? node.y : desiredY;
+
+    node.x = currentX + (desiredX - currentX) * step;
+    node.y = currentY + (desiredY - currentY) * step;
+
+    if (!Array.isArray(node.trail)) {
+        node.trail = [];
+    }
+
+    const lastPoint = node.trail[0];
+    if (!lastPoint || Math.hypot(lastPoint.x - node.x, lastPoint.y - node.y) >= 1.2) {
+        node.trail.unshift({ x: node.x, y: node.y });
+    }
+
+    if (node.trail.length > trailLimit) {
+        node.trail.length = trailLimit;
+    }
+}
+
+function drawInsectTrail(ctx, node, color, baseWidth, alpha = 0.22) {
+    const points = Array.isArray(node?.trail) ? node.trail : [];
+    if (points.length < 2) return;
+
+    for (let index = 1; index < points.length; index++) {
+        const from = points[index - 1];
+        const to = points[index];
+        const fade = 1 - (index / points.length);
+        if (fade <= 0) continue;
+
+        ctx.beginPath();
+        ctx.strokeStyle = withAlpha(color, alpha * fade);
+        ctx.lineWidth = Math.max(0.45, baseWidth * fade);
+        ctx.moveTo(from.x, from.y);
+        ctx.lineTo(to.x, to.y);
+        ctx.stroke();
+    }
+}
+
 function normalizeSearchText(value) {
     return String(value || '')
         .normalize('NFD')
@@ -4543,11 +4643,12 @@ const Input = {
                 angle: Math.random() * Math.PI * 2,
                 radius: random(minRadius, maxRadius),
                 targetRadius: random(minRadius, maxRadius),
-                speed: random(1.4, 3.2),
+                speed: random(0.95, 2.2),
                 wobble: Math.random() * Math.PI * 2,
-                wobbleSpeed: random(1.2, 2.8),
+                wobbleSpeed: random(0.85, 1.9),
                 size: random(2, 3.8) * (species?.tier === 'DE' ? 1.18 : 1),
                 targetRef: null,
+                trail: [],
                 x: centerX,
                 y: centerY
             });
@@ -4562,6 +4663,7 @@ const Input = {
                 node.speciesKey = this.pickOwnedInsectSpeciesKey(combatSpeciesKeys) || node.speciesKey;
             }
 
+            const previousTargetRef = node.targetRef || null;
             const profile = this.getInsectCombatProfile(node.speciesKey);
             const hasTargetFocus = this.isAttacking && focusTargets.length > 0;
 
@@ -4573,25 +4675,35 @@ const Input = {
                 node.targetRef = null;
             }
 
+            if (previousTargetRef !== node.targetRef) {
+                node.trail = [];
+            }
+
             const orbitMin = node.targetRef ? Math.max(8, (profile.latchRadius || 16) * 0.7) * scaleFactor : minRadius;
             const orbitMax = node.targetRef ? Math.max(orbitMin + 4, (profile.latchRadius || 16) * 1.35) * scaleFactor : maxRadius;
             const anchorX = node.targetRef ? node.targetRef.x : centerX;
             const anchorY = node.targetRef ? node.targetRef.y : centerY;
-            const chaosJitter = node.targetRef ? jitter * 0.35 : jitter;
+            const chaosJitter = node.targetRef ? jitter * 0.22 : jitter * 0.74;
 
-            node.angle += dt * node.speed * (node.targetRef ? 4.2 : (this.isAttacking ? 2.6 : 1.6));
+            node.angle += dt * node.speed * (node.targetRef ? 2.8 : (this.isAttacking ? 1.9 : 1.25));
             node.wobble += dt * node.wobbleSpeed;
-            node.targetRadius += random(node.targetRef ? -4 : -8, node.targetRef ? 4 : 8) * dt * 10;
+            node.targetRadius += random(node.targetRef ? -3.5 : -7, node.targetRef ? 3.5 : 7) * dt * 10;
             node.targetRadius = Math.max(orbitMin, Math.min(orbitMax, node.targetRadius));
-            node.radius += (node.targetRadius - node.radius) * (node.targetRef ? 0.12 : 0.08);
+            node.radius += (node.targetRadius - node.radius) * (node.targetRef ? 0.09 : 0.06);
 
             const swirlX = Math.cos(node.angle) * node.radius;
             const swirlY = Math.sin(node.angle * 1.18 + node.wobble) * (node.radius * (node.targetRef ? 0.54 : 0.72));
             const chaosX = Math.cos(node.wobble * 1.7 + node.angle * 0.45) * chaosJitter;
             const chaosY = Math.sin(node.wobble * 1.35 - node.angle * 0.4) * chaosJitter;
 
-            node.x = anchorX + swirlX + chaosX;
-            node.y = anchorY + swirlY + chaosY;
+            syncInsectVisualMotion(
+                node,
+                anchorX + swirlX + chaosX,
+                anchorY + swirlY + chaosY,
+                dt,
+                node.targetRef ? 11.5 : 8.5,
+                node.targetRef ? 5 : 4
+            );
         });
 
         this.insectCombat.visuals = visuals;
@@ -4672,27 +4784,29 @@ const Input = {
 
         ctx.save();
         ctx.lineWidth = 1;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const highlightedTargets = new Set();
 
-        this.insectCombat.visuals.forEach((node, index) => {
+        this.insectCombat.visuals.forEach(node => {
             const species = this.getInsectSpecies(node.speciesKey);
-            const color = species?.color || '#79ffd4';
-            const secondaryColor = species?.secondaryColor || color;
-            const auraColor = species?.auraColor || secondaryColor;
-            const trailColor = species?.auraColor || secondaryColor;
+            const palette = getInsectCombatPalette(species);
             const size = Math.max(1.8, node.size * scaleFactor);
 
-            if (node.targetRef) {
+            drawInsectTrail(
+                ctx,
+                node,
+                node.targetRef ? palette.aura : palette.primary,
+                size * (node.targetRef ? 0.62 : 0.46),
+                node.targetRef ? 0.36 : 0.22
+            );
+
+            if (node.targetRef && !highlightedTargets.has(node.targetRef)) {
+                highlightedTargets.add(node.targetRef);
                 ctx.beginPath();
-                ctx.strokeStyle = `${trailColor}33`;
-                ctx.moveTo(node.targetRef.x, node.targetRef.y);
-                ctx.lineTo(node.x, node.y);
-                ctx.stroke();
-            } else if (index > 0) {
-                const prev = this.insectCombat.visuals[index - 1];
-                ctx.beginPath();
-                ctx.strokeStyle = `${trailColor}26`;
-                ctx.moveTo(prev.x, prev.y);
-                ctx.lineTo(node.x, node.y);
+                ctx.strokeStyle = withAlpha(palette.aura, 0.2);
+                ctx.lineWidth = Math.max(0.7, 0.85 * scaleFactor);
+                ctx.arc(node.targetRef.x, node.targetRef.y, Math.max(5 * scaleFactor, size * 1.55), 0, Math.PI * 2);
                 ctx.stroke();
             }
 
@@ -4705,13 +4819,13 @@ const Input = {
                 size * 1.2
             );
             gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.25, secondaryColor);
-            gradient.addColorStop(0.7, color);
-            gradient.addColorStop(1, `${auraColor}12`);
+            gradient.addColorStop(0.18, palette.secondary);
+            gradient.addColorStop(0.58, palette.primary);
+            gradient.addColorStop(1, withAlpha(palette.aura, 0.08));
 
             ctx.beginPath();
-            ctx.shadowBlur = node.targetRef ? 18 : 14;
-            ctx.shadowColor = auraColor;
+            ctx.shadowBlur = node.targetRef ? 16 : 12;
+            ctx.shadowColor = withAlpha(palette.aura, node.targetRef ? 0.92 : 0.78);
             ctx.fillStyle = gradient;
             ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
             ctx.fill();
@@ -4759,11 +4873,12 @@ const Input = {
                 angle: Math.random() * Math.PI * 2,
                 radius: random(targetRadius, orbitRadius),
                 targetRadius: random(targetRadius, orbitRadius),
-                speed: random(2.8, 5.6),
+                speed: random(2.0, 4.2),
                 wobble: Math.random() * Math.PI * 2,
-                wobbleSpeed: random(1.8, 3.8),
+                wobbleSpeed: random(1.4, 3.2),
                 size: random(2.6, 5.4) * (species?.tier === 'DE' ? 1.2 : 1),
                 targetRef: null,
+                trail: [],
                 x: centerX,
                 y: centerY
             });
@@ -4778,28 +4893,39 @@ const Input = {
                 node.speciesKey = this.pickOwnedInsectSpeciesKey(combatSpeciesKeys) || node.speciesKey;
             }
 
+            const previousTargetRef = node.targetRef || null;
             node.targetRef = focusTargets.length ? focusTargets[index % focusTargets.length] : null;
+            if (previousTargetRef !== node.targetRef) {
+                node.trail = [];
+            }
+
             const profile = this.getInsectCombatProfile(node.speciesKey);
             const latchRadius = Math.max(10, (profile.latchRadius || 16) * scaleFactor);
             const anchorX = node.targetRef ? node.targetRef.x : centerX;
             const anchorY = node.targetRef ? node.targetRef.y : centerY;
             const minRadius = node.targetRef ? latchRadius * 0.55 : targetRadius;
             const maxRadius = node.targetRef ? latchRadius * 1.45 : orbitRadius;
-            const nodeJitter = node.targetRef ? jitter * 0.42 : jitter;
+            const nodeJitter = node.targetRef ? jitter * 0.26 : jitter * 0.68;
 
-            node.angle += dt * node.speed * (node.targetRef ? 5.8 : 3.4);
+            node.angle += dt * node.speed * (node.targetRef ? 4.2 : 2.6);
             node.wobble += dt * node.wobbleSpeed;
-            node.targetRadius += random(node.targetRef ? -3 : -8, node.targetRef ? 3 : 8) * dt * 10;
+            node.targetRadius += random(node.targetRef ? -2.5 : -6, node.targetRef ? 2.5 : 6) * dt * 10;
             node.targetRadius = Math.max(minRadius, Math.min(maxRadius, node.targetRadius));
-            node.radius += (node.targetRadius - node.radius) * (node.targetRef ? 0.18 : 0.1);
+            node.radius += (node.targetRadius - node.radius) * (node.targetRef ? 0.13 : 0.08);
 
             const swirlX = Math.cos(node.angle) * node.radius;
             const swirlY = Math.sin(node.angle * 1.35 + node.wobble) * (node.radius * (node.targetRef ? 0.48 : 0.76));
             const chaosX = Math.cos(node.wobble * 1.8 + node.angle * 0.52) * nodeJitter;
             const chaosY = Math.sin(node.wobble * 1.55 - node.angle * 0.46) * nodeJitter;
 
-            node.x = anchorX + swirlX + chaosX;
-            node.y = anchorY + swirlY + chaosY;
+            syncInsectVisualMotion(
+                node,
+                anchorX + swirlX + chaosX,
+                anchorY + swirlY + chaosY,
+                dt,
+                node.targetRef ? 13 : 9.5,
+                node.targetRef ? 6 : 5
+            );
         });
 
         this.insectUltimate.visuals = visuals;
@@ -4919,6 +5045,7 @@ const Input = {
 
         ctx.save();
         ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         this.insectUltimate.focusTargets.forEach(target => {
             ctx.beginPath();
             ctx.strokeStyle = 'rgba(255, 161, 224, 0.22)';
@@ -4939,27 +5066,26 @@ const Input = {
             ctx.stroke();
         });
 
-        this.insectUltimate.visuals.forEach((node, index) => {
+        const highlightedTargets = new Set();
+        this.insectUltimate.visuals.forEach(node => {
             const species = this.getInsectSpecies(node.speciesKey);
-            const color = species?.color || '#79ffd4';
-            const secondaryColor = species?.secondaryColor || '#ffb0e8';
-            const auraColor = species?.auraColor || secondaryColor;
+            const palette = getInsectCombatPalette(species);
             const size = Math.max(2.2, node.size * scaleFactor * 1.14);
 
-            if (node.targetRef) {
+            drawInsectTrail(
+                ctx,
+                node,
+                node.targetRef ? palette.aura : palette.primary,
+                size * (node.targetRef ? 0.72 : 0.56),
+                node.targetRef ? 0.4 : 0.24
+            );
+
+            if (node.targetRef && !highlightedTargets.has(node.targetRef)) {
+                highlightedTargets.add(node.targetRef);
                 ctx.beginPath();
-                ctx.strokeStyle = `${auraColor}28`;
-                ctx.lineWidth = 0.9 * scaleFactor;
-                ctx.moveTo(node.targetRef.x, node.targetRef.y);
-                ctx.lineTo(node.x, node.y);
-                ctx.stroke();
-            } else if (index > 0) {
-                const prev = this.insectUltimate.visuals[index - 1];
-                ctx.beginPath();
-                ctx.strokeStyle = `${secondaryColor}22`;
-                ctx.lineWidth = 0.8 * scaleFactor;
-                ctx.moveTo(prev.x, prev.y);
-                ctx.lineTo(node.x, node.y);
+                ctx.strokeStyle = withAlpha(palette.aura, 0.24);
+                ctx.lineWidth = Math.max(0.8, 1.1 * scaleFactor);
+                ctx.arc(node.targetRef.x, node.targetRef.y, Math.max((node.targetRef.r + 7) * scaleFactor, size * 1.8), 0, Math.PI * 2);
                 ctx.stroke();
             }
 
@@ -4972,13 +5098,13 @@ const Input = {
                 size * 1.4
             );
             gradient.addColorStop(0, '#ffffff');
-            gradient.addColorStop(0.24, secondaryColor);
-            gradient.addColorStop(0.7, color);
-            gradient.addColorStop(1, `${auraColor}10`);
+            gradient.addColorStop(0.16, palette.secondary);
+            gradient.addColorStop(0.62, palette.primary);
+            gradient.addColorStop(1, withAlpha(palette.aura, 0.08));
 
             ctx.beginPath();
-            ctx.shadowBlur = node.targetRef ? 20 : 16;
-            ctx.shadowColor = auraColor;
+            ctx.shadowBlur = node.targetRef ? 18 : 14;
+            ctx.shadowColor = withAlpha(palette.aura, node.targetRef ? 1 : 0.82);
             ctx.fillStyle = gradient;
             ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
             ctx.fill();
