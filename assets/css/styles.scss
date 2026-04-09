@@ -6,13 +6,45 @@ $mana-color: #00d4ff;
 $danger-color: #ff4444;
 $bg-gradient: radial-gradient(circle at center, #0a1525, #000);
 $shadow-color: rgba(0, 0, 0, 0.4);
-$ui-font: 'Bookman Old Style', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
-$ui-font-display: 'STKaiti', 'DFKai-SB', 'Adobe Kaiti Std', 'Bookman Old Style', 'Palatino Linotype', serif;
+$ui-font: 'Noto Sans Game', 'Noto Sans', 'Open Sans', 'Segoe UI', Tahoma, sans-serif;
+$ui-font-display: 'Noto Sans Game', 'Noto Sans', 'Montserrat', 'Open Sans', 'Segoe UI', sans-serif;
 $ult-color: #ff3366;
 
 // ====================================================================
 // 2. MIXINS
 // ====================================================================
+@font-face {
+    font-family: 'Noto Sans Game';
+    src: url('../fonts/NotoSans-Regular.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Sans Game';
+    src: url('../fonts/NotoSans-Italic.ttf') format('truetype');
+    font-style: italic;
+    font-weight: 400;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Sans Game';
+    src: url('../fonts/NotoSans-Bold.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Noto Sans Game';
+    src: url('../fonts/NotoSans-BoldItalic.ttf') format('truetype');
+    font-style: italic;
+    font-weight: 700;
+    font-display: swap;
+}
+
 @mixin flex-center {
     display: flex;
     align-items: center;
@@ -96,6 +128,8 @@ textarea {
 .btn-shop-page,
 #cultivation-rank {
     font-family: $ui-font-display;
+    font-weight: 700;
+    letter-spacing: 0.03em;
 }
 
 .game-ui {
@@ -1265,7 +1299,9 @@ body.is-touch-device {
     gap: 0; // Để sát nhau hoặc để 2px nếu muốn có khoảng cách
     border-top: 1px solid rgba($primary-color, 0.2);
 
-    .btn-reset, .btn-save {
+    .btn-reset,
+    .btn-progress-reset,
+    .btn-save {
         flex: 1;
         padding: 10px;
         font-weight: bold;
@@ -1274,6 +1310,7 @@ body.is-touch-device {
         transition: all 0.2s;
         text-transform: uppercase;
         font-size: 14px;
+        line-height: 1.2;
     }
 
     .btn-reset {
@@ -1283,6 +1320,16 @@ body.is-touch-device {
 
         &:hover {
             background: #444;
+            color: #fff;
+        }
+    }
+
+    .btn-progress-reset {
+        background: rgba(#a81818, 0.92);
+        color: #ffe2e2;
+
+        &:hover {
+            background: rgba(#c11d1d, 1);
             color: #fff;
         }
     }

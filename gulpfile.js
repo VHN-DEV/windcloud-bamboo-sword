@@ -41,12 +41,22 @@ gulp.task('copy-images', function () {
     .pipe(gulp.dest('public/assets/images'));
 });
 
+// 4. Copy font sang public
+gulp.task('copy-fonts', function () {
+  return gulp.src([
+    'assets/fonts/**/*.{otf,ttf,woff,woff2}',
+    '!assets/fonts/._*'
+  ])
+    .pipe(gulp.dest('public/assets/fonts'));
+});
+
 // Task chạy mặc định
-gulp.task('default', gulp.parallel('build-css', 'build-js', 'copy-images'));
+gulp.task('default', gulp.parallel('build-css', 'build-js', 'copy-images', 'copy-fonts'));
 
 // Task theo dõi thay đổi
 gulp.task('watch', function () {
   gulp.watch('assets/css/**/*.scss', gulp.series('build-css'));
   gulp.watch('assets/js/**/*.js', gulp.series('build-js'));
   gulp.watch('assets/images/**/*', gulp.series('copy-images'));
+  gulp.watch('assets/fonts/**/*.{otf,ttf,woff,woff2}', gulp.series('copy-fonts'));
 });
