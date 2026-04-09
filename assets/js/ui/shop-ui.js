@@ -34,6 +34,13 @@ ShopUI = {
 
         if (this.list) {
             this.list.addEventListener('pointerdown', (e) => {
+                const toggleBtn = e.target.closest('[data-description-toggle]');
+                if (toggleBtn) {
+                    e.stopPropagation();
+                    toggleDescriptionCard(toggleBtn.closest('[data-description-card]'));
+                    return;
+                }
+
                 const actionBtn = e.target.closest('[data-shop-id]');
                 if (!actionBtn) return;
 
@@ -190,6 +197,7 @@ ShopUI = {
             const isOwnedUnique = Boolean(item.isOneTime && item.uniqueKey && Input.hasUniquePurchase(item.uniqueKey));
             const hasDedicatedHabitat = item.category === 'SPIRIT_HABITAT' && Boolean(Input.insectHabitats?.[item.speciesKey]);
             const hasRainbowHabitat = item.category === 'SPIRIT_HABITAT' && Input.hasSevenColorSpiritBag();
+            const swordProgress = item.category === 'SWORD_ARTIFACT' ? Input.getSwordFormationProgress() : null;
             const canStoreOrUpgrade = item.category === 'BAG'
                 ? Input.canUpgradeInventoryCapacity(item)
                 : item.category === 'RAINBOW_BAG'
@@ -202,6 +210,8 @@ ShopUI = {
                                 ? Input.canUpgradeBeastBagCapacity(item)
                                 : item.category === 'INSECT_EGG'
                                     ? true
+                                    : item.category === 'SWORD_ARTIFACT'
+                                        ? Input.hasInventorySpaceForSpec(item)
                                     : (!isOwnedUnique && Input.hasInventorySpaceForSpec(item));
             const canAfford = !Input.isVoidCollapsed && canStoreOrUpgrade && Input.canAffordLowStoneCost(item.priceLowStone);
             const priceMarkup = Input.renderSpiritStoneCostMarkup(item.priceLowStone);
@@ -209,7 +219,14 @@ ShopUI = {
                 ? (canStoreOrUpgrade ? 'Mở rộng' : 'Không hợp lệ')
                 : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
 
-            if (item.category === 'SWORD_ART' || item.category === 'FLAME_ART') {
+            if (item.category === 'SWORD_ARTIFACT') {
+                actionLabel = canStoreOrUpgrade
+                    ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua')
+                    : (canStoreOrUpgrade ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua') : 'Túi đầy');
+                actionLabel = canStoreOrUpgrade
+                    ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua')
+                    : 'Túi đầy';
+            } else if (item.category === 'SWORD_ART' || item.category === 'FLAME_ART') {
                 actionLabel = isOwnedUnique ? 'Đã mua' : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
             } else if (item.category === 'ARTIFACT') {
                 actionLabel = isOwnedUnique
@@ -236,7 +253,7 @@ ShopUI = {
                     <div class="slot-badge">${escapeHtml(Input.getItemCategoryLabel(item))}</div>
                     ${buildPillVisualMarkup(item, qualityConfig, { context: 'shop' })}
                     <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                    <p class="item-description">${Input.getItemDescriptionMarkup(item)}</p>
+                    <div class="item-description" data-description-card>${Input.getItemDescriptionMarkup(item)}</div>
                     <div class="slot-meta">Giá: ${formatNumber(item.priceLowStone)} hạ phẩm linh thạch</div>
                     <div class="slot-meta slot-meta-price">
                         <span class="slot-meta-title">Giá</span>
@@ -293,7 +310,7 @@ ShopUI.ensureToolbar = function () {
     this.toolbar.innerHTML = `
         <div class="shop-tip" id="shop-tip"></div>
         <div class="panel-tabs shop-tabs" id="shop-tabs">
-            ${ITEM_COLLECTION_TABS.map(tab => `
+            ${ITEM_COLLECTION_TABS.filter(tab => tab.key !== 'KHAC').map(tab => `
                 <button class="panel-tab" type="button" data-shop-tab="${tab.key}">
                     ${escapeHtml(tab.label)}
                 </button>

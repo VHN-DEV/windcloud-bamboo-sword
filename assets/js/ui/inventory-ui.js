@@ -32,6 +32,13 @@ InventoryUI = {
 
         if (this.pillGrid) {
             this.pillGrid.addEventListener('pointerdown', (e) => {
+                const toggleBtn = e.target.closest('[data-description-toggle]');
+                if (toggleBtn) {
+                    e.stopPropagation();
+                    toggleDescriptionCard(toggleBtn.closest('[data-description-card]'));
+                    return;
+                }
+
                 const actionBtn = e.target.closest('[data-item-key]');
                 if (!actionBtn) return;
 
@@ -96,7 +103,9 @@ InventoryUI = {
             const sellPrice = Input.getInventorySellPrice(item);
             const sellPriceMarkup = Input.renderSpiritStoneCostMarkup(sellPrice);
             const isArtifactBook = item.category === 'INSECT_ARTIFACT';
-            const inventoryActionLabel = item.category === 'SWORD_ART'
+            const inventoryActionLabel = item.category === 'SWORD_ARTIFACT'
+                ? (CONFIG.SWORD?.ARTIFACT_ITEM?.inventoryActionLabel || 'Triển khai')
+                : item.category === 'SWORD_ART'
                 ? (CONFIG.SECRET_ARTS?.DAI_CANH_KIEM_TRAN?.inventoryActionLabel || 'Lĩnh ngộ')
                 : item.category === 'FLAME_ART'
                     ? (CONFIG.SECRET_ARTS?.CAN_LAM_BANG_DIEM?.inventoryActionLabel || 'Luyện hóa')
@@ -114,7 +123,7 @@ InventoryUI = {
                     <div class="slot-badge">${formatNumber(item.count)}x</div>
                     ${buildPillVisualMarkup(item, qualityConfig, { context: 'inventory' })}
                     <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                    <p class="item-description">${Input.getItemDescriptionMarkup(item)}</p>
+                    <div class="item-description" data-description-card>${Input.getItemDescriptionMarkup(item)}</div>
                     <div class="slot-meta">Bán lại: ${formatNumber(sellPrice)} hạ phẩm linh thạch</div>
                     <div class="slot-meta slot-meta-price">
                         <span class="slot-meta-title">Bán lại</span>

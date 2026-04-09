@@ -52,7 +52,7 @@ const CONFIG = {
         STAR_TWINKLE_SPEED: 0.01                // Tốc độ nhấp nháy của sao
     },
     SWORD: {
-        STARTING_COUNT_BEFORE_FORMATION: 1, // Trước khi lĩnh ngộ kiếm trận chỉ vận dụng 1 kiếm bản mệnh
+        STARTING_COUNT_BEFORE_FORMATION: 0, // Mặc định chưa có kiếm hộ thân, cần kết duyên từng thanh rồi mới triển khai
         COUNT: 72,              // Tổng số lượng kiếm tối đa
         BASE_RADIUS: 150,       // Khoảng cách từ tâm đến lớp kiếm đầu tiên
         LAYER_SPACING: 70,      // Khoảng cách giữa các lớp kiếm (vòng trong - vòng ngoài)
@@ -67,11 +67,71 @@ const CONFIG = {
         IS_PAUSED: false,          // Trạng thái tạm dừng
         BREATH_SPEED: { MIN: 0.015, MAX: 0.025 }, // Tốc độ hiệu ứng "nhịp thở" (co giãn vòng kiếm)
         FLOW_OFFSET: { MIN: 40, MAX: 100 },       // Biên độ dao động xa gần của kiếm khi bay
+        IDLE_SPHERE: {
+            DENSITY_MAX: 4.2,           // Mật độ tối đa khi số kiếm tăng cao
+            DENSITY_DIVISOR: 4.8,       // Số càng nhỏ thì càng nở quỹ đạo nhanh theo số lượng kiếm
+            FLOW_NOISE_WEIGHT: 0.45,    // Độ lệch pha ngẫu nhiên giữa các thanh kiếm
+            YAW_SPEED_BASE: 0.90,       // Tốc độ tự quay chính của thiên cầu khi ở trạng thái thường
+            YAW_SPEED_DENSITY_BONUS: 0.05, // Càng nhiều kiếm thì vòng cầu quay càng dày và nhanh hơn
+            PITCH_BASE: 0.88,           // Góc nghiêng nền của mặt cầu
+            PITCH_OSC_SPEED: 0.34,      // Tốc độ dao động trục nghiêng
+            PITCH_OSC_LAYER_STEP: 0.42, // Độ lệch nhịp giữa các tầng kiếm
+            PITCH_OSC_AMPLITUDE: 0.1,   // Biên độ lắc nhẹ của thiên cầu
+            ROLL_SPEED_BASE: 0.16,      // Tốc độ tự lăn của quỹ đạo cầu
+            ROLL_SPEED_LAYER_STEP: 0.02, // Mỗi tầng tăng thêm một chút tốc độ lăn
+            RADIUS_MIN_BASE: 56,        // Bán kính tối thiểu của tầng trong cùng
+            RADIUS_MIN_LAYER_STEP: 12,  // Mỗi tầng ngoài nở thêm bao nhiêu
+            RADIUS_MAX_BASE: 78,        // Bán kính cơ sở theo mật độ đàn kiếm
+            RADIUS_DENSITY_STEP: 28,    // Độ nở thêm theo số lượng kiếm đang có
+            RADIUS_MAX_LAYER_STEP: 13,  // Độ nở thêm theo tầng khi tính bán kính tối đa
+            BREATH_SPEED_BASE: 0.9,     // Nhịp "thở" của quỹ đạo
+            BREATH_SPEED_INDEX_STEP: 0.06, // Độ lệch nhịp thở theo từng thanh
+            BREATH_AMPLITUDE: 0.045,    // Mức co giãn của thiên cầu
+            X_RADIUS_BASE: 1.08,        // Tỉ lệ nở theo trục ngang
+            X_RADIUS_LAYER_BONUS: 0.04, // Tầng xen kẽ sẽ nở ngang thêm nhẹ
+            Y_RADIUS_SCALE: 0.88,       // Tỉ lệ nén theo trục dọc để tạo cảm giác elip-cầu
+            DEPTH_LIFT_SCALE: 0.3,      // Độ nâng lên/hạ xuống theo chiều sâu giả 3D
+            DRIFT_X_SPEED: 0.42,        // Nhịp trôi nhẹ theo trục X
+            DRIFT_X_AMPLITUDE: 3.5,     // Biên độ trôi theo trục X
+            DRIFT_Y_SPEED: 0.36,        // Nhịp trôi nhẹ theo trục Y
+            DRIFT_Y_NOISE_SCALE: 0.8,   // Độ lệch pha trôi Y theo từng kiếm
+            DRIFT_Y_AMPLITUDE: 2.5,     // Biên độ trôi theo trục Y
+            VISUAL_SCALE_BASE: 0.72,    // Kích thước tối thiểu khi kiếm nằm phía sau
+            VISUAL_SCALE_DEPTH_MULT: 0.24, // Mức tăng kích thước theo chiều sâu
+            OPACITY_BASE: 0.42,         // Độ mờ tối thiểu khi kiếm ra phía sau
+            OPACITY_DEPTH_MULT: 0.27,   // Mức tăng độ rõ theo chiều sâu
+            LOOKAHEAD_TIME: 0.08        // Khoảng nhìn trước để xoay mũi kiếm theo quỹ đạo
+        },
         ATTACK_DELAY_VAR: { BASE: 6, RAND: 10 },  // Độ trễ ngẫu nhiên giữa các lần phóng kiếm
         FRAGMENTS: {            // Hiệu ứng mảnh vỡ khi kiếm gãy
             LIFE_TIME: 2000,    // Thời gian tồn tại của mảnh vỡ
             FADE_TIME: 1000     // Thời gian mờ dần trước khi mất tích
         },
+        ARTIFACT_ITEM: {
+            uniqueKey: "THANH_TRUC_PHONG_VAN_KIEM",
+            fullName: "Thanh Trúc Phong Vân Kiếm",
+            quality: "HIGH",
+            color: "#66f0c2",
+            secondaryColor: "#dffef2",
+            auraColor: "#30b894",
+            buyPriceLowStone: 360,
+            buttonLabel: "Mua 1 thanh",
+            inventoryActionLabel: "Triển khai",
+            realmLabel: "Pháp bảo cao cấp",
+            evolutionLabel: "Linh bảo (gần Thông thiên)",
+            featureSummary: "Phân kiếm thành trận, dẫn Tịch Tà Thần Lôi và tăng trưởng theo chủ nhân.",
+            description: "Bộ kiếm tre xanh có thể tách hợp linh hoạt. Mỗi lần luyện hóa sẽ thêm một thanh hộ thân; đủ 72 thanh mới có thể khai triển Đại Canh Kiếm Trận.",
+            gradeSystem: "Pháp khí: hạ, trung, thượng, cực phẩm • Pháp bảo: phổ thông, cao cấp, đỉnh cấp • Cổ bảo • Linh bảo, Thông thiên linh bảo • Huyền thiên chi bảo.",
+            thunderStrike: {
+                TRIGGER_CHANCE: 0.18,
+                FORMATION_TRIGGER_CHANCE: 0.32,
+                MOVEMENT_LOCK_MS: 180,
+                SLOW_MS: 1000,
+                SLOW_FACTOR: 0.72,
+                DODGE_SUPPRESS_MS: 1200,
+                SHIELD_BLOCK_MS: 1600
+            }
+        }
     },
     ULTIMATE: {
         MAX_RAGE: 100,      // Giới hạn nộ đầy
@@ -622,10 +682,11 @@ const CONFIG = {
             FORTUNE: 11, // Loại thưởng FORTUNE
             SWORD_ART: 12, // Loại thưởng SWORD_ART
             FLAME_ART: 13, // Loại thưởng FLAME_ART
-            ARTIFACT: 14, // Loại thưởng ARTIFACT
-            INSECT_SKILL: 15, // Loại thưởng INSECT_SKILL
-            INSECT_ARTIFACT: 16, // Loại thưởng INSECT_ARTIFACT
-            SPECIAL: 17 // Loại thưởng SPECIAL
+            SWORD_ARTIFACT: 14, // Loại thưởng SWORD_ARTIFACT
+            ARTIFACT: 15, // Loại thưởng ARTIFACT
+            INSECT_SKILL: 16, // Loại thưởng INSECT_SKILL
+            INSECT_ARTIFACT: 17, // Loại thưởng INSECT_ARTIFACT
+            SPECIAL: 18 // Loại thưởng SPECIAL
         },
         CATEGORY_RATES: {
             NORMAL: { EXP: 0.17, INSIGHT: 0.07, BREAKTHROUGH: 0.10, ATTACK: 0.12, SHIELD_BREAK: 0.05, BERSERK: 0.06, RAGE: 0.09, MANA: 0.08, MAX_MANA: 0.07, REGEN: 0.06, SPEED: 0.08, FORTUNE: 0.05 },

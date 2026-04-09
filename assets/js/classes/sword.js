@@ -43,6 +43,8 @@ class Sword {
         this.isEnlarged = false;      // Đang trong trạng thái cường hóa phóng to
         this.currentVisualScale = 1;  // Tỉ lệ hiển thị thực tế (để animation mượt)
         this.targetVisualScale = 1;   // Tỉ lệ đích muốn hướng tới
+        this.renderDepth = 0;
+        this.renderOpacity = 1;
         this.pierceCount = 0;      // Đếm số lần đâm xuyên mục tiêu
         this.maxPierce = 3;        // Tối đa 3 lần đâm xuyên
         this.dragonPhase = index * 0.15; // Độ lệch pha để tạo hiệu ứng uốn lượn dải lụa
@@ -89,7 +91,7 @@ class Sword {
             return this.getMergedGuardTarget(guardCenter, scaleFactor);
         }
 
-        return this.getNormalGuardTarget(guardCenter, r, Input);
+        return this.getNormalGuardTarget(guardCenter, r, Input, scaleFactor);
     }
 
     getSafeSpeedMultiplier(Input) {
@@ -107,7 +109,104 @@ class Sword {
         this.pierceCount = 0;
     }
 
-    getNormalGuardTarget(guardCenter, r, Input) {
+    useSphereGuardOrbit(Input) {
+        return !Input.isUltMode && Input.attackMode !== 'SWORD';
+    }
+
+    getCursorGuardAnchor(guardCenter, Input) {
+        const cursorX = Number(Input?.x);
+        const cursorY = Number(Input?.y);
+
+        return Number.isFinite(cursorX) && Number.isFinite(cursorY)
+            ? { x: cursorX, y: cursorY }
+            : guardCenter;
+    }
+
+    sampleSphereGuardPoint(anchor, scaleFactor, timeOffset = 0) {
+        const sphereConfig = CONFIG.SWORD.IDLE_SPHERE || {};
+        const activeSwordCount = (typeof swords !== 'undefined' && Array.isArray(swords) && swords.length > 0)
+            ? swords.length
+            : Math.max(1, CONFIG.SWORD.COUNT || 1);
+        const densityFactor = Math.min(
+            sphereConfig.DENSITY_MAX || 3.8,
+            1 + Math.sqrt(activeSwordCount) / (sphereConfig.DENSITY_DIVISOR || 5.2)
+        );
+        const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+        const pointIndex = this.index + 0.5;
+        const normalizedY = 1 - ((pointIndex / Math.max(1, activeSwordCount)) * 2);
+        const radial = Math.sqrt(Math.max(0, 1 - normalizedY * normalizedY));
+        const baseAzimuth = goldenAngle * this.index + this.flowNoise * (sphereConfig.FLOW_NOISE_WEIGHT || 0.45);
+        const time = performance.now() * 0.001 + timeOffset;
+        const yaw = time
+            * ((sphereConfig.YAW_SPEED_BASE || 0.34) + densityFactor * (sphereConfig.YAW_SPEED_DENSITY_BONUS || 0.03))
+            * ((this.layer + this.index) % 2 === 0 ? 1 : -1);
+        const pitch = (sphereConfig.PITCH_BASE || 0.88)
+            + Math.sin(time * (sphereConfig.PITCH_OSC_SPEED || 0.28) + this.layer * (sphereConfig.PITCH_OSC_LAYER_STEP || 0.42))
+            * (sphereConfig.PITCH_OSC_AMPLITUDE || 0.1);
+        const roll = time * ((sphereConfig.ROLL_SPEED_BASE || 0.11) + (this.layer % 3) * (sphereConfig.ROLL_SPEED_LAYER_STEP || 0.014));
+        const shellRadius = Math.max(
+            ((sphereConfig.RADIUS_MIN_BASE || 56) + this.layer * (sphereConfig.RADIUS_MIN_LAYER_STEP || 12)) * scaleFactor,
+            ((sphereConfig.RADIUS_MAX_BASE || 74) + densityFactor * (sphereConfig.RADIUS_DENSITY_STEP || 26) + this.layer * (sphereConfig.RADIUS_MAX_LAYER_STEP || 13)) * scaleFactor
+        );
+        const breathing = 1
+            + Math.sin(time * ((sphereConfig.BREATH_SPEED_BASE || 0.9) + (this.index % 5) * (sphereConfig.BREATH_SPEED_INDEX_STEP || 0.06)) + this.breath)
+            * (sphereConfig.BREATH_AMPLITUDE || 0.045);
+
+        let x = Math.cos(baseAzimuth) * radial;
+        let y = normalizedY;
+        let z = Math.sin(baseAzimuth) * radial;
+
+        const cosYaw = Math.cos(yaw);
+        const sinYaw = Math.sin(yaw);
+        [x, z] = [x * cosYaw - z * sinYaw, x * sinYaw + z * cosYaw];
+
+        const cosPitch = Math.cos(pitch);
+        const sinPitch = Math.sin(pitch);
+        [y, z] = [y * cosPitch - z * sinPitch, y * sinPitch + z * cosPitch];
+
+        const cosRoll = Math.cos(roll);
+        const sinRoll = Math.sin(roll);
+        [x, y] = [x * cosRoll - y * sinRoll, x * sinRoll + y * cosRoll];
+
+        const xRadius = shellRadius * ((sphereConfig.X_RADIUS_BASE || 1.08) + (this.layer % 2) * (sphereConfig.X_RADIUS_LAYER_BONUS || 0.04)) * breathing;
+        const yRadius = shellRadius * (sphereConfig.Y_RADIUS_SCALE || 0.88) * breathing;
+        const depthLift = shellRadius * (sphereConfig.DEPTH_LIFT_SCALE || 0.3);
+        const projectedX = anchor.x
+            + x * xRadius
+            + Math.cos(time * (sphereConfig.DRIFT_X_SPEED || 0.42) + this.flowNoise) * (sphereConfig.DRIFT_X_AMPLITUDE || 3.5) * scaleFactor;
+        const projectedY = anchor.y
+            + y * yRadius
+            + z * depthLift
+            + Math.sin(time * (sphereConfig.DRIFT_Y_SPEED || 0.36) + this.flowNoise * (sphereConfig.DRIFT_Y_NOISE_SCALE || 0.8)) * (sphereConfig.DRIFT_Y_AMPLITUDE || 2.5) * scaleFactor;
+        const depth = z;
+        const visualScale = (sphereConfig.VISUAL_SCALE_BASE || 0.72) + (depth + 1) * (sphereConfig.VISUAL_SCALE_DEPTH_MULT || 0.24);
+        const opacity = (sphereConfig.OPACITY_BASE || 0.42) + (depth + 1) * (sphereConfig.OPACITY_DEPTH_MULT || 0.27);
+
+        return { x: projectedX, y: projectedY, depth, visualScale, opacity };
+    }
+
+    getSphereGuardTarget(guardCenter, Input, scaleFactor) {
+        const sphereConfig = CONFIG.SWORD.IDLE_SPHERE || {};
+        const anchor = this.getCursorGuardAnchor(guardCenter, Input);
+        const currentPoint = this.sampleSphereGuardPoint(anchor, scaleFactor, 0);
+        const futurePoint = this.sampleSphereGuardPoint(anchor, scaleFactor, sphereConfig.LOOKAHEAD_TIME || 0.08);
+        const finalAngle = Math.atan2(futurePoint.y - currentPoint.y, futurePoint.x - currentPoint.x) + Math.PI / 2;
+
+        return {
+            tx: currentPoint.x,
+            ty: currentPoint.y,
+            finalAngle,
+            renderDepth: currentPoint.depth,
+            visualScale: currentPoint.visualScale,
+            opacity: currentPoint.opacity
+        };
+    }
+
+    getNormalGuardTarget(guardCenter, r, Input, scaleFactor) {
+        if (this.useSphereGuardOrbit(Input)) {
+            return this.getSphereGuardTarget(guardCenter, Input, scaleFactor);
+        }
+
         const globalRotation = !CONFIG.SWORD.IS_PAUSED
             ? (performance.now() / 1000) * this.spinSpeed * (CONFIG.SWORD.SPEED_MULT || 100)
             : 0;
@@ -126,7 +225,7 @@ class Sword {
         const phase = Input.ultimatePhase;
         const eased = Input.getUltimateTransitionEase();
         const mergedTarget = this.getMergedGuardTarget(guardCenter, scaleFactor);
-        const normalTarget = this.getNormalGuardTarget(guardCenter, r, Input);
+        const normalTarget = this.getNormalGuardTarget(guardCenter, r, Input, scaleFactor);
         const isCore = this.isUltimateCore();
         const coreSword = this.getUltimateCoreSword();
         const transitionOrigin = (phase === 'splitting' && coreSword)
@@ -199,7 +298,15 @@ class Sword {
         if (Input.isUltMode && this.isUltimateCore()) {
             this.targetVisualScale = 4.8;
         } else if (!this.isEnlarged) {
-            this.targetVisualScale = 1;
+            this.targetVisualScale = Number.isFinite(target.visualScale) ? target.visualScale : 1;
+        }
+
+        if (!Input.isUltMode) {
+            this.renderDepth += ((Number(target.renderDepth) || 0) - this.renderDepth) * 0.2;
+            this.renderOpacity += ((Number(target.opacity) || 1) - this.renderOpacity) * 0.2;
+        } else {
+            this.renderDepth *= 0.8;
+            this.renderOpacity += (1 - this.renderOpacity) * 0.2;
         }
 
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.14;
@@ -334,6 +441,8 @@ class Sword {
         this.isReturning = false;
         this.currentVisualScale = 1;
         this.targetVisualScale = 1;
+        this.renderDepth = 0;
+        this.renderOpacity = 1;
         this.lastUltimateHitAt = 0;
         this.trail = [];
         this.fragments = [];
@@ -366,17 +475,18 @@ class Sword {
 
             // 3. (Tùy chọn) Tăng kích thước khi hợp nhất để trông quyền năng hơn
             this.targetVisualScale = 4.8; // Phóng to thanh kiếm lên khi hợp nhất
+            this.renderDepth *= 0.8;
+            this.renderOpacity += (1 - this.renderOpacity) * 0.2;
 
         } else {
-            // --- QUỸ ĐẠO XOAY VÒNG BÌNH THƯỜNG ---
-            this.targetVisualScale = 1; // Trở về kích thước cũ
-            let globalRotation = !CONFIG.SWORD.IS_PAUSED ? 
-                (performance.now() / 1000) * this.spinSpeed * (CONFIG.SWORD.SPEED_MULT || 100) : 0;
-            
-            const a = this.baseAngle + globalRotation;
-            tx = guardCenter.x + Math.cos(a) * r;
-            ty = guardCenter.y + Math.sin(a) * r;
-            finalAngle = (Input.guardForm === 1) ? a + Math.PI / 2 : Math.atan2(ty - this.y, tx - this.x) + Math.PI / 2;
+            // --- QUỸ ĐẠO HỘ THÂN / KIẾM TRẬN ---
+            const guardTarget = this.getNormalGuardTarget(guardCenter, r, Input, scaleFactor);
+            tx = guardTarget.tx;
+            ty = guardTarget.ty;
+            finalAngle = guardTarget.finalAngle;
+            this.renderDepth += ((Number(guardTarget.renderDepth) || 0) - this.renderDepth) * 0.22;
+            this.renderOpacity += ((Number(guardTarget.opacity) || 1) - this.renderOpacity) * 0.22;
+            this.targetVisualScale = Number.isFinite(guardTarget.visualScale) ? guardTarget.visualScale : 1;
         }
 
         // DI CHUYỂN VẬT LÝ (Dùng nội suy để mượt hơn khi nhập thể)
@@ -585,14 +695,18 @@ class Sword {
         }
 
         if (this.trail.length > 1) {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0.2, this.renderOpacity * 0.72);
             ctx.beginPath();
             ctx.moveTo(this.trail[0].x, this.trail[0].y);
             for (let i = 1; i < this.trail.length; i++) ctx.lineTo(this.trail[i].x, this.trail[i].y);
             ctx.strokeStyle = CONFIG.COLORS.SWORD_TRAIL;
             ctx.lineWidth = 2 * scaleFactor;
             ctx.stroke();
+            ctx.restore();
         }
         ctx.save();
+        ctx.globalAlpha = this.renderOpacity;
         ctx.translate(this.x, this.y);
         ctx.rotate(this.drawAngle);
         ctx.scale(this.currentVisualScale, this.currentVisualScale);
