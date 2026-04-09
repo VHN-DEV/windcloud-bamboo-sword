@@ -1,7 +1,7 @@
 const ITEM_COLLECTION_TABS = Object.freeze([
     { key: 'DAN_DUOC', label: 'Đan dược' },
     { key: 'TRUNG_NOAN', label: 'Trùng noãn' },
-    { key: 'NGUYEN_LIEU', label: 'Nguyên liệu' },
+    { key: 'THIEN_TAI_DIA_BAO', label: 'Thiên tài địa bảo' },
     { key: 'TUI', label: 'Túi' },
     { key: 'BI_PHAP', label: 'Bí pháp' },
     { key: 'PHAP_BAO', label: 'Pháp bảo' },
@@ -21,7 +21,7 @@ function getItemCollectionTabKey(item) {
 
     if (category === 'SPECIAL') return 'DAN_DUOC';
     if (category === 'INSECT_EGG') return 'TRUNG_NOAN';
-    if (category === 'MATERIAL') return 'NGUYEN_LIEU';
+    if (category === 'MATERIAL') return 'THIEN_TAI_DIA_BAO';
     if (['BAG', 'RAINBOW_BAG', 'SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(category)) return 'TUI';
     if (category === 'FLAME_ART' && item?.uniqueKey === 'CAN_LAM_BANG_DIEM') return 'PHAP_BAO';
     if (['SWORD_ART', 'FLAME_ART', 'INSECT_SKILL'].includes(category)) return 'BI_PHAP';

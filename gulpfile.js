@@ -30,6 +30,9 @@ gulp.task('build-js', function () {
     'assets/js/ui/shop-ui.js',
     'assets/js/ui/inventory-ui.js',
     'assets/js/ui/beast-bag-ui.js',
+    'assets/js/ui/settings-ui.js',
+    'assets/js/ui/cultivation-panels-ui.js',
+    'assets/js/game-progress.js',
     'assets/js/main.js'
   ])
     .pipe(concat('scripts.js'))
