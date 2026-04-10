@@ -196,6 +196,41 @@ function toggleDescriptionCard(card, forceExpanded = null) {
     return nextExpanded;
 }
 
+function toggleTrackedDescriptionCard(toggleBtn, expandedIds) {
+    if (!toggleBtn) return false;
+
+    const card = toggleBtn.closest('[data-description-card]');
+    const cardId = card?.getAttribute('data-description-id') || '';
+    const nextExpanded = toggleDescriptionCard(card);
+
+    if (expandedIds instanceof Set && cardId) {
+        if (nextExpanded) {
+            expandedIds.add(cardId);
+        } else {
+            expandedIds.delete(cardId);
+        }
+    }
+
+    return nextExpanded;
+}
+
+function restoreTrackedDescriptionCards(root, expandedIds) {
+    if (!root?.querySelectorAll || !(expandedIds instanceof Set)) return;
+
+    const nextExpandedIds = new Set();
+
+    root.querySelectorAll('[data-description-card][data-description-id]').forEach(card => {
+        const cardId = card.getAttribute('data-description-id') || '';
+        if (!cardId || !expandedIds.has(cardId)) return;
+
+        toggleDescriptionCard(card, true);
+        nextExpandedIds.add(cardId);
+    });
+
+    expandedIds.clear();
+    nextExpandedIds.forEach(cardId => expandedIds.add(cardId));
+}
+
 function refreshExpandedDescriptionCards(root = document) {
     if (!root?.querySelectorAll) return;
 

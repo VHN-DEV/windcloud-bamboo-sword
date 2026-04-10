@@ -30,20 +30,40 @@ function getItemCollectionTabKey(item) {
     return 'DAN_DUOC';
 }
 
-function buildMaterialArtMarkup(materialKey) {
+function getKimLoiTrucArtStageMeta(item) {
+    if (typeof Input !== 'undefined'
+        && Input
+        && typeof Input.getKimLoiTrucStageMeta === 'function') {
+        return Input.getKimLoiTrucStageMeta(item);
+    }
+
+    return { visualStage: 'buried-root' };
+}
+
+function buildMaterialArtMarkup(materialKey, item = null) {
     if (materialKey === 'KIM_LOI_TRUC_ROOT') {
+        const stageMeta = getKimLoiTrucArtStageMeta(item);
+        const visualStage = stageMeta?.visualStage || 'buried-root';
+
         return `
-            <div class="kim-loi-truc-mau-art" aria-hidden="true">
+            <div class="kim-loi-truc-mau-art kim-loi-truc-mau-art--${visualStage}" aria-hidden="true">
                 <span class="kim-loi-truc-mau-art__halo"></span>
+                <span class="kim-loi-truc-mau-art__ground"></span>
+                <span class="kim-loi-truc-mau-art__mound"></span>
+                <span class="kim-loi-truc-mau-art__crack"></span>
                 <span class="kim-loi-truc-mau-art__core"></span>
                 <span class="kim-loi-truc-mau-art__stalk kim-loi-truc-mau-art__stalk--main"></span>
+                <span class="kim-loi-truc-mau-art__stalk kim-loi-truc-mau-art__stalk--mid"></span>
                 <span class="kim-loi-truc-mau-art__stalk kim-loi-truc-mau-art__stalk--side"></span>
                 <span class="kim-loi-truc-mau-art__leaf kim-loi-truc-mau-art__leaf--left"></span>
                 <span class="kim-loi-truc-mau-art__leaf kim-loi-truc-mau-art__leaf--right"></span>
+                <span class="kim-loi-truc-mau-art__leaf kim-loi-truc-mau-art__leaf--upper-left"></span>
+                <span class="kim-loi-truc-mau-art__leaf kim-loi-truc-mau-art__leaf--upper-right"></span>
                 <span class="kim-loi-truc-mau-art__root kim-loi-truc-mau-art__root--left"></span>
                 <span class="kim-loi-truc-mau-art__root kim-loi-truc-mau-art__root--right"></span>
                 <span class="kim-loi-truc-mau-art__spark kim-loi-truc-mau-art__spark--1"></span>
                 <span class="kim-loi-truc-mau-art__spark kim-loi-truc-mau-art__spark--2"></span>
+                <span class="kim-loi-truc-mau-art__spark kim-loi-truc-mau-art__spark--3"></span>
             </div>
         `;
     }
@@ -142,6 +162,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const isChuongThienBinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CHUONG_THIEN_BINH';
     const isThanhTrucSwordArtifact = item.category === 'SWORD_ARTIFACT';
     const isKimLoiTrucMau = item.category === 'MATERIAL' && item.materialKey === 'KIM_LOI_TRUC_ROOT';
+    const kimLoiStageMeta = isKimLoiTrucMau ? getKimLoiTrucArtStageMeta(item) : null;
     const visualClasses = [visual.className];
 
     if (isPhongLoiArtifact) {
@@ -155,6 +176,9 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     }
     if (isKimLoiTrucMau) {
         visualClasses.push('is-material-kim-loi-root');
+        if (kimLoiStageMeta?.visualStage) {
+            visualClasses.push(`is-material-kim-loi-root--${kimLoiStageMeta.visualStage}`);
+        }
     }
     if (visual.rainbow) {
         visualClasses.push('is-rainbow-bag');
@@ -173,7 +197,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             </div>
         `
         : visual.className === 'is-material'
-            ? buildMaterialArtMarkup(item.materialKey)
+            ? buildMaterialArtMarkup(item.materialKey, item)
         : visual.isBagLike
         ? `
             <span class="pill-visual__core pill-visual__core--bag"></span>

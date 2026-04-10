@@ -49,6 +49,10 @@
         return Math.max(1, Math.floor(buyPrice * sellbackRatio));
     }
 
+    function getKimLoiTrucBaseName() {
+        return CONFIG.ITEMS?.MATERIALS?.[ROOT_MATERIAL_KEY]?.fullName || 'Kim Lôi Trúc Mẫu';
+    }
+
     const baseBuildInventoryKey = Input.buildInventoryKey;
     Input.buildInventoryKey = function (spec) {
         const baseKey = baseBuildInventoryKey.call(this, spec);
@@ -88,20 +92,40 @@
         return clampFloor(item?.nurtureYears || 0, 0, clampFloor(getNurtureConfig().MAX_NURTURE_YEARS || 3600, 1));
     };
 
-    Input.getKimLoiTrucStageLabel = function (yearsOrItem) {
+    Input.getKimLoiTrucStageMeta = function (yearsOrItem) {
         const years = typeof yearsOrItem === 'number'
             ? clampFloor(yearsOrItem)
             : this.getKimLoiTrucNurtureYears(yearsOrItem);
         const thresholds = getSortedNurtureThresholds();
-        let currentLabel = 'Mẫu căn sơ tỉnh';
+        const baseName = getKimLoiTrucBaseName();
+        let currentMeta = {
+            years: 0,
+            label: 'Mẫu căn sơ tỉnh',
+            displayName: baseName,
+            visualStage: 'buried-root'
+        };
 
         thresholds.forEach(entry => {
-            if (years >= clampFloor(entry?.years || 0)) {
-                currentLabel = entry?.label || currentLabel;
-            }
+            if (years < clampFloor(entry?.years || 0)) return;
+
+            const nextLabel = entry?.label || currentMeta.label;
+            currentMeta = {
+                years: clampFloor(entry?.years || 0),
+                label: nextLabel,
+                displayName: entry?.displayName || `${baseName} - ${nextLabel}`,
+                visualStage: entry?.visualStage || currentMeta.visualStage
+            };
         });
 
-        return currentLabel;
+        return currentMeta;
+    };
+
+    Input.getKimLoiTrucStageLabel = function (yearsOrItem) {
+        return this.getKimLoiTrucStageMeta(yearsOrItem).label;
+    };
+
+    Input.getKimLoiTrucDisplayName = function (yearsOrItem) {
+        return this.getKimLoiTrucStageMeta(yearsOrItem).displayName;
     };
 
     Input.canRefineKimLoiTrucRoot = function (item) {
@@ -211,7 +235,6 @@
     Input.ensureKimLoiTrucRuntimeState = function () {
         if (!this.kimLoiTrucRuntime || typeof this.kimLoiTrucRuntime !== 'object') {
             this.kimLoiTrucRuntime = {
-                nextUiRefreshAt: 0,
                 nextSaveAt: 0,
                 uiRefreshScheduled: false
             };
@@ -451,24 +474,12 @@
         const msPerYear = Math.max(1, Math.round(1000 / yearsPerSecond));
         const safeDtMs = Math.max(0, Math.min(250, Math.round((Number(dt) || 0) * 1000)));
         const now = Date.now();
-        const inventoryVisible = typeof InventoryUI !== 'undefined'
-            && InventoryUI
-            && this.isOverlayVisible(InventoryUI.overlay);
         const activeRoots = this.getActiveKimLoiTrucRootItems();
-        const shouldRefreshCooldownUi = inventoryVisible
-            && this.hasChuongThienBinh()
-            && this.getChuongThienBinhCooldownRemainingMs() > 0;
 
         if (!activeRoots.length) {
-            if (shouldRefreshCooldownUi && now >= (runtime.nextUiRefreshAt || 0)) {
-                runtime.nextUiRefreshAt = now + clampFloor(nurtureConfig.AUTO_UI_REFRESH_MS || 1000, 250);
-                this.scheduleKimLoiTrucUiRefresh();
-            }
             return;
         }
 
-        let changed = false;
-        let shouldRefreshUi = false;
         let shouldSave = false;
 
         activeRoots.forEach(item => {
@@ -484,8 +495,6 @@
                 return;
             }
 
-            changed = true;
-            shouldRefreshUi = true;
             shouldSave = true;
 
             if (result.beforeStage !== result.afterStage) {
@@ -512,19 +521,19 @@
             }
         });
 
-        if (shouldRefreshCooldownUi) {
-            shouldRefreshUi = true;
-        }
-
-        if (shouldRefreshUi && now >= (runtime.nextUiRefreshAt || 0)) {
-            runtime.nextUiRefreshAt = now + clampFloor(nurtureConfig.AUTO_UI_REFRESH_MS || 1000, 250);
-            this.scheduleKimLoiTrucUiRefresh();
-        }
-
         if (shouldSave && now >= (runtime.nextSaveAt || 0)) {
             runtime.nextSaveAt = now + clampFloor(nurtureConfig.AUTO_SAVE_INTERVAL_MS || 5000, 1000);
             GameProgress.requestSave();
         }
+    };
+
+    const baseGetItemDisplayName = Input.getItemDisplayName;
+    Input.getItemDisplayName = function (item) {
+        if (this.isKimLoiTrucRootItem(item)) {
+            return this.getKimLoiTrucDisplayName(item);
+        }
+
+        return baseGetItemDisplayName.call(this, item);
     };
 
     const baseGetItemDescription = Input.getItemDescription;
@@ -629,7 +638,10 @@
 
     Input.getInventoryItemActionLabel = function (item) {
         if (this.isKimLoiTrucRootItem(item)) {
-            return this.isKimLoiTrucRootNurturing(item) ? 'Dừng dưỡng' : `Ôn dưỡng`;
+            const nurtureYears = this.getKimLoiTrucNurtureYears(item);
+            return nurtureYears > 0 || this.isKimLoiTrucRootNurturing(item)
+                ? `${formatNumber(nurtureYears)} năm`
+                : 'Ôn dưỡng';
         }
 
         if (this.isChuongThienBinhItem(item)) {

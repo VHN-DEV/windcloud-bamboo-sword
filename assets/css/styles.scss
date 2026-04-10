@@ -5060,10 +5060,16 @@ select.shop-control-input {
 }
 
 .btn-slot-action {
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
     white-space: nowrap;
     margin-top: auto;
-    padding: 10px 7px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    padding: 9px 6px;
     border: none;
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(215, 244, 237, 0.92));
@@ -5385,6 +5391,7 @@ select.shop-control-input {
     }
 
     .btn-slot-action {
+        font-size: 11px;
         min-height: 42px;
     }
 
@@ -5698,12 +5705,45 @@ select.shop-control-input {
     0%,
     100% {
         opacity: 0.24;
-        transform: scaleY(0.86);
+        transform: var(--kim-loi-spark-transform, none) scaleY(0.86);
     }
 
     45% {
         opacity: 0.92;
-        transform: scaleY(1.06);
+        transform: var(--kim-loi-spark-transform, none) scaleY(1.06);
+    }
+}
+
+@keyframes kim-loi-truc-ground-breathe {
+    0%,
+    100% {
+        transform: translateX(-50%) scaleX(0.98);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(-1px) scaleX(1.02);
+    }
+}
+
+@keyframes kim-loi-truc-bud-rise {
+    0%,
+    100% {
+        transform: var(--kim-loi-core-transform, translateX(-50%));
+    }
+
+    50% {
+        transform: var(--kim-loi-core-transform, translateX(-50%)) translateY(-1px);
+    }
+}
+
+@keyframes kim-loi-truc-sway {
+    0%,
+    100% {
+        transform: var(--kim-loi-stalk-transform) scaleY(var(--kim-loi-stalk-scale, 1));
+    }
+
+    50% {
+        transform: var(--kim-loi-stalk-transform) translateY(-1px) scaleY(calc(var(--kim-loi-stalk-scale, 1) + 0.03));
     }
 }
 
@@ -5796,15 +5836,61 @@ select.shop-control-input {
 }
 
 .pill-visual.is-material-kim-loi-root {
-    --kim-loi-glow: #93ffbf;
-    --kim-loi-deep: #2c744d;
-    --pill-aura: rgba(147, 255, 191, 0.46);
+    --kim-loi-glow: #b4ff8d;
+    --kim-loi-deep: #70522f;
+    --kim-loi-soil: #8c6239;
+    --pill-aura: rgba(180, 255, 141, 0.38);
+
+    &.is-material-kim-loi-root--buried-root {
+        --kim-loi-glow: #d8ff9a;
+        --kim-loi-deep: #6e5032;
+        --kim-loi-soil: #9b7244;
+        --pill-aura: rgba(216, 255, 154, 0.3);
+    }
+
+    &.is-material-kim-loi-root--swollen-mound {
+        --kim-loi-glow: #d2ff93;
+        --kim-loi-deep: #6e4c2a;
+        --kim-loi-soil: #9f6f3d;
+        --pill-aura: rgba(210, 255, 147, 0.36);
+    }
+
+    &.is-material-kim-loi-root--sprout {
+        --kim-loi-glow: #b4ff8d;
+        --kim-loi-deep: #446333;
+        --kim-loi-soil: #8d6139;
+        --pill-aura: rgba(180, 255, 141, 0.42);
+    }
+
+    &.is-material-kim-loi-root--young-bamboo {
+        --kim-loi-glow: #8ff7bf;
+        --kim-loi-deep: #23684d;
+        --kim-loi-soil: #7b5739;
+        --pill-aura: rgba(143, 247, 191, 0.46);
+    }
+
+    &.is-material-kim-loi-root--mature-bamboo {
+        --kim-loi-glow: #7fffc8;
+        --kim-loi-deep: #1e805d;
+        --kim-loi-soil: #6b4d33;
+        --pill-aura: rgba(127, 255, 200, 0.5);
+    }
+
+    &.is-material-kim-loi-root--thunder-grove {
+        --kim-loi-glow: #b4ffcf;
+        --kim-loi-deep: #0f8b63;
+        --kim-loi-soil: #63482e;
+        --pill-aura: rgba(180, 255, 207, 0.56);
+    }
 
     .pill-visual__backdrop {
         background:
             radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.34), transparent 20%),
-            radial-gradient(circle at 50% 56%, rgba(135, 255, 185, 0.28), transparent 48%),
-            radial-gradient(circle at 50% 62%, rgba(28, 74, 48, 0.58), transparent 82%);
+            radial-gradient(circle at 50% 54%, color-mix(in srgb, var(--kim-loi-glow) 30%, rgba(255, 255, 255, 0.08)), transparent 46%),
+            radial-gradient(circle at 50% 68%, color-mix(in srgb, var(--kim-loi-soil) 72%, rgba(14, 8, 4, 0.16)), transparent 82%);
+        box-shadow:
+            0 0 26px color-mix(in srgb, var(--kim-loi-glow) 22%, transparent),
+            inset 0 -10px 16px rgba(14, 8, 4, 0.24);
     }
 
     .pill-visual__orbit {
@@ -5819,13 +5905,16 @@ select.shop-control-input {
 
 .kim-loi-truc-mau-art {
     position: absolute;
-    inset: 5px;
+    inset: 4px;
     z-index: 4;
     pointer-events: none;
     filter: drop-shadow(0 0 18px color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 30%, transparent));
 }
 
 .kim-loi-truc-mau-art__halo,
+.kim-loi-truc-mau-art__ground,
+.kim-loi-truc-mau-art__mound,
+.kim-loi-truc-mau-art__crack,
 .kim-loi-truc-mau-art__core,
 .kim-loi-truc-mau-art__stalk,
 .kim-loi-truc-mau-art__leaf,
@@ -5836,112 +5925,440 @@ select.shop-control-input {
 }
 
 .kim-loi-truc-mau-art__halo {
-    inset: 12px;
+    z-index: 0;
+    inset: 11px;
     border-radius: 50%;
     background:
-        radial-gradient(circle at 50% 50%, rgba(241, 255, 233, 0.18), transparent 32%),
+        radial-gradient(circle at 50% 50%, rgba(248, 255, 240, 0.18), transparent 32%),
         radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 34%, rgba(255, 255, 255, 0.12)), transparent 74%);
     animation: kim-loi-truc-pulse 3.4s ease-in-out infinite;
 }
 
-.kim-loi-truc-mau-art__core {
+.kim-loi-truc-mau-art__ground {
+    z-index: 2;
     left: 50%;
-    bottom: 17px;
-    width: 22px;
-    height: 20px;
+    bottom: 8px;
+    width: 58px;
+    height: 17px;
     transform: translateX(-50%);
-    border-radius: 55% 55% 48% 48% / 44% 44% 56% 56%;
+    border-radius: 50%;
     background:
-        radial-gradient(circle at 40% 24%, rgba(248, 255, 240, 0.76), transparent 24%),
-        linear-gradient(180deg, rgba(228, 255, 210, 0.94), rgba(134, 232, 143, 0.86) 42%, rgba(40, 103, 58, 0.96) 100%);
-    border: 1px solid rgba(231, 255, 217, 0.58);
+        radial-gradient(circle at 50% 30%, rgba(255, 234, 198, 0.22), transparent 38%),
+        linear-gradient(180deg, color-mix(in srgb, var(--kim-loi-soil, #8c6239) 72%, rgba(255, 244, 220, 0.2)), color-mix(in srgb, var(--kim-loi-soil, #8c6239) 76%, rgba(24, 12, 4, 0.54)));
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.38),
-        0 0 12px rgba(147, 255, 191, 0.24);
+        inset 0 1px 0 rgba(255, 245, 228, 0.22),
+        0 4px 10px rgba(26, 16, 8, 0.26);
+    animation: kim-loi-truc-ground-breathe 4.4s ease-in-out infinite;
+}
+
+.kim-loi-truc-mau-art__mound {
+    z-index: 3;
+    left: 50%;
+    bottom: 11px;
+    width: 34px;
+    height: 21px;
+    transform: translateX(-50%);
+    border-radius: 58% 58% 44% 44% / 68% 68% 36% 36%;
+    background:
+        radial-gradient(circle at 50% 28%, rgba(255, 244, 219, 0.24), transparent 36%),
+        radial-gradient(circle at 50% 48%, color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 20%, rgba(255, 255, 255, 0.06)), transparent 68%),
+        linear-gradient(180deg, color-mix(in srgb, var(--kim-loi-soil, #8c6239) 66%, rgba(255, 244, 220, 0.24)), color-mix(in srgb, var(--kim-loi-soil, #8c6239) 76%, rgba(20, 10, 4, 0.58)));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 244, 223, 0.26),
+        0 0 12px color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 18%, transparent);
+    transform-origin: center bottom;
+}
+
+.kim-loi-truc-mau-art__crack {
+    z-index: 4;
+    left: 50%;
+    bottom: 20px;
+    width: 24px;
+    height: 16px;
+    transform: translateX(-50%);
+    background:
+        linear-gradient(130deg, transparent 38%, rgba(246, 255, 223, 0.7) 38% 47%, transparent 47%),
+        linear-gradient(58deg, transparent 46%, rgba(221, 255, 177, 0.62) 46% 54%, transparent 54%),
+        linear-gradient(104deg, transparent 58%, rgba(255, 255, 255, 0.46) 58% 64%, transparent 64%);
+    clip-path: polygon(18% 100%, 38% 56%, 28% 48%, 46% 20%, 58% 36%, 70% 0, 86% 8%, 62% 54%, 74% 64%, 56% 100%);
+    opacity: 0.18;
+}
+
+.kim-loi-truc-mau-art__core {
+    --kim-loi-core-transform: translateX(-50%) scale(0.74);
+    z-index: 5;
+    left: 50%;
+    bottom: 18px;
+    width: 18px;
+    height: 16px;
+    transform: var(--kim-loi-core-transform);
+    border-radius: 58% 58% 42% 42% / 48% 48% 56% 56%;
+    background:
+        radial-gradient(circle at 42% 20%, rgba(248, 255, 240, 0.82), transparent 24%),
+        linear-gradient(180deg, rgba(233, 255, 214, 0.96), rgba(164, 240, 126, 0.9) 42%, color-mix(in srgb, var(--kim-loi-deep, #2c744d) 76%, rgba(14, 36, 23, 0.34)) 100%);
+    border: 1px solid rgba(235, 255, 221, 0.58);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.32),
+        0 0 10px color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 24%, transparent);
+    animation: kim-loi-truc-bud-rise 3.8s ease-in-out infinite;
 }
 
 .kim-loi-truc-mau-art__stalk {
-    bottom: 28px;
+    z-index: 6;
+    bottom: 25px;
     border-radius: 999px;
     background:
-        linear-gradient(180deg, rgba(241, 255, 232, 0.96), rgba(173, 255, 181, 0.86) 18%, rgba(83, 196, 102, 0.9) 60%, rgba(34, 86, 51, 0.96) 100%);
-    border: 1px solid rgba(233, 255, 220, 0.58);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        linear-gradient(180deg, rgba(242, 255, 235, 0.96), rgba(173, 255, 187, 0.88) 18%, color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 68%, rgba(54, 150, 87, 0.9)) 58%, color-mix(in srgb, var(--kim-loi-deep, #2c744d) 84%, rgba(12, 40, 24, 0.48)) 100%);
+    border: 1px solid rgba(233, 255, 220, 0.56);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 0 10px color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 18%, transparent);
+    opacity: 0;
+    transform-origin: center bottom;
+    animation: kim-loi-truc-sway 4.3s ease-in-out infinite;
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 5px;
+        width: 76%;
+        height: calc(100% - 10px);
+        transform: translateX(-50%);
+        background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0 3px, rgba(44, 112, 73, 0.06) 3px 8px);
+        border-radius: inherit;
+        opacity: 0.7;
+    }
 }
 
 .kim-loi-truc-mau-art__stalk--main {
     left: 50%;
-    width: 11px;
-    height: 34px;
-    transform: translateX(-50%);
+    width: 10px;
+    height: 24px;
+    --kim-loi-stalk-transform: translateX(-50%);
+}
+
+.kim-loi-truc-mau-art__stalk--mid {
+    left: 50%;
+    width: 8px;
+    height: 20px;
+    --kim-loi-stalk-transform: translateX(-50%) translateX(-13px) rotate(-8deg);
+    animation-delay: -1.1s;
 }
 
 .kim-loi-truc-mau-art__stalk--side {
     left: 50%;
-    width: 8px;
-    height: 28px;
-    transform: translateX(7px) rotate(10deg);
-    opacity: 0.82;
+    width: 7px;
+    height: 18px;
+    --kim-loi-stalk-transform: translateX(-50%) translateX(13px) rotate(10deg);
+    animation-delay: -2.2s;
 }
 
 .kim-loi-truc-mau-art__leaf {
-    top: 28px;
+    z-index: 7;
     width: 20px;
-    height: 11px;
+    height: 10px;
     border-radius: 100% 10% 100% 10% / 100% 10% 100% 10%;
-    background: linear-gradient(180deg, rgba(231, 255, 220, 0.92), rgba(97, 210, 115, 0.84) 56%, rgba(40, 103, 58, 0.92));
-    box-shadow: 0 0 10px rgba(147, 255, 191, 0.18);
+    background:
+        linear-gradient(180deg, rgba(237, 255, 225, 0.96), color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 68%, rgba(72, 192, 106, 0.88)) 56%, color-mix(in srgb, var(--kim-loi-deep, #2c744d) 76%, rgba(18, 52, 32, 0.5)));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 18%, transparent);
+    opacity: 0;
 }
 
 .kim-loi-truc-mau-art__leaf--left {
-    left: 17px;
-    transform: rotate(-26deg);
+    left: 16px;
+    bottom: 34px;
+    transform: rotate(-28deg) scale(0.82);
 }
 
 .kim-loi-truc-mau-art__leaf--right {
     right: 16px;
-    transform: scaleX(-1) rotate(-18deg);
+    bottom: 34px;
+    transform: scaleX(-1) rotate(-20deg) scale(0.82);
+}
+
+.kim-loi-truc-mau-art__leaf--upper-left {
+    left: 22px;
+    bottom: 47px;
+    width: 17px;
+    transform: rotate(-36deg) scale(0.74);
+}
+
+.kim-loi-truc-mau-art__leaf--upper-right {
+    right: 21px;
+    bottom: 46px;
+    width: 17px;
+    transform: scaleX(-1) rotate(-32deg) scale(0.74);
 }
 
 .kim-loi-truc-mau-art__root {
-    bottom: 13px;
-    width: 14px;
-    height: 12px;
-    border-left: 2px solid rgba(228, 255, 210, 0.82);
-    border-bottom: 2px solid rgba(171, 255, 180, 0.52);
+    z-index: 1;
+    bottom: 7px;
+    width: 15px;
+    height: 13px;
+    border-left: 2px solid rgba(232, 255, 214, 0.78);
+    border-bottom: 2px solid rgba(171, 255, 180, 0.48);
     border-radius: 0 0 0 12px;
-    opacity: 0.82;
+    opacity: 0.3;
 }
 
 .kim-loi-truc-mau-art__root--left {
-    left: 26px;
+    left: 24px;
     transform: rotate(24deg);
 }
 
 .kim-loi-truc-mau-art__root--right {
-    right: 25px;
-    transform: scaleX(-1) rotate(16deg);
+    right: 24px;
+    transform: scaleX(-1) rotate(18deg);
 }
 
 .kim-loi-truc-mau-art__spark {
+    z-index: 8;
     width: 11px;
-    height: 20px;
+    height: 19px;
     background: linear-gradient(180deg, rgba(249, 255, 238, 0.94), rgba(237, 254, 200, 0.84) 44%, rgba(175, 255, 164, 0.18) 100%);
     clip-path: polygon(54% 0, 100% 0, 64% 44%, 92% 44%, 30% 100%, 46% 60%, 14% 60%);
     box-shadow: 0 0 12px rgba(239, 255, 170, 0.3);
     mix-blend-mode: screen;
+    opacity: 0.18;
     animation: kim-loi-truc-spark 1.7s steps(2, end) infinite;
 }
 
 .kim-loi-truc-mau-art__spark--1 {
-    left: 18px;
-    top: 20px;
-    transform: rotate(-18deg);
+    left: 14px;
+    top: 18px;
+    --kim-loi-spark-transform: rotate(-18deg);
 }
 
 .kim-loi-truc-mau-art__spark--2 {
-    right: 17px;
-    top: 32px;
-    transform: rotate(16deg);
+    right: 13px;
+    top: 28px;
+    --kim-loi-spark-transform: rotate(16deg);
     animation-delay: -0.8s;
+}
+
+.kim-loi-truc-mau-art__spark--3 {
+    left: 50%;
+    top: 10px;
+    --kim-loi-spark-transform: translateX(-50%) rotate(4deg);
+    animation-delay: -0.35s;
+}
+
+.kim-loi-truc-mau-art--buried-root {
+    .kim-loi-truc-mau-art__ground {
+        width: 56px;
+    }
+
+    .kim-loi-truc-mau-art__mound {
+        width: 38px;
+        height: 23px;
+    }
+
+    .kim-loi-truc-mau-art__core {
+        opacity: 0.34;
+    }
+
+    .kim-loi-truc-mau-art__spark--3 {
+        opacity: 0;
+    }
+}
+
+.kim-loi-truc-mau-art--swollen-mound {
+    .kim-loi-truc-mau-art__mound {
+        width: 42px;
+        height: 27px;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 244, 223, 0.28),
+            0 0 14px color-mix(in srgb, var(--kim-loi-glow, var(--pill-accent)) 24%, transparent);
+    }
+
+    .kim-loi-truc-mau-art__crack {
+        opacity: 0.56;
+    }
+
+    .kim-loi-truc-mau-art__core {
+        --kim-loi-core-transform: translateX(-50%) scale(0.88);
+        bottom: 22px;
+        opacity: 0.72;
+    }
+
+    .kim-loi-truc-mau-art__root {
+        opacity: 0.58;
+    }
+
+    .kim-loi-truc-mau-art__spark {
+        opacity: 0.28;
+    }
+}
+
+.kim-loi-truc-mau-art--sprout {
+    .kim-loi-truc-mau-art__mound {
+        width: 36px;
+        height: 21px;
+    }
+
+    .kim-loi-truc-mau-art__crack {
+        opacity: 0.74;
+    }
+
+    .kim-loi-truc-mau-art__core {
+        --kim-loi-core-transform: translateX(-50%) scale(0.98);
+        bottom: 25px;
+        width: 16px;
+        height: 24px;
+        border-radius: 50% 50% 40% 40% / 58% 58% 42% 42%;
+        opacity: 0.96;
+    }
+
+    .kim-loi-truc-mau-art__stalk--main {
+        opacity: 0.64;
+        height: 18px;
+        --kim-loi-stalk-scale: 0.86;
+    }
+
+    .kim-loi-truc-mau-art__root {
+        opacity: 0.68;
+    }
+
+    .kim-loi-truc-mau-art__spark {
+        opacity: 0.44;
+    }
+
+    .kim-loi-truc-mau-art__spark--3 {
+        opacity: 0.24;
+    }
+}
+
+.kim-loi-truc-mau-art--young-bamboo {
+    .kim-loi-truc-mau-art__mound {
+        width: 28px;
+        height: 16px;
+    }
+
+    .kim-loi-truc-mau-art__crack {
+        opacity: 0.38;
+    }
+
+    .kim-loi-truc-mau-art__core {
+        --kim-loi-core-transform: translateX(-50%) scale(0.92);
+        bottom: 37px;
+        width: 13px;
+        height: 15px;
+        opacity: 0.9;
+    }
+
+    .kim-loi-truc-mau-art__stalk--main {
+        opacity: 1;
+        height: 30px;
+    }
+
+    .kim-loi-truc-mau-art__leaf--left,
+    .kim-loi-truc-mau-art__leaf--right {
+        opacity: 0.94;
+    }
+
+    .kim-loi-truc-mau-art__root {
+        opacity: 0.72;
+    }
+
+    .kim-loi-truc-mau-art__spark {
+        opacity: 0.54;
+    }
+}
+
+.kim-loi-truc-mau-art--mature-bamboo {
+    .kim-loi-truc-mau-art__mound {
+        width: 24px;
+        height: 14px;
+        opacity: 0.84;
+    }
+
+    .kim-loi-truc-mau-art__crack {
+        opacity: 0.24;
+    }
+
+    .kim-loi-truc-mau-art__core {
+        --kim-loi-core-transform: translateX(-50%) scale(0.9);
+        bottom: 46px;
+        width: 13px;
+        height: 16px;
+        opacity: 0.94;
+    }
+
+    .kim-loi-truc-mau-art__stalk--main {
+        opacity: 1;
+        height: 40px;
+    }
+
+    .kim-loi-truc-mau-art__stalk--mid {
+        opacity: 0.92;
+        height: 31px;
+    }
+
+    .kim-loi-truc-mau-art__stalk--side {
+        opacity: 0.82;
+        height: 27px;
+    }
+
+    .kim-loi-truc-mau-art__leaf {
+        opacity: 1;
+    }
+
+    .kim-loi-truc-mau-art__root {
+        opacity: 0.78;
+    }
+
+    .kim-loi-truc-mau-art__spark {
+        opacity: 0.68;
+    }
+}
+
+.kim-loi-truc-mau-art--thunder-grove {
+    .kim-loi-truc-mau-art__mound {
+        width: 20px;
+        height: 11px;
+        opacity: 0.72;
+    }
+
+    .kim-loi-truc-mau-art__core {
+        --kim-loi-core-transform: translateX(-50%) scale(0.92);
+        bottom: 51px;
+        width: 14px;
+        height: 17px;
+    }
+
+    .kim-loi-truc-mau-art__stalk--main {
+        opacity: 1;
+        height: 46px;
+    }
+
+    .kim-loi-truc-mau-art__stalk--mid {
+        opacity: 0.96;
+        height: 37px;
+    }
+
+    .kim-loi-truc-mau-art__stalk--side {
+        opacity: 0.88;
+        height: 33px;
+    }
+
+    .kim-loi-truc-mau-art__leaf--left,
+    .kim-loi-truc-mau-art__leaf--right {
+        width: 22px;
+        opacity: 1;
+    }
+
+    .kim-loi-truc-mau-art__leaf--upper-left,
+    .kim-loi-truc-mau-art__leaf--upper-right {
+        width: 18px;
+        opacity: 1;
+    }
+
+    .kim-loi-truc-mau-art__root {
+        opacity: 0.84;
+    }
+
+    .kim-loi-truc-mau-art__spark {
+        opacity: 0.8;
+    }
 }

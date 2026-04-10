@@ -9,6 +9,7 @@ InventoryUI = {
     pillGrid: document.getElementById('inventory-pill-grid'),
     stoneGrid: document.getElementById('inventory-stone-grid'),
     currentTab: 'items',
+    expandedDescriptionIds: new Set(),
 
     init() {
         if (!this.overlay || !this.btnOpen) return;
@@ -35,7 +36,7 @@ InventoryUI = {
                 const toggleBtn = e.target.closest('[data-description-toggle]');
                 if (toggleBtn) {
                     e.stopPropagation();
-                    toggleDescriptionCard(toggleBtn.closest('[data-description-card]'));
+                    toggleTrackedDescriptionCard(toggleBtn, this.expandedDescriptionIds);
                     return;
                 }
 
@@ -124,7 +125,7 @@ InventoryUI = {
                     <div class="slot-badge">${formatNumber(item.count)}x</div>
                     ${buildPillVisualMarkup(item, qualityConfig, { context: 'inventory' })}
                     <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                    <div class="item-description" data-description-card>${Input.getItemDescriptionMarkup(item)}</div>
+                    <div class="item-description" data-description-card data-description-id="${escapeHtml(item.key)}">${Input.getItemDescriptionMarkup(item)}</div>
                     <div class="slot-meta">Bán lại: ${formatNumber(sellPrice)} hạ phẩm linh thạch</div>
                     <div class="slot-meta slot-meta-price">
                         <span class="slot-meta-title">Bán lại</span>
@@ -143,6 +144,7 @@ InventoryUI = {
             cards.push('<article class="inventory-slot is-empty"><span>Ô trống</span></article>');
         }
         this.pillGrid.innerHTML = cards.join('');
+        restoreTrackedDescriptionCards(this.pillGrid, this.expandedDescriptionIds);
 
         this.stoneGrid.innerHTML = STONE_ORDER.map(quality => {
             const stoneType = Input.getSpiritStoneType(quality);

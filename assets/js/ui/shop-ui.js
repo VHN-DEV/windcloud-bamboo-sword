@@ -11,6 +11,7 @@ ShopUI = {
     qualityFilter: 'ALL',
     currentPage: 1,
     lastPageSize: 0,
+    expandedDescriptionIds: new Set(),
 
     init() {
         if (!this.overlay || !this.btnOpen) return;
@@ -37,7 +38,7 @@ ShopUI = {
                 const toggleBtn = e.target.closest('[data-description-toggle]');
                 if (toggleBtn) {
                     e.stopPropagation();
-                    toggleDescriptionCard(toggleBtn.closest('[data-description-card]'));
+                    toggleTrackedDescriptionCard(toggleBtn, this.expandedDescriptionIds);
                     return;
                 }
 
@@ -253,7 +254,7 @@ ShopUI = {
                     <div class="slot-badge">${escapeHtml(Input.getItemCategoryLabel(item))}</div>
                     ${buildPillVisualMarkup(item, qualityConfig, { context: 'shop' })}
                     <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                    <div class="item-description" data-description-card>${Input.getItemDescriptionMarkup(item)}</div>
+                    <div class="item-description" data-description-card data-description-id="${escapeHtml(item.id)}">${Input.getItemDescriptionMarkup(item)}</div>
                     <div class="slot-meta">Giá: ${formatNumber(item.priceLowStone)} hạ phẩm linh thạch</div>
                     <div class="slot-meta slot-meta-price">
                         <span class="slot-meta-title">Giá</span>
@@ -265,6 +266,7 @@ ShopUI = {
         }).join('');
 
         this.list.innerHTML = cards;
+        restoreTrackedDescriptionCards(this.list, this.expandedDescriptionIds);
     },
 
     render() {

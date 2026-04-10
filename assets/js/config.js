@@ -149,12 +149,42 @@ const CONFIG = {
             REFINED_SELL_BASE: 800,
             REFINED_SELL_PER_POWER: 10,
             STAGE_THRESHOLDS: [
-                { years: 0, label: "Mẫu căn sơ tỉnh" },
-                { years: 60, label: "Lôi văn hiện mạch" },
-                { years: 120, label: "Mẫu trúc ngưng hình" },
-                { years: 360, label: "Kim lôi sơ thành" },
-                { years: 720, label: "Kim lôi đại thành" },
-                { years: 1440, label: "Lôi mộc viên mãn" }
+                {
+                    years: 0,
+                    label: "Mẫu căn sơ tỉnh",
+                    displayName: "Kim Lôi Trúc Mẫu - Lôi Thổ Tàng Căn",
+                    visualStage: "buried-root"
+                },
+                {
+                    years: 60,
+                    label: "Lôi văn hiện mạch",
+                    displayName: "Kim Lôi Trúc Mẫu - Lôi Văn Linh Nhưỡng",
+                    visualStage: "swollen-mound"
+                },
+                {
+                    years: 120,
+                    label: "Mẫu trúc ngưng hình",
+                    displayName: "Kim Lôi Trúc Mẫu - Măng Lôi Phá Thổ",
+                    visualStage: "sprout"
+                },
+                {
+                    years: 360,
+                    label: "Kim lôi sơ thành",
+                    displayName: "Kim Lôi Trúc Mẫu - Kim Lôi Trúc Non",
+                    visualStage: "young-bamboo"
+                },
+                {
+                    years: 720,
+                    label: "Kim lôi đại thành",
+                    displayName: "Kim Lôi Trúc Mẫu - Kim Lôi Song Trúc",
+                    visualStage: "mature-bamboo"
+                },
+                {
+                    years: 1440,
+                    label: "Lôi mộc viên mãn",
+                    displayName: "Kim Lôi Trúc Mẫu - Lôi Mộc Trúc Vương",
+                    visualStage: "thunder-grove"
+                }
             ]
         }
     },
