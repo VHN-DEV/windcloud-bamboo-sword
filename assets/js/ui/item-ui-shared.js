@@ -69,15 +69,10 @@ function buildChuongThienBinhVisualMarkup() {
     return `
         <div class="chuong-thien-binh-art" aria-hidden="true">
             <span class="chuong-thien-binh-art__halo"></span>
-            <span class="chuong-thien-binh-art__ring chuong-thien-binh-art__ring--outer"></span>
-            <span class="chuong-thien-binh-art__ring chuong-thien-binh-art__ring--inner"></span>
-            <span class="chuong-thien-binh-art__bottle"></span>
-            <span class="chuong-thien-binh-art__neck"></span>
-            <span class="chuong-thien-binh-art__mouth"></span>
-            <span class="chuong-thien-binh-art__liquid"></span>
-            <span class="chuong-thien-binh-art__sigil"></span>
-            <span class="chuong-thien-binh-art__droplet chuong-thien-binh-art__droplet--1"></span>
-            <span class="chuong-thien-binh-art__droplet chuong-thien-binh-art__droplet--2"></span>
+            <span class="chuong-thien-binh-art__particle chuong-thien-binh-art__particle--1"></span>
+            <span class="chuong-thien-binh-art__particle chuong-thien-binh-art__particle--2"></span>
+            <span class="chuong-thien-binh-art__particle chuong-thien-binh-art__particle--3"></span>
+            <img src="./assets/images/chuong-thien-binh.svg" class="chuong-thien-binh-art__image" alt="">
         </div>
     `;
 }

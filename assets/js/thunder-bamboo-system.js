@@ -629,7 +629,7 @@
 
     Input.getInventoryItemActionLabel = function (item) {
         if (this.isKimLoiTrucRootItem(item)) {
-            return this.isKimLoiTrucRootNurturing(item) ? 'Dừng dưỡng' : `Ôn dưỡng ${this.getKimLoiTrucNurtureRateLabel()}`;
+            return this.isKimLoiTrucRootNurturing(item) ? 'Dừng dưỡng' : `Ôn dưỡng`;
         }
 
         if (this.isChuongThienBinhItem(item)) {
