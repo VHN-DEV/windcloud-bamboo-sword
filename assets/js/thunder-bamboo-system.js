@@ -72,6 +72,11 @@
         if (Object.prototype.hasOwnProperty.call(spec, 'refineYears')) item.refineYears = clampFloor(spec.refineYears || 0);
         if (Object.prototype.hasOwnProperty.call(spec, 'powerRating')) item.powerRating = clampFloor(spec.powerRating || 0);
         if (Object.prototype.hasOwnProperty.call(spec, 'sellPriceLowStone')) item.sellPriceLowStone = clampFloor(spec.sellPriceLowStone || 0);
+        if (Object.prototype.hasOwnProperty.call(spec, 'maxDurability')) item.maxDurability = clampFloor(spec.maxDurability || 0);
+        if (Object.prototype.hasOwnProperty.call(spec, 'durability')) item.durability = clampFloor(spec.durability || 0);
+        if (Object.prototype.hasOwnProperty.call(spec, 'breakWear')) item.breakWear = clampFloor(spec.breakWear || 0);
+        if (Object.prototype.hasOwnProperty.call(spec, 'breakCount')) item.breakCount = clampFloor(spec.breakCount || 0);
+        if (Object.prototype.hasOwnProperty.call(spec, 'equippedAt')) item.equippedAt = clampFloor(spec.equippedAt || 0);
 
         return item;
     };
@@ -398,7 +403,15 @@
             source: 'REFINED',
             refineYears: nurtureYears,
             powerRating,
-            sellPriceLowStone
+            sellPriceLowStone,
+            maxDurability: typeof this.getRefinedThanhTrucSwordDurability === 'function'
+                ? this.getRefinedThanhTrucSwordDurability(nurtureYears)
+                : 0,
+            durability: typeof this.getRefinedThanhTrucSwordDurability === 'function'
+                ? this.getRefinedThanhTrucSwordDurability(nurtureYears)
+                : 0,
+            breakWear: 0,
+            breakCount: 0
         };
 
         delete this.inventory[itemKey];
@@ -442,6 +455,94 @@
         if (!nurtured) return false;
 
         this.chuongThienBinhCooldownEndsAt = Date.now() + cooldownMs;
+        this.refreshResourceUI();
+        return true;
+    };
+
+    Input.canUseChuongThienBinhOnTarget = function (target) {
+        if (this.isVoidCollapsed || !this.hasChuongThienBinh()) return false;
+        if (this.getChuongThienBinhCooldownRemainingMs() > 0) return false;
+
+        if (this.isKimLoiTrucRootItem(target)) {
+            return true;
+        }
+
+        if (target?.category === 'SWORD_ARTIFACT') {
+            const maxDurability = clampFloor(target.maxDurability || 0, 0);
+            const durability = clampFloor(target.durability || 0, 0);
+            return maxDurability > 0 && durability < maxDurability;
+        }
+
+        const swordState = typeof target === 'string'
+            ? this.getEquippedSwordArtifactByKey?.(target)
+            : (target?.instanceKey ? this.getEquippedSwordArtifactByKey?.(target.instanceKey) || target : null);
+        if (!swordState) return false;
+
+        return this.isSwordArtifactDamaged?.(swordState) || false;
+    };
+
+    Input.useChuongThienBinhOnTarget = function (target) {
+        if (!this.hasChuongThienBinh()) {
+            showNotify('Chưa có Chưởng Thiên Bình để quán chú mục tiêu này.', '#ffd36b');
+            return false;
+        }
+
+        const cooldownRemainingMs = this.getChuongThienBinhCooldownRemainingMs();
+        if (cooldownRemainingMs > 0) {
+            showNotify(
+                `Chưởng Thiên Bình đang hồi phục, còn ${getCountdownLabel(cooldownRemainingMs)}.`,
+                getChuongThienBinhConfig()?.color || '#8fffe0'
+            );
+            return false;
+        }
+
+        const chuongConfig = getChuongThienBinhConfig() || {};
+        const cooldownMs = clampFloor(chuongConfig.cooldownMs || 60000, 0);
+
+        if (this.isKimLoiTrucRootItem(target)) {
+            const bonusYears = clampFloor(chuongConfig.nurtureBoostYears || getNurtureConfig().CHUONG_ACCELERATION_YEARS || 180, 1);
+            const nurtured = this.nurtureKimLoiTrucRoot(target, bonusYears, { source: 'artifact' });
+            if (!nurtured) return false;
+
+            this.chuongThienBinhCooldownEndsAt = Date.now() + cooldownMs;
+            this.refreshResourceUI();
+            return true;
+        }
+
+        if (target?.category === 'SWORD_ARTIFACT') {
+            const maxDurability = clampFloor(target.maxDurability || 0, 0);
+            const durability = clampFloor(target.durability || 0, 0);
+            if (maxDurability <= 0 || durability >= maxDurability) {
+                return false;
+            }
+
+            target.durability = maxDurability;
+            target.breakWear = 0;
+            this.chuongThienBinhCooldownEndsAt = Date.now() + cooldownMs;
+            showNotify(
+                `${this.getItemDisplayName(target)} đã được Chưởng Thiên Bình phục hồi ${formatNumber(maxDurability)}/${formatNumber(maxDurability)} độ bền.`,
+                this.getItemQualityConfig(target).color || '#66f0c2'
+            );
+            this.refreshResourceUI();
+            GameProgress.requestSave();
+            return true;
+        }
+
+        const swordState = typeof target === 'string'
+            ? this.getEquippedSwordArtifactByKey?.(target)
+            : (target?.instanceKey ? this.getEquippedSwordArtifactByKey?.(target.instanceKey) || target : null);
+        if (!swordState || !this.isSwordArtifactDamaged?.(swordState)) {
+            return false;
+        }
+
+        const repaired = this.repairSwordArtifactDurability?.(swordState, { silent: true });
+        if (!repaired) return false;
+
+        this.chuongThienBinhCooldownEndsAt = Date.now() + cooldownMs;
+        showNotify(
+            `${this.getItemDisplayName({ category: 'SWORD_ARTIFACT', quality: 'HIGH' })} đã được Chưởng Thiên Bình quán chú, độ bền trở lại viên mãn.`,
+            (this.getThanhTrucSwordArtifactConfig?.() || {}).color || '#66f0c2'
+        );
         this.refreshResourceUI();
         return true;
     };
@@ -779,6 +880,256 @@
             }
         }
 
+        return true;
+    };
+
+    const baseGetItemDescriptionFinal = Input.getItemDescription;
+    Input.getItemDescription = function (item) {
+        if (!item) return baseGetItemDescriptionFinal.call(this, item);
+
+        if (this.isChuongThienBinhItem(item)) {
+            const cooldownRemainingMs = this.getChuongThienBinhCooldownRemainingMs();
+            const repairableInventorySwords = Object.values(this.inventory || {}).filter(entry => {
+                if (!entry || entry.key === item.key || entry.category !== 'SWORD_ARTIFACT') return false;
+                return clampFloor(entry.maxDurability || 0, 0) > clampFloor(entry.durability || 0, 0);
+            }).length;
+            const repairableEquippedSwords = (this.getEquippedSwordArtifacts?.() || []).filter(entry => {
+                return clampFloor(entry.maxDurability || 0, 0) > clampFloor(entry.durability || 0, 0);
+            }).length;
+
+            return [
+                'Chưởng Thiên Bình không còn dùng trực tiếp trên chính pháp bảo này.',
+                'Hãy bấm nút Gia tốc hoặc Phục bền ngay trên Kim Lôi Trúc Mẫu hay Thanh Trúc Phong Vân Kiếm bị hao tổn.',
+                `Mục tiêu hiện có: ${formatNumber(this.getActiveKimLoiTrucRootItems().length)} linh trúc, ${formatNumber(repairableInventorySwords + repairableEquippedSwords)} thanh kiếm cần khôi phục.`,
+                cooldownRemainingMs > 0
+                    ? `Chưởng Thiên Bình đang hồi phục, còn ${getCountdownLabel(cooldownRemainingMs)}.`
+                    : 'Chưởng Thiên Bình đang sẵn sàng.'
+            ].join(' ');
+        }
+
+        if (item.category === 'SWORD_ART' && item.uniqueKey === 'THANH_LINH_KIEM_QUYET') {
+            const progress = this.getSwordFormationProgress?.() || {};
+            const controlLimit = this.getSwordControlLimit?.() || 0;
+            return [
+                'Kiếm quyết giúp thần thức điều khiển nhiều Thanh Trúc Phong Vân Kiếm cùng lúc.',
+                `Chưa lĩnh ngộ chỉ có thể điều động ${formatNumber(Math.max(1, Math.floor(Number(CONFIG.SWORD?.CONTROL?.WITHOUT_SECRET_ART) || 1)))} thanh kiếm đứng hộ thân và chỉ chém khi bấm tấn công.`,
+                `Sau khi lĩnh ngộ, số kiếm điều khiển phụ thuộc thần thức hiện tại (${formatNumber(progress.consciousness || this.getSwordConsciousnessStat?.() || 0)}), hiện có thể dùng tối đa ${formatNumber(controlLimit)} thanh.`
+            ].join(' ');
+        }
+
+        if (item.category === 'SWORD_ARTIFACT') {
+            const baseDescription = baseGetItemDescriptionFinal.call(this, item);
+            const isRefined = this.isRefinedThanhTrucSword?.(item);
+            const refineYears = clampFloor(item.refineYears || 0);
+            const powerRating = clampFloor(
+                item.powerRating || (isRefined
+                    ? this.getRefinedThanhTrucSwordPower?.(refineYears)
+                    : this.getSwordBasePowerRating?.()),
+                1
+            );
+            const maxDurability = clampFloor(
+                item.maxDurability || (isRefined
+                    ? this.getRefinedThanhTrucSwordDurability?.(refineYears)
+                    : this.getSwordDurabilityBaseline?.()),
+                1
+            );
+            const durability = clampFloor(item.durability ?? maxDurability, 0);
+            const breakCount = clampFloor(item.breakCount || 0, 0);
+            const breakWear = clampFloor(item.breakWear || 0, 0);
+
+            return [
+                baseDescription,
+                `Uy năng hiện tại: ${formatNumber(powerRating)}.`,
+                `Độ bền: ${formatNumber(durability)}/${formatNumber(maxDurability)}.`,
+                `Số lần vỡ: ${formatNumber(breakCount)} lần, hao mòn hiện tại ${formatNumber(breakWear)} tầng.`,
+                durability < maxDurability
+                    ? 'Có thể dùng Chưởng Thiên Bình để phục hồi độ bền.'
+                    : 'Kiếm vẫn đang ở trạng thái tốt.'
+            ].join(' ');
+        }
+
+        return baseGetItemDescriptionFinal.call(this, item);
+    };
+
+    const baseIsInventoryItemUsableFinal = Input.isInventoryItemUsable;
+    Input.isInventoryItemUsable = function (item) {
+        if (this.isChuongThienBinhItem(item)) {
+            return false;
+        }
+
+        return baseIsInventoryItemUsableFinal.call(this, item);
+    };
+
+    const baseGetInventoryItemActionLabelFinal = Input.getInventoryItemActionLabel;
+    Input.getInventoryItemActionLabel = function (item) {
+        if (this.isChuongThienBinhItem(item)) {
+            return 'Chọn mục tiêu';
+        }
+
+        if (item?.category === 'SWORD_ARTIFACT') {
+            return 'Trang bị';
+        }
+
+        if (item?.category === 'SWORD_ART') {
+            return CONFIG.SECRET_ARTS?.[item.uniqueKey]?.inventoryActionLabel || 'Lĩnh ngộ';
+        }
+
+        return baseGetInventoryItemActionLabelFinal.call(this, item);
+    };
+
+    Input.getInventoryItemActions = function (item, defaultActions = []) {
+        if (!item) return defaultActions;
+
+        const cooldownRemainingMs = this.getChuongThienBinhCooldownRemainingMs?.() || 0;
+        const hasChuongThienBinh = this.hasChuongThienBinh?.() || false;
+        const sellPrice = this.getInventorySellPrice?.(item) || 0;
+        const actions = [];
+        const pushSellAction = () => {
+            if (sellPrice > 0) {
+                actions.push({
+                    type: 'sell',
+                    label: 'Bán',
+                    disabled: false,
+                    variant: 'secondary'
+                });
+            }
+        };
+
+        if (this.isChuongThienBinhItem(item)) {
+            return [{
+                type: 'noop',
+                label: cooldownRemainingMs > 0 ? `Hồi ${getCountdownLabel(cooldownRemainingMs)}` : 'Chọn mục tiêu',
+                disabled: true,
+                variant: 'primary'
+            }];
+        }
+
+        if (this.isKimLoiTrucRootItem(item)) {
+            actions.push({
+                type: 'use',
+                label: this.getInventoryItemActionLabel(item),
+                disabled: !this.isInventoryItemUsable(item),
+                variant: 'primary'
+            });
+
+            if (this.canRefineKimLoiTrucRoot(item)) {
+                actions.push({
+                    type: 'special',
+                    label: 'Luyện kiếm',
+                    disabled: false,
+                    variant: 'secondary'
+                });
+            }
+
+            if (hasChuongThienBinh) {
+                actions.push({
+                    type: 'chuong',
+                    label: cooldownRemainingMs > 0 ? `Hồi ${getCountdownLabel(cooldownRemainingMs)}` : 'Gia tốc',
+                    disabled: this.isVoidCollapsed || cooldownRemainingMs > 0,
+                    variant: 'secondary'
+                });
+            }
+
+            pushSellAction();
+            return actions;
+        }
+
+        if (item.category === 'SWORD_ARTIFACT') {
+            const maxDurability = clampFloor(item.maxDurability || 0, 0);
+            const durability = clampFloor(item.durability ?? maxDurability, 0);
+
+            actions.push({
+                type: 'use',
+                label: this.getInventoryItemActionLabel(item),
+                disabled: !this.isInventoryItemUsable(item),
+                variant: 'primary'
+            });
+
+            if (hasChuongThienBinh && maxDurability > 0 && durability < maxDurability) {
+                actions.push({
+                    type: 'chuong',
+                    label: cooldownRemainingMs > 0 ? `Hồi ${getCountdownLabel(cooldownRemainingMs)}` : 'Phục bền',
+                    disabled: this.isVoidCollapsed || cooldownRemainingMs > 0,
+                    variant: 'secondary'
+                });
+            }
+
+            pushSellAction();
+            return actions;
+        }
+
+        return defaultActions;
+    };
+
+    Input.handleInventoryItemAction = function (itemKey, action = 'use') {
+        const item = this.inventory?.[itemKey];
+        if (!item || item.count <= 0) return false;
+
+        if (action === 'sell') {
+            return this.sellInventoryItem(itemKey);
+        }
+
+        if (action === 'special') {
+            return typeof this.useInventoryItemSpecial === 'function'
+                ? this.useInventoryItemSpecial(itemKey)
+                : false;
+        }
+
+        if (action === 'chuong') {
+            return this.useChuongThienBinhOnTarget(item);
+        }
+
+        if (action === 'noop') {
+            return false;
+        }
+
+        return this.useInventoryItem(itemKey);
+    };
+
+    const baseBuyShopItemFinal = Input.buyShopItem;
+    Input.buyShopItem = function (itemId) {
+        const item = this.getShopItems().find(entry => entry.id === itemId);
+        if (!item || item.category !== 'SWORD_ARTIFACT') {
+            return baseBuyShopItemFinal.call(this, itemId);
+        }
+
+        if (this.isVoidCollapsed) {
+            showNotify(VOID_COLLAPSE_NOTIFY, '#a778ff');
+            return false;
+        }
+
+        const qualityConfig = this.getItemQualityConfig(item);
+        const instanceSpec = {
+            ...item,
+            instanceKey: this.createSwordArtifactInstanceKey?.('SHOP_THANH_TRUC') || createItemInstanceKey('SHOP_THANH_TRUC'),
+            source: 'SHOP',
+            powerRating: this.getSwordBasePowerRating?.() || 100,
+            sellPriceLowStone: getShopSwordSellPrice(),
+            maxDurability: this.getSwordDurabilityBaseline?.() || 1,
+            durability: this.getSwordDurabilityBaseline?.() || 1,
+            breakWear: 0,
+            breakCount: 0
+        };
+
+        if (!this.hasInventorySpaceForSpec(instanceSpec)) {
+            showNotify('Túi trữ vật đã đầy, không thể mua thêm vật phẩm mới.', '#ff8a80');
+            return false;
+        }
+
+        if (!this.spendSpiritStones(item.priceLowStone)) {
+            showNotify('Linh thạch không đủ để giao dịch', '#ff8a80');
+            return false;
+        }
+
+        const addedItem = this.addInventoryItem(instanceSpec, 1);
+        if (!addedItem) {
+            this.setSpiritStoneTotalValue(this.getSpiritStoneTotalValue() + clampFloor(item.priceLowStone || 0));
+            showNotify('Không thể cất Thanh Trúc Phong Vân Kiếm vào túi trữ vật.', '#ff8a80');
+            return false;
+        }
+
+        showNotify(`Đã mua ${this.getItemDisplayName(addedItem)}`, qualityConfig.color || '#66f0c2');
+        this.refreshResourceUI();
         return true;
     };
 

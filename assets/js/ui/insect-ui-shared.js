@@ -220,9 +220,26 @@ function buildEggShellSvg(uid, content) {
     `;
 }
 
+function buildInsectImageMarkup(species, slug, { egg = false } = {}) {
+    const classes = ['insect-art', 'insect-art--image', `insect-art--${slug}`];
+    if (egg) classes.push('is-egg');
+
+    return `
+        <div class="${classes.join(' ')}" aria-hidden="true">
+            <span class="insect-art__halo"></span>
+            ${egg ? '<span class="insect-art__egg-shell"></span><span class="insect-art__egg-sheen"></span>' : ''}
+            <img src="${species.imagePath}" class="insect-art__image" alt="">
+        </div>
+    `;
+}
+
 function buildInsectArtMarkup(speciesKey, { egg = false } = {}) {
     const species = Input.getInsectSpecies(speciesKey) || {};
     const slug = getInsectVisualSlug(speciesKey);
+    if (species.imagePath) {
+        return buildInsectImageMarkup(species, slug, { egg });
+    }
+
     const family = getInsectSvgFamily(speciesKey);
     const classes = ['insect-art', 'insect-art--svg', `insect-art--${slug}`];
     if (egg) classes.push('is-egg');

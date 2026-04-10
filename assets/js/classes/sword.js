@@ -5,7 +5,7 @@ function getSwordFrameNow(now = null) {
 }
 
 class Sword {
-    constructor(index, scaleFactor) {
+    constructor(index, scaleFactor, artifactState = null) {
         this.index = index;
         this.layer = Math.floor(index / 24);
         // this.baseAngle = (Math.PI * 2 / 24) * (index % 24);
@@ -38,6 +38,8 @@ class Sword {
         this.isStunned = false;
         this.stunTimer = 0;
         const rankData = CONFIG.CULTIVATION.RANKS[Input.rankIndex] || CONFIG.CULTIVATION.RANKS[0];
+        this.artifactState = null;
+        this.artifactInstanceKey = null;
         this.maxHp = rankData.swordDurability;
         this.hp = this.maxHp;
         this.isDead = false;
@@ -45,6 +47,7 @@ class Sword {
         this.fragments = [];
         this.deathTime = 0;
         this.lastUltimateHitAt = 0;
+        this.lastCloseSlashCycle = -1;
         this.powerPenalty = 1; // hệ số sát thương theo độ bền
         this.isEnlarged = false;      // Đang trong trạng thái cường hóa phóng to
         this.currentVisualScale = 1;  // Tỉ lệ hiển thị thực tế (để animation mượt)
@@ -55,6 +58,45 @@ class Sword {
         this.maxPierce = 3;        // Tối đa 3 lần đâm xuyên
         this.dragonPhase = index * 0.15; // Độ lệch pha để tạo hiệu ứng uốn lượn dải lụa
         this.isReturning = false;  // Trạng thái đang quay về sau khi đâm đủ 3 lần
+        this.bindArtifactState(artifactState);
+    }
+
+    bindArtifactState(artifactState) {
+        this.artifactState = artifactState || null;
+        this.artifactInstanceKey = artifactState?.instanceKey || null;
+
+        const durability = this.getArtifactDurabilityValue();
+        if (durability > 0) {
+            this.maxHp = durability;
+            this.hp = Math.min(Math.max(1, this.hp || durability), durability);
+        }
+    }
+
+    getArtifactState() {
+        if (this.artifactState) return this.artifactState;
+        if (this.artifactInstanceKey && typeof Input?.getEquippedSwordArtifactByKey === 'function') {
+            this.artifactState = Input.getEquippedSwordArtifactByKey(this.artifactInstanceKey) || null;
+        }
+        return this.artifactState;
+    }
+
+    getArtifactDurabilityValue() {
+        const state = this.getArtifactState();
+        if (state) {
+            return Math.max(0, Math.floor(Number(state.durability) || 0));
+        }
+
+        const rankData = CONFIG.CULTIVATION.RANKS[Input.rankIndex] || CONFIG.CULTIVATION.RANKS[0];
+        return Math.max(1, Math.floor(Number(rankData?.swordDurability) || 1));
+    }
+
+    getArtifactPowerMultiplier() {
+        const state = this.getArtifactState();
+        if (!state || typeof Input?.getSwordArtifactPowerMultiplier !== 'function') {
+            return 1;
+        }
+
+        return Input.getSwordArtifactPowerMultiplier(state);
     }
 
     getUltimateCoreSword() {
@@ -74,14 +116,15 @@ class Sword {
     }
 
     getDamageMultiplier() {
+        const artifactPowerMultiplier = this.getArtifactPowerMultiplier();
         if (Input.isUltMode && this.isUltimateCore()) {
             const activeSwordCount = (typeof swords !== 'undefined' && Array.isArray(swords) && swords.length)
                 ? swords.length
                 : Math.max(1, CONFIG.SWORD.COUNT || 1);
-            return Math.max(this.powerPenalty, Math.max(1, Math.floor(activeSwordCount / 3)));
+            return Math.max(this.powerPenalty, Math.max(1, Math.floor(activeSwordCount / 3))) * artifactPowerMultiplier;
         }
 
-        return this.powerPenalty;
+        return this.powerPenalty * artifactPowerMultiplier;
     }
 
     getMergedGuardTarget(guardCenter, scaleFactor) {
@@ -101,12 +144,40 @@ class Sword {
     }
 
     getSafeSpeedMultiplier(Input) {
-        const rawSpeedMult = Input?.getSpeedMultiplier ? Input.getSpeedMultiplier() : 1;
+        const rawSpeedMult = Input?.getMovementSpeedMultiplier
+            ? Input.getMovementSpeedMultiplier()
+            : (Input?.getSpeedMultiplier ? Input.getSpeedMultiplier() : 1);
         if (!Number.isFinite(rawSpeedMult)) {
             return 16;
         }
 
         return Math.max(0.35, rawSpeedMult);
+    }
+
+    usesCloseRangeSlash(Input) {
+        return !Input.isUltMode
+            && Input.attackMode !== 'SWORD'
+            && !Boolean(Input?.hasThanhLinhKiemQuyetUnlocked?.());
+    }
+
+    getCloseRangeSlashAnchor(Input, scaleFactor) {
+        if (typeof guardCenter !== 'undefined'
+            && guardCenter
+            && Number.isFinite(guardCenter.x)
+            && Number.isFinite(guardCenter.y)) {
+            return {
+                x: guardCenter.x,
+                y: guardCenter.y
+            };
+        }
+
+        const safeX = Number.isFinite(Input?.x) ? Input.x : this.x;
+        const safeY = Number.isFinite(Input?.y) ? Input.y : this.y;
+
+        return {
+            x: safeX,
+            y: safeY
+        };
     }
 
     startReturnToGuard() {
@@ -116,7 +187,9 @@ class Sword {
     }
 
     useSphereGuardOrbit(Input) {
-        return !Input.isUltMode && Input.attackMode !== 'SWORD';
+        return !Input.isUltMode
+            && Input.attackMode !== 'SWORD'
+            && Boolean(Input?.hasThanhLinhKiemQuyetUnlocked?.());
     }
 
     getCursorGuardAnchor(guardCenter, Input) {
@@ -211,6 +284,15 @@ class Sword {
     getNormalGuardTarget(guardCenter, r, Input, scaleFactor, now = null) {
         if (this.useSphereGuardOrbit(Input)) {
             return this.getSphereGuardTarget(guardCenter, Input, scaleFactor, now);
+        }
+
+        const canMultiControl = Boolean(Input?.hasThanhLinhKiemQuyetUnlocked?.());
+        if (!Input.isUltMode && Input.attackMode !== 'SWORD' && !canMultiControl) {
+            return {
+                tx: guardCenter.x,
+                ty: guardCenter.y - Math.max(42 * scaleFactor, r * 0.45),
+                finalAngle: 0
+            };
         }
 
         const globalRotation = !CONFIG.SWORD.IS_PAUSED
@@ -355,6 +437,9 @@ class Sword {
 
     update(guardCenter, enemies, Input, scaleFactor, now = null) {
         if (this.isDead) {
+            if (this.getArtifactDurabilityValue() <= 0) {
+                return;
+            }
             const frameNow = getSwordFrameNow(now);
             if (frameNow > this.respawnTimer) {
                 // KIỂM TRA MANA TRƯỚC KHI HỒI SINH
@@ -433,8 +518,14 @@ class Sword {
     }
 
     respawn(Input) {
-        const rankData = CONFIG.CULTIVATION.RANKS[Input.rankIndex] || CONFIG.CULTIVATION.RANKS[0];
-        this.maxHp = rankData.swordDurability;
+        const durability = this.getArtifactDurabilityValue();
+        if (durability <= 0) {
+            this.maxHp = 0;
+            this.hp = 0;
+            return;
+        }
+
+        this.maxHp = durability;
         this.hp = this.maxHp;
         this.isDead = false;
         this.x = Input.x;
@@ -450,6 +541,7 @@ class Sword {
         this.renderDepth = 0;
         this.renderOpacity = 1;
         this.lastUltimateHitAt = 0;
+        this.lastCloseSlashCycle = -1;
         this.trail = [];
         this.fragments = [];
     }
@@ -522,6 +614,7 @@ class Sword {
         }
 
         this.attackFrame = 0;
+        this.lastCloseSlashCycle = -1;
         this.pierceCount = 0; 
         // Giữ trail ngắn lại một chút khi ở mode rồng để không bị rối mắt
         if (this.trail.length > 10) this.trail.shift();
@@ -536,9 +629,10 @@ class Sword {
         this.attackFrame++;
         const requiredAttackDelay = isUltimateCore ? 1 : this.attackDelay;
         if (this.attackFrame < requiredAttackDelay) return;
+        const closeRangeSlashMode = this.usesCloseRangeSlash(Input);
 
         // Cập nhật kích thước (Enlarge logic)
-        if (!Input.isUltMode && !this.isEnlarged && Math.random() < 0.01 && Input.mana >= 1) {
+        if (!Input.isUltMode && !closeRangeSlashMode && !this.isEnlarged && Math.random() < 0.01 && Input.mana >= 1) {
             Input.updateMana(-1);
             this.isEnlarged = true;
             this.targetVisualScale = 2.5;
@@ -546,7 +640,117 @@ class Sword {
         if (isUltimateCore) {
             this.targetVisualScale = 4.8;
         }
+        if (closeRangeSlashMode) {
+            this.isEnlarged = false;
+            this.targetVisualScale = 1;
+        }
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.1;
+
+        if (closeRangeSlashMode) {
+            const anchor = this.getCloseRangeSlashAnchor(Input, scaleFactor);
+            let target = null;
+            let minTargetDistance = Infinity;
+
+            for (const enemy of enemies) {
+                const distance = Math.hypot(enemy.x - anchor.x, enemy.y - anchor.y);
+                if (distance < minTargetDistance) {
+                    minTargetDistance = distance;
+                    target = enemy;
+                }
+            }
+
+            const slashReach = 110 * scaleFactor;
+            const canSlashTarget = Boolean(target) && minTargetDistance <= slashReach + (target?.r || 0);
+            const slashCycleMs = 260;
+            const slashProgress = ((frameNow + this.index * 37) % slashCycleMs) / slashCycleMs;
+            const attackWindowRatio = 0.72;
+            const downstrokeProgress = slashProgress <= attackWindowRatio
+                ? (slashProgress / attackWindowRatio)
+                : 1;
+            const recoveryProgress = slashProgress > attackWindowRatio
+                ? ((slashProgress - attackWindowRatio) / Math.max(0.001, 1 - attackWindowRatio))
+                : 0;
+            const startAngle = -Math.PI / 2;
+            let targetAngle = canSlashTarget
+                ? Math.atan2(target.y - anchor.y, target.x - anchor.x)
+                : startAngle;
+            let angleDelta = targetAngle - startAngle;
+
+            while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
+            while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
+
+            if (Math.abs(angleDelta) < 0.16) {
+                angleDelta = (canSlashTarget && target.x < anchor.x ? -1 : 1) * 0.42;
+                targetAngle = startAngle + angleDelta;
+            }
+
+            const orbitRadius = canSlashTarget
+                ? clampNumber(minTargetDistance * 0.92, 42 * scaleFactor, slashReach)
+                : 42 * scaleFactor;
+            const attackEase = 1 - Math.pow(1 - downstrokeProgress, 3);
+            const recoveryEase = 1 - Math.pow(recoveryProgress, 2);
+            const orbitAngle = slashProgress <= attackWindowRatio
+                ? startAngle + (angleDelta * attackEase)
+                : targetAngle + ((startAngle - targetAngle) * recoveryEase);
+            const desiredX = anchor.x + (Math.cos(orbitAngle) * orbitRadius);
+            const desiredY = anchor.y + (Math.sin(orbitAngle) * orbitRadius);
+            const toDesiredX = desiredX - this.x;
+            const toDesiredY = desiredY - this.y;
+
+            this.vx = this.vx * 0.42 + toDesiredX * 0.22 * speedMult;
+            this.vy = this.vy * 0.42 + toDesiredY * 0.22 * speedMult;
+            this.x += this.vx;
+            this.y += this.vy;
+            const desiredDrawAngle = Math.atan2(this.vy || toDesiredY, this.vx || toDesiredX) + Math.PI / 2;
+            let drawDiff = desiredDrawAngle - this.drawAngle;
+            while (drawDiff < -Math.PI) drawDiff += Math.PI * 2;
+            while (drawDiff > Math.PI) drawDiff -= Math.PI * 2;
+            this.drawAngle += drawDiff * 0.32;
+            this.pierceCount = 0;
+
+            if (!canSlashTarget) {
+                this.lastCloseSlashCycle = -1;
+            } else {
+                const slashCycle = Math.floor((frameNow + this.index * 37) / slashCycleMs);
+                const hitDistance = (target.r || 0) + (target.hasShield ? 15 : 0) + 14 * scaleFactor;
+                const impactWindow = slashProgress <= attackWindowRatio && downstrokeProgress >= 0.7 && downstrokeProgress <= 0.94;
+                const landedHit = impactWindow && Math.hypot(this.x - target.x, this.y - target.y) <= hitDistance;
+
+                if (landedHit && this.lastCloseSlashCycle !== slashCycle) {
+                    this.lastCloseSlashCycle = slashCycle;
+
+                    if (this.isEnlarged) {
+                        this.powerPenalty *= 1.5;
+                        if (typeof Input.createAttackBurst === 'function') {
+                            Input.createAttackBurst(target.x, target.y, '#ffcc00');
+                        }
+                        this.isEnlarged = false;
+                        this.targetVisualScale = 1;
+                    }
+
+                    const result = target.hit(this);
+                    if (result === 'shielded') {
+                        this.hp -= target.isElite ? 3 : 1;
+                        if (this.hp <= 0) {
+                            this.breakSword(scaleFactor, frameNow);
+                            return;
+                        }
+
+                        this.isStunned = true;
+                        this.stunTimer = frameNow + Math.max(120, Math.floor(CONFIG.SWORD.STUN_DURATION_MS * 0.72));
+                        this.vx = (anchor.x - this.x) * 0.08;
+                        this.vy = -Math.max(1.2 * scaleFactor, Math.abs(this.vy) * 0.55);
+                    } else if (result !== 'missed') {
+                        this.vx *= 0.36;
+                        this.vy *= 0.22;
+                    }
+                }
+            }
+
+            this.trail.push({ x: this.x, y: this.y });
+            if (this.trail.length > 8) this.trail.shift();
+            return;
+        }
 
         // Tìm mục tiêu gần nhất
         let target = null, minStartDist = Infinity;
@@ -678,6 +882,15 @@ class Sword {
             angle: this.drawAngle + random(-0.5, 0.5),
             va: random(-0.4, 0.4)
         });
+
+        const updatedState = this.artifactInstanceKey && typeof Input?.recordSwordArtifactBreak === 'function'
+            ? Input.recordSwordArtifactBreak(this.artifactInstanceKey)
+            : null;
+        if (updatedState && updatedState.durability <= 0 && typeof Input?.reformSwordFormationState === 'function') {
+            setTimeout(() => {
+                Input.reformSwordFormationState({ rebuildAll: true });
+            }, 0);
+        }
     }
 
     draw(ctx, scaleFactor, now = null) {

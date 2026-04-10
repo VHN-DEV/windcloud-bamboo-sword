@@ -11,11 +11,13 @@ const GameProgress = {
 
     getDefaultUniquePurchases() {
         return {
+            THANH_LINH_KIEM_QUYET: false,
             DAI_CANH_KIEM_TRAN: false,
             CAN_LAM_BANG_DIEM: false,
             CHUONG_THIEN_BINH: false,
             KHU_TRUNG_THUAT: false,
             PHONG_LOI_SI: false,
+            HUYET_SAC_PHI_PHONG: false,
             KY_TRUNG_BANG: false,
             LINH_THU_DAI: false,
             THAT_SAC_TRU_VAT_NANG: false,
@@ -25,16 +27,19 @@ const GameProgress = {
 
     getDefaultCultivationArts() {
         return {
+            THANH_LINH_KIEM_QUYET: false,
             DAI_CANH_KIEM_TRAN: false,
             CAN_LAM_BANG_DIEM: false,
             KHU_TRUNG_THUAT: false,
-            PHONG_LOI_SI: false
+            PHONG_LOI_SI: false,
+            HUYET_SAC_PHI_PHONG: false
         };
     },
 
     getDefaultActiveArtifacts() {
         return {
-            PHONG_LOI_SI: false
+            PHONG_LOI_SI: false,
+            HUYET_SAC_PHI_PHONG: false
         };
     },
 
@@ -171,11 +176,41 @@ const GameProgress = {
                 refineYears: Math.max(0, Math.floor(Number(entry.refineYears) || 0)),
                 powerRating: Math.max(0, Math.floor(Number(entry.powerRating) || 0)),
                 sellPriceLowStone: Math.max(0, Math.floor(Number(entry.sellPriceLowStone) || 0)),
+                maxDurability: Math.max(0, Math.floor(Number(entry.maxDurability) || 0)),
+                durability: Math.max(0, Math.floor(Number(entry.durability) || 0)),
+                breakWear: Math.max(0, Math.floor(Number(entry.breakWear) || 0)),
+                breakCount: Math.max(0, Math.floor(Number(entry.breakCount) || 0)),
+                equippedAt: Math.max(0, Math.floor(Number(entry.equippedAt) || 0)),
                 count
             };
         });
 
         return inventory;
+    },
+
+    sanitizeSwordArtifacts(source) {
+        const safeSource = Array.isArray(source) ? source : [];
+
+        return safeSource
+            .filter(entry => entry && typeof entry === 'object')
+            .map(entry => {
+                const instanceKey = String(entry.instanceKey || entry.id || '').trim();
+                if (!instanceKey) return null;
+
+                return {
+                    instanceKey,
+                    source: typeof entry.source === 'string' ? entry.source : 'SHOP',
+                    refineYears: Math.max(0, Math.floor(Number(entry.refineYears) || 0)),
+                    powerRating: Math.max(0, Math.floor(Number(entry.powerRating) || 0)),
+                    sellPriceLowStone: Math.max(0, Math.floor(Number(entry.sellPriceLowStone) || 0)),
+                    maxDurability: Math.max(0, Math.floor(Number(entry.maxDurability) || 0)),
+                    durability: Math.max(0, Math.floor(Number(entry.durability) || 0)),
+                    breakWear: Math.max(0, Math.floor(Number(entry.breakWear) || 0)),
+                    breakCount: Math.max(0, Math.floor(Number(entry.breakCount) || 0)),
+                    equippedAt: Math.max(0, Math.floor(Number(entry.equippedAt) || 0))
+                };
+            })
+            .filter(Boolean);
     },
 
     sanitizeInsectColonies(source) {
@@ -226,6 +261,9 @@ const GameProgress = {
             playerName: Input.playerName,
             playerAvatarInitials: Input.playerAvatarInitials,
             bondedSwordCount: Input.getBondedSwordCount(),
+            equippedSwordArtifacts: typeof Input.getEquippedSwordArtifactSnapshot === 'function'
+                ? Input.getEquippedSwordArtifactSnapshot()
+                : [],
             attackMode: Input.attackMode,
             selectedInventoryTab: Input.selectedInventoryTab,
             selectedBeastBagTab: Input.selectedBeastBagTab,
@@ -336,6 +374,7 @@ const GameProgress = {
             Input.playerName = 'Thanh Trúc Kiếm Chủ';
             Input.playerAvatarInitials = 'TT';
             Input.bondedSwordCount = 0;
+            Input.equippedSwordArtifacts = [];
             Input.attackMode = 'BASE';
             Input.selectedInventoryTab = 'items';
             Input.selectedBeastBagTab = 'all';
@@ -422,6 +461,7 @@ const GameProgress = {
                         : (parsed?.cultivationArts?.DAI_CANH_KIEM_TRAN ? getConfiguredSwordCount() : 0)
                 )
             );
+            Input.equippedSwordArtifacts = this.sanitizeSwordArtifacts(parsed.equippedSwordArtifacts);
             Input.attackMode = parsed.attackMode === 'INSECT' || parsed.attackMode === 'SWORD' ? parsed.attackMode : 'BASE';
             Input.selectedInventoryTab = ['items', 'stones', 'beasts'].includes(parsed.selectedInventoryTab) ? parsed.selectedInventoryTab : 'items';
             Input.selectedBeastBagTab = typeof parsed.selectedBeastBagTab === 'string' && parsed.selectedBeastBagTab.trim()
@@ -491,6 +531,9 @@ const GameProgress = {
             Input.rage = clampNumber(Input.rage, 0, Input.maxRage);
             Input.ensureBeastFoodStorageShape();
             Input.ensureInsectHabitatCapacities();
+            if (typeof Input.ensureSwordArtifactState === 'function') {
+                Input.ensureSwordArtifactState();
+            }
             Input.syncDaiCanhKiemTranProgress();
             Object.keys(Input.tamedInsects || {}).forEach(speciesKey => {
                 Input.ensureInsectColony(speciesKey);

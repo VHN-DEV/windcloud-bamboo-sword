@@ -86,22 +86,34 @@ function buildMaterialArtMarkup(materialKey, item = null) {
 }
 
 function buildChuongThienBinhVisualMarkup() {
+    const imagePath = CONFIG.IMAGES?.ARTIFACTS?.CHUONG_THIEN_BINH || '';
     return `
         <div class="chuong-thien-binh-art" aria-hidden="true">
             <span class="chuong-thien-binh-art__halo"></span>
             <span class="chuong-thien-binh-art__particle chuong-thien-binh-art__particle--1"></span>
             <span class="chuong-thien-binh-art__particle chuong-thien-binh-art__particle--2"></span>
             <span class="chuong-thien-binh-art__particle chuong-thien-binh-art__particle--3"></span>
-            <img src="./assets/images/chuong-thien-binh.svg" class="chuong-thien-binh-art__image" alt="">
+            <img src="${imagePath}" class="chuong-thien-binh-art__image" alt="">
         </div>
     `;
 }
 
 function buildPhongLoiArtifactVisualMarkup() {
+    const imagePath = CONFIG.IMAGES?.ARTIFACTS?.PHONG_LOI_SI || '';
     return `
         <div class="phong-loi-art" aria-hidden="true">
             <span class="phong-loi-art__halo"></span>
-            <img src="./assets/images/phong-loi-si.svg" class="phong-loi-art__image" alt="">
+            <img src="${imagePath}" class="phong-loi-art__image" alt="">
+        </div>
+    `;
+}
+
+function buildStaticArtifactImageVisualMarkup(imagePath, variantClass = '') {
+    const wrapperClass = ['artifact-svg-art', variantClass].filter(Boolean).join(' ');
+    return `
+        <div class="${wrapperClass}" aria-hidden="true">
+            <span class="artifact-svg-art__halo"></span>
+            <img src="${imagePath}" class="artifact-svg-art__image" alt="">
         </div>
     `;
 }
@@ -116,6 +128,16 @@ function buildThanhTrucSwordArtifactVisualMarkup() {
             <span class="thanh-truc-art__lightning thanh-truc-art__lightning--1"></span>
             <span class="thanh-truc-art__lightning thanh-truc-art__lightning--2"></span>
         </div>
+    `;
+}
+
+function buildItemImageVisualMarkup(imagePath, { coreClass = '', imageClass = '', extraMarkup = '' } = {}) {
+    const imageClasses = ['pill-visual__item-icon', imageClass].filter(Boolean).join(' ');
+
+    return `
+        <span class="pill-visual__core ${coreClass}"></span>
+        ${extraMarkup}
+        <img src="${imagePath}" class="${imageClasses}" alt="">
     `;
 }
 
@@ -153,17 +175,25 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const visualKey = item.specialKey || item.category;
     const visual = visualMap[visualKey] || visualMap.EXP;
     const insectSpecies = item.category === 'INSECT_EGG' ? Input.getInsectSpecies(item.speciesKey) : null;
+    const uniqueConfig = item.uniqueKey ? Input.getUniqueItemConfig(item.uniqueKey) : null;
     const artifactConfig = item.category === 'ARTIFACT' && item.uniqueKey
-        ? (CONFIG.ARTIFACTS?.[item.uniqueKey] || null)
+        ? uniqueConfig
         : item.category === 'SWORD_ARTIFACT'
             ? (CONFIG.SWORD?.ARTIFACT_ITEM || null)
             : null;
+    const isCanLamFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'CAN_LAM_BANG_DIEM';
     const isPhongLoiArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'PHONG_LOI_SI';
     const isChuongThienBinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CHUONG_THIEN_BINH';
+    const isHuyetSacArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'HUYET_SAC_PHI_PHONG';
     const isThanhTrucSwordArtifact = item.category === 'SWORD_ARTIFACT';
+    const isFormationSecretArt = item.category === 'SWORD_ART'
+        && (item.uniqueKey === 'DAI_CANH_KIEM_TRAN' || uniqueConfig?.visualStyle === 'formation');
     const isKimLoiTrucMau = item.category === 'MATERIAL' && item.materialKey === 'KIM_LOI_TRUC_ROOT';
     const kimLoiStageMeta = isKimLoiTrucMau ? getKimLoiTrucArtStageMeta(item) : null;
     const visualClasses = [visual.className];
+    const bagImagePath = ['BAG', 'RAINBOW_BAG'].includes(item.category)
+        ? (CONFIG.IMAGES?.BAGS?.TREASURE || '')
+        : (CONFIG.IMAGES?.BAGS?.STORAGE || '');
 
     if (isPhongLoiArtifact) {
         visualClasses.push('is-artifact-phong-loi');
@@ -188,6 +218,10 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         ? buildPhongLoiArtifactVisualMarkup()
         : isChuongThienBinhArtifact
         ? buildChuongThienBinhVisualMarkup()
+        : isCanLamFlameArt && uniqueConfig?.imagePath
+        ? buildStaticArtifactImageVisualMarkup(uniqueConfig.imagePath, 'is-can-lam')
+        : isHuyetSacArtifact && artifactConfig?.imagePath
+        ? buildStaticArtifactImageVisualMarkup(artifactConfig.imagePath, 'is-huyet-sac')
         : isThanhTrucSwordArtifact
         ? buildThanhTrucSwordArtifactVisualMarkup()
         : visual.className === 'is-insect-egg'
@@ -199,10 +233,10 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         : visual.className === 'is-material'
             ? buildMaterialArtMarkup(item.materialKey, item)
         : visual.isBagLike
-        ? `
-            <span class="pill-visual__core pill-visual__core--bag"></span>
-            <img src="./assets/images/bag.svg" class="pill-visual__item-icon" alt="">
-        `
+        ? buildItemImageVisualMarkup(bagImagePath, {
+            coreClass: 'pill-visual__core--bag',
+            imageClass: 'pill-visual__item-icon--bag'
+        })
         : visual.className === 'is-insect-skill'
             ? `
                 <span class="pill-visual__core pill-visual__core--book"></span>
@@ -211,19 +245,33 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             : visual.className === 'is-sword-art'
                 ? `
                     <span class="pill-visual__core pill-visual__core--book"></span>
-                    <span class="pill-visual__cover-seal pill-visual__cover-seal--sword"></span>
+                    <span class="pill-visual__cover-seal pill-visual__cover-seal--${isFormationSecretArt ? 'formation' : 'sword'}"></span>
                 `
             : visual.className === 'is-flame-art'
-                ? `
-                    <span class="pill-visual__core pill-visual__core--flame"></span>
-                    <span class="pill-visual__flame-mark"></span>
-                `
+                ? uniqueConfig?.imagePath
+                    ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                        coreClass: 'pill-visual__core--flame',
+                        imageClass: 'pill-visual__item-icon--flame'
+                    })
+                    : `
+                        <span class="pill-visual__core pill-visual__core--flame"></span>
+                        <span class="pill-visual__flame-mark"></span>
+                    `
             : visual.className === 'is-artifact'
-                ? `
-                    <span class="pill-visual__core pill-visual__core--artifact"></span>
-                    <span class="pill-visual__wing-artifact pill-visual__wing-artifact--left"></span>
-                    <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
-                `
+                ? artifactConfig?.imagePath
+                    ? buildItemImageVisualMarkup(artifactConfig.imagePath, {
+                        coreClass: 'pill-visual__core--artifact',
+                        imageClass: 'pill-visual__item-icon--artifact',
+                        extraMarkup: `
+                            <span class="pill-visual__wing-artifact pill-visual__wing-artifact--left"></span>
+                            <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
+                        `
+                    })
+                    : `
+                        <span class="pill-visual__core pill-visual__core--artifact"></span>
+                        <span class="pill-visual__wing-artifact pill-visual__wing-artifact--left"></span>
+                        <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
+                    `
             : visual.className === 'is-insect-artifact'
                 ? `
                     <span class="pill-visual__core pill-visual__core--book"></span>

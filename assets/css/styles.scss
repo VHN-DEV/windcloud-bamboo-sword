@@ -2529,6 +2529,19 @@ select.shop-control-input {
     gap: 10px;
 }
 
+.attack-skill-card__sword-roster-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+    gap: 10px;
+    align-items: start;
+    align-content: start;
+    max-height: min(40vh, 300px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+    scrollbar-width: thin;
+}
+
 .insect-toggle-chip {
     display: flex;
     flex-direction: column;
@@ -2574,6 +2587,75 @@ select.shop-control-input {
     font-size: 12px;
     line-height: 1.45;
     color: rgba(240, 255, 249, 0.72);
+}
+
+.attack-skill-card__sword-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+    min-height: 100%;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--toggle-accent, #79ffd4) 30%, rgba(255, 255, 255, 0.08));
+    background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--toggle-accent, #79ffd4) 14%, rgba(255, 255, 255, 0.06)), transparent 42%),
+        linear-gradient(180deg, rgba(15, 24, 34, 0.94), rgba(8, 13, 20, 0.96));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 14px 28px rgba(0, 0, 0, 0.16);
+    color: #f6fffd;
+    overflow: hidden;
+}
+
+.attack-skill-card__sword-head {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.attack-skill-card__sword-title,
+.attack-skill-card__sword-meta,
+.attack-skill-card__sword-note {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.attack-skill-card__sword-title {
+    flex: 1 1 auto;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.attack-skill-card__sword-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.attack-skill-card__sword-meta,
+.attack-skill-card__sword-note {
+    font-size: 11px;
+    line-height: 1.35;
+    color: rgba(240, 255, 249, 0.72);
+    overflow-wrap: anywhere;
+}
+
+.attack-skill-card__sword-actions .btn-slot-action {
+    width: auto;
+    min-width: 64px;
+    min-height: 30px;
+    padding: 6px 10px;
+    margin-top: 0;
+    border-radius: 999px;
+    flex: 0 0 auto;
 }
 
 .book-summary {
@@ -2878,6 +2960,59 @@ select.shop-control-input {
     top: 52%;
     width: 44px;
     height: 56px;
+}
+
+.insect-art--image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+
+    .insect-art__image,
+    .insect-art__egg-shell,
+    .insect-art__egg-sheen {
+        position: absolute;
+        display: block;
+        pointer-events: none;
+    }
+
+    .insect-art__image {
+        left: 50%;
+        top: 50%;
+        width: 84%;
+        height: 84%;
+        object-fit: contain;
+        transform: translate(-50%, -50%);
+        filter: drop-shadow(0 0 14px color-mix(in srgb, var(--insect-aura) 34%, transparent));
+    }
+
+    &.is-egg {
+        .insect-art__image {
+            width: 70%;
+            height: 70%;
+            opacity: 0.34;
+            transform: translate(-50%, -40%);
+        }
+
+        .insect-art__egg-shell {
+            inset: 8% 18%;
+            border-radius: 50% 50% 46% 46% / 44% 44% 56% 56%;
+            background:
+                radial-gradient(circle at 38% 24%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.12) 20%, transparent 30%),
+                linear-gradient(180deg, color-mix(in srgb, #ffffff 34%, var(--insect-secondary)), var(--insect-primary));
+            border: 1px solid color-mix(in srgb, var(--insect-secondary) 48%, rgba(255, 255, 255, 0.2));
+            box-shadow:
+                inset 0 -8px 12px rgba(10, 16, 24, 0.18),
+                0 0 14px color-mix(in srgb, var(--insect-aura) 24%, transparent);
+        }
+
+        .insect-art__egg-sheen {
+            inset: 14% 32% 42% 30%;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.32);
+            filter: blur(1px);
+        }
+    }
 }
 
 .insect-art--huyen-diem-nga {
@@ -3473,6 +3608,20 @@ select.shop-control-input {
         transform: rotate(10deg) scale(1.08);
     }
 
+    &__item-icon--bag {
+        transform: scale(1.08);
+    }
+
+    &__item-icon--flame {
+        z-index: 5;
+        transform: translateY(1px) scale(1.34);
+    }
+
+    &__item-icon--artifact {
+        z-index: 5;
+        transform: translateY(1px) scale(1.52);
+    }
+
     &__cover-seal {
         position: absolute;
         z-index: 4;
@@ -3531,6 +3680,39 @@ select.shop-control-input {
                 border-top: 1px solid rgba(244, 255, 252, 0.96);
                 border-bottom: 1px solid rgba(244, 255, 252, 0.5);
                 opacity: 0.9;
+            }
+        }
+
+        &--formation {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 1px solid rgba(250, 242, 210, 0.72);
+            background:
+                radial-gradient(circle at 50% 50%, rgba(255, 246, 214, 0.24), transparent 68%);
+
+            &::before {
+                inset: 4px;
+                border-radius: 50%;
+                border: 1px dashed rgba(255, 240, 184, 0.82);
+                box-shadow:
+                    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+                    0 0 12px rgba(255, 214, 102, 0.2);
+            }
+
+            &::after {
+                left: 50%;
+                top: 50%;
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                background: rgba(255, 248, 226, 0.96);
+                transform: translate(-50%, -50%);
+                box-shadow:
+                    0 -8px 0 rgba(255, 240, 184, 0.86),
+                    0 8px 0 rgba(255, 240, 184, 0.86),
+                    -8px 0 0 rgba(255, 240, 184, 0.86),
+                    8px 0 0 rgba(255, 240, 184, 0.86);
             }
         }
     }
@@ -4303,6 +4485,50 @@ select.shop-control-input {
     fill: rgba(247, 252, 255, 0.96);
     stroke: color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 72%, rgba(255, 255, 255, 0.48));
     stroke-width: 1.2;
+}
+
+.artifact-svg-art {
+    position: absolute;
+    inset: 3px;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    isolation: isolate;
+    pointer-events: none;
+    filter: drop-shadow(0 0 18px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 26%, transparent));
+}
+
+.artifact-svg-art__halo,
+.artifact-svg-art__image {
+    position: absolute;
+    display: block;
+}
+
+.artifact-svg-art__halo {
+    inset: 10px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.18), transparent 30%),
+        radial-gradient(circle at 50% 54%, color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 28%, rgba(255, 255, 255, 0.08)), transparent 74%);
+}
+
+.artifact-svg-art__image {
+    left: 50%;
+    top: 50%;
+    width: 102%;
+    height: auto;
+    max-width: none;
+    object-fit: contain;
+    transform: translate(-50%, -50%);
+}
+
+.artifact-svg-art.is-can-lam .artifact-svg-art__image {
+    width: 88%;
+}
+
+.artifact-svg-art.is-huyet-sac .artifact-svg-art__image {
+    width: 92%;
 }
 
 .thanh-truc-art {

@@ -371,6 +371,22 @@ const ATTACK_MODE_LABELS = Object.freeze({
     INSECT: 'Khu Trùng Thuật'
 });
 
+const SWORD_SECRET_ART_KEYS = Object.freeze(['THANH_LINH_KIEM_QUYET', 'DAI_CANH_KIEM_TRAN']);
+
+const THANH_LINH_UI_TEXT = Object.freeze({
+    SKILL_NAME: 'Thanh Linh Kiem Quyet',
+    SKILL_DESCRIPTION: 'Lay than thuc dieu khien Thanh Truc Phong Van Kiem bay quanh than, so kiem xuat tran tang dan theo canh gioi.',
+    learned(limit, statLabel) {
+        return `Da linh ngo, hien than thuc ${statLabel} co the dieu ${limit} thanh kiem ho than.`;
+    },
+    pendingInventory() {
+        return 'Kiem quyet dang nam trong tui, linh ngo xong moi co the dieu nhieu thanh kiem ho than.';
+    },
+    baseOnly() {
+        return 'Chua linh ngo, hien chi co the ngu 1 thanh kiem va giu kiem the so khoi.';
+    }
+});
+
 const SWORD_UI_TEXT = Object.freeze({
     CATEGORY_LABEL: 'Pháp bảo kiếm trận',
     SKILL_NAME: 'Đại Canh Kiếm Trận',
@@ -459,6 +475,7 @@ const INSECT_HATCH_REQUIREMENTS = {
     KIM_GIAP_HAT: [{ materialKey: 'YEU_GIAC', count: 2 }, { materialKey: 'DOC_NANG', count: 1 }],
     HUYET_THUC_NGHI: [{ materialKey: 'YEU_HUYET', count: 2 }, { materialKey: 'TINH_THIT', count: 1 }],
     BANG_TAM: [{ materialKey: 'LINH_TY', count: 2 }, { materialKey: 'YEU_DAN', count: 1 }],
+    LUC_DUC_SUONG_CONG: [{ materialKey: 'LINH_VU', count: 2 }, { materialKey: 'DOC_NANG', count: 1 }],
     THON_LINH_TRUNG: [{ materialKey: 'YEU_DAN', count: 1 }, { materialKey: 'TINH_THIT', count: 1 }]
 };
 
@@ -473,6 +490,7 @@ const INSECT_FOOD_PREFERENCES = {
     KIM_GIAP_HAT: ['TINH_THIT', 'YEU_DAN'],
     HUYET_THUC_NGHI: ['YEU_HUYET', 'TINH_THIT'],
     BANG_TAM: ['LINH_TY', 'YEU_DAN'],
+    LUC_DUC_SUONG_CONG: ['DOC_NANG', 'LINH_VU'],
     THON_LINH_TRUNG: ['YEU_DAN', 'TINH_THIT']
 };
 
@@ -556,6 +574,13 @@ const INSECT_COMBAT_PROFILES = Object.freeze({
         damageScale: 0.9,
         latchRadius: 20
     },
+    LUC_DUC_SUONG_CONG: {
+        label: 'Lá»¥c dá»±c hĂ n táº­p',
+        summary: 'LÆ°á»£n quanh con má»“i rá»“i phun sÆ°Æ¡ng Ä‘á»™c, káº¿o cháº­m vĂ  khá»‘a hÆ°á»›ng nĂ©.',
+        focus: 'swift',
+        damageScale: 1.02,
+        latchRadius: 21
+    },
     THON_LINH_TRUNG: {
         label: 'Thôn linh thực khí',
         summary: 'Gặm nhấm linh lực, khóa hồi khiên và làm suy yếu thân pháp.',
@@ -596,27 +621,34 @@ const Input = {
     playerName: 'Thanh Trúc Kiếm Chủ',
     playerAvatarInitials: 'TT',
     bondedSwordCount: 0,
+    equippedSwordArtifacts: [],
     attackMode: 'BASE',
     selectedInventoryTab: 'items',
     selectedBeastBagTab: 'all',
     uniquePurchases: {
+        THANH_LINH_KIEM_QUYET: false,
         DAI_CANH_KIEM_TRAN: false,
         CAN_LAM_BANG_DIEM: false,
+        CHUONG_THIEN_BINH: false,
         KHU_TRUNG_THUAT: false,
         PHONG_LOI_SI: false,
+        HUYET_SAC_PHI_PHONG: false,
         KY_TRUNG_BANG: false,
         LINH_THU_DAI: false,
         THAT_SAC_TRU_VAT_NANG: false,
         THAT_SAC_LINH_THU_DAI: false
     },
     cultivationArts: {
+        THANH_LINH_KIEM_QUYET: false,
         DAI_CANH_KIEM_TRAN: false,
         CAN_LAM_BANG_DIEM: false,
         KHU_TRUNG_THUAT: false,
-        PHONG_LOI_SI: false
+        PHONG_LOI_SI: false,
+        HUYET_SAC_PHI_PHONG: false
     },
     activeArtifacts: {
-        PHONG_LOI_SI: false
+        PHONG_LOI_SI: false,
+        HUYET_SAC_PHI_PHONG: false
     },
     phongLoiBlink: {
         enabled: false,
@@ -827,14 +859,19 @@ const Input = {
 
         const anchorX = typeof guardCenter !== 'undefined' ? guardCenter.x : this.x;
         const anchorY = typeof guardCenter !== 'undefined' ? guardCenter.y : this.y;
-        const rankData = this.getCurrentRank();
+        const activeStates = this.getActiveSwordArtifactStates({
+            mode: this.attackMode === 'SWORD' ? 'SWORD' : 'BASE'
+        });
 
         swords.forEach((sword, index) => {
             if (!sword) return;
 
             sword.index = index;
             sword.layer = Math.floor(index / 24);
-            sword.maxHp = rankData?.swordDurability || sword.maxHp || 1;
+            if (typeof sword.bindArtifactState === 'function') {
+                sword.bindArtifactState(activeStates[index] || null);
+            }
+            sword.maxHp = Math.max(1, sword.getArtifactDurabilityValue ? sword.getArtifactDurabilityValue() : (sword.maxHp || 1));
             sword.hp = sword.maxHp;
             sword.isDead = false;
             sword.fragments = [];
@@ -1435,7 +1472,10 @@ const Input = {
             case 'ARTIFACT':
                 this.unlockCultivationArt(item.uniqueKey);
                 this.setArtifactDeployment(item.uniqueKey, true, { silent: true, skipRefresh: true });
-                showNotify(`Luyện hóa ${this.getItemDisplayName(item)}: phong lôi linh dực đã hiện bên tâm ấn.`, qualityConfig.color || '#9fe8ff');
+                showNotify(
+                    `Luyện hóa ${this.getItemDisplayName(item)}: ${this.getArtifactAttunementNote(item.uniqueKey)}`,
+                    qualityConfig.color || '#9fe8ff'
+                );
                 this.refreshResourceUI();
                 return true;
             case 'INSECT_SKILL':
@@ -1607,7 +1647,10 @@ const Input = {
             case 'ARTIFACT':
                 this.unlockCultivationArt(item.uniqueKey);
                 this.setArtifactDeployment(item.uniqueKey, true, { silent: true, skipRefresh: true });
-                showNotify(`Luyện hóa ${this.getItemDisplayName(item)}: phong lôi linh dực đã hiện bên tâm ấn.`, qualityConfig.color || '#9fe8ff');
+                showNotify(
+                    `Luyện hóa ${this.getItemDisplayName(item)}: ${this.getArtifactAttunementNote(item.uniqueKey)}`,
+                    qualityConfig.color || '#9fe8ff'
+                );
                 this.refreshResourceUI();
                 return true;
             case 'INSECT_SKILL':
@@ -2040,6 +2083,151 @@ const Input = {
         if (this.isVoidCollapsed) return 0;
         const active = this.getActiveEffectModifiers();
         return Math.max(0.35, 1 + this.bonusStats.speedPct + active.speedPct);
+    },
+
+    getArtifactMovementSpeedBonusPct() {
+        if (this.isVoidCollapsed) return 0;
+
+        return Object.keys(CONFIG.ARTIFACTS || {}).reduce((total, uniqueKey) => {
+            if (!this.isArtifactDeployed(uniqueKey)) return total;
+            return total + Math.max(0, Number(this.getArtifactConfig(uniqueKey)?.speedBonusPct) || 0);
+        }, 0);
+    },
+
+    getMovementSpeedMultiplier() {
+        return Math.max(0.35, this.getSpeedMultiplier() + this.getArtifactMovementSpeedBonusPct());
+    },
+
+    ensureHuyetSacPhiPhongTrail() {
+        if (!Array.isArray(this.huyetSacPhiPhongTrail)) {
+            this.huyetSacPhiPhongTrail = [];
+        }
+        return this.huyetSacPhiPhongTrail;
+    },
+
+    clearHuyetSacPhiPhongTrail() {
+        const trail = this.ensureHuyetSacPhiPhongTrail();
+        trail.length = 0;
+        return trail;
+    },
+
+    updateHuyetSacPhiPhongTrail(anchor, deltaX = 0, deltaY = 0) {
+        const trail = this.ensureHuyetSacPhiPhongTrail();
+        const active = this.isArtifactDeployed('HUYET_SAC_PHI_PHONG');
+        if (!active || !anchor) {
+            trail.length = 0;
+            return trail;
+        }
+
+        const now = performance.now();
+        const artifactConfig = this.getArtifactConfig('HUYET_SAC_PHI_PHONG') || {};
+        const trailLifetimeMs = Math.max(180, Math.floor(Number(artifactConfig.trailLifetimeMs) || 360));
+        const maxTrailPoints = Math.max(6, Math.floor(Number(artifactConfig.maxTrailPoints) || 16));
+        const moveDistance = Math.hypot(deltaX, deltaY);
+        const restOffset = Math.max(10, Number(artifactConfig.trailOffsetStanding) || Number(artifactConfig.trailOffset) || 18);
+        const movingOffset = Math.max(6, Math.min(restOffset, Number(artifactConfig.trailOffsetMoving) || 9));
+        const movingFollow = clampNumber(Number(artifactConfig.movingAnchorFollow) || 0.78, 0, 1);
+
+        for (let index = trail.length - 1; index >= 0; index--) {
+            if ((now - (trail[index]?.startedAt || 0)) > trailLifetimeMs) {
+                trail.splice(index, 1);
+            }
+        }
+
+        if (moveDistance <= 0.3) {
+            return trail;
+        }
+
+        const directionX = deltaX / moveDistance;
+        const directionY = deltaY / moveDistance;
+        const motionRatio = clampNumber(moveDistance / 18, 0, 1);
+        const anchorTargetX = Number.isFinite(this.x) ? this.x : anchor.x;
+        const anchorTargetY = Number.isFinite(this.y) ? this.y : anchor.y;
+        const trailAnchorX = anchor.x + ((anchorTargetX - anchor.x) * motionRatio * movingFollow);
+        const trailAnchorY = anchor.y + ((anchorTargetY - anchor.y) * motionRatio * movingFollow);
+        const offsetDistance = restOffset + ((movingOffset - restOffset) * motionRatio);
+
+        trail.unshift({
+            x: trailAnchorX - (directionX * offsetDistance),
+            y: trailAnchorY - (directionY * offsetDistance),
+            startedAt: now,
+            width: Math.max(14, Math.min(28, 14 + (moveDistance * 1.8)))
+        });
+
+        if (trail.length > maxTrailPoints) {
+            trail.length = maxTrailPoints;
+        }
+
+        return trail;
+    },
+
+    drawHuyetSacPhiPhongTrail(ctx, scaleFactor) {
+        const trail = this.ensureHuyetSacPhiPhongTrail();
+        if (!trail.length || !this.isArtifactDeployed('HUYET_SAC_PHI_PHONG')) return;
+
+        const artifactConfig = this.getArtifactConfig('HUYET_SAC_PHI_PHONG') || {};
+        const primaryColor = artifactConfig.color || '#ff5d73';
+        const secondaryColor = artifactConfig.secondaryColor || '#ffd0d6';
+        const auraColor = artifactConfig.auraColor || '#b81531';
+        const now = performance.now();
+        const trailLifetimeMs = Math.max(180, Math.floor(Number(artifactConfig.trailLifetimeMs) || 360));
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        for (let pass = 0; pass < 2; pass++) {
+            ctx.beginPath();
+
+            let started = false;
+            for (let index = 0; index < trail.length; index++) {
+                const point = trail[index];
+                if (!point) continue;
+
+                const ageRatio = clampNumber((now - point.startedAt) / trailLifetimeMs, 0, 1);
+                if (ageRatio >= 1) continue;
+
+                if (!started) {
+                    ctx.moveTo(point.x, point.y);
+                    started = true;
+                } else {
+                    ctx.lineTo(point.x, point.y);
+                }
+            }
+
+            if (!started) {
+                continue;
+            }
+
+            ctx.strokeStyle = pass === 0
+                ? withAlpha(auraColor, 0.3)
+                : withAlpha(primaryColor, 0.78);
+            ctx.lineWidth = (pass === 0 ? 18 : 8) * scaleFactor;
+            ctx.shadowBlur = (pass === 0 ? 20 : 12) * scaleFactor;
+            ctx.shadowColor = pass === 0 ? withAlpha(auraColor, 0.56) : withAlpha(primaryColor, 0.88);
+            ctx.stroke();
+        }
+
+        trail.forEach((point, index) => {
+            const ageRatio = clampNumber((now - point.startedAt) / trailLifetimeMs, 0, 1);
+            if (ageRatio >= 1) return;
+
+            const alpha = 1 - ageRatio;
+            const radius = Math.max(2.2, ((point.width || 16) * 0.24) * (1 - (index / Math.max(1, trail.length * 1.25)))) * scaleFactor;
+            const gradient = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, radius * 2.4);
+            gradient.addColorStop(0, withAlpha('#ffffff', 0.34 * alpha));
+            gradient.addColorStop(0.22, withAlpha(secondaryColor, 0.48 * alpha));
+            gradient.addColorStop(0.68, withAlpha(primaryColor, 0.3 * alpha));
+            gradient.addColorStop(1, withAlpha(auraColor, 0));
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, radius * 2.4, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        ctx.restore();
     },
 
     prunePhongLoiBlinkEffects(now = performance.now()) {
@@ -3762,7 +3950,7 @@ const Input = {
         Object.entries(CONFIG.SECRET_ARTS || {}).forEach(([uniqueKey, artConfig]) => {
             if (!this.hasUniquePurchase(uniqueKey) || this.hasCultivationArt(uniqueKey)) return;
 
-            const category = uniqueKey === 'DAI_CANH_KIEM_TRAN' ? 'SWORD_ART' : 'FLAME_ART';
+            const category = SWORD_SECRET_ART_KEYS.includes(uniqueKey) ? 'SWORD_ART' : 'FLAME_ART';
             const existingEntry = this.getInventoryEntryByUniqueKey(uniqueKey, [category]);
             if (existingEntry) return;
 
@@ -3783,12 +3971,197 @@ const Input = {
         return Boolean(item && item.category === 'SWORD_ARTIFACT');
     },
 
+    getSwordInstanceSystemConfig() {
+        return CONFIG.SWORD?.INSTANCE_SYSTEM || {};
+    },
+
+    getSwordControlConfig() {
+        return CONFIG.SWORD?.CONTROL || {};
+    },
+
+    createSwordArtifactInstanceKey(prefix = 'THANH_TRUC_SWORD') {
+        return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    },
+
+    getSwordBasePowerRating() {
+        return Math.max(1, Math.floor(Number(this.getSwordInstanceSystemConfig().BASE_POWER_RATING) || 100));
+    },
+
+    getSwordDurabilityBaseline(rank = null) {
+        const rankData = rank || this.getCurrentRank();
+        const minDurability = Math.max(1, Math.floor(Number(this.getSwordInstanceSystemConfig().MIN_DURABILITY) || 1));
+        return Math.max(minDurability, Math.floor(Number(rankData?.swordDurability) || 0));
+    },
+
+    getRefinedThanhTrucSwordDurability(years = 0) {
+        const cfg = this.getSwordInstanceSystemConfig();
+        const steps = Math.max(0, Math.floor(Number(years) || 0) / 120);
+        const refinedBase = Math.max(1, Math.floor(Number(cfg.REFINED_DURABILITY_BASE) || 8));
+        const stepValue = Math.max(1, Math.floor(Number(cfg.REFINED_DURABILITY_PER_120_YEARS) || 2));
+        return Math.max(this.getSwordDurabilityBaseline(), refinedBase + Math.floor(steps) * stepValue);
+    },
+
+    normalizeSwordArtifactState(state, fallbackItem = null) {
+        const safeSource = state && typeof state === 'object' ? state : {};
+        const sourceItem = fallbackItem && typeof fallbackItem === 'object' ? fallbackItem : {};
+        const instanceKey = String(safeSource.instanceKey || safeSource.id || sourceItem.instanceKey || '').trim()
+            || this.createSwordArtifactInstanceKey();
+        const source = typeof safeSource.source === 'string'
+            ? safeSource.source
+            : (typeof sourceItem.source === 'string' ? sourceItem.source : 'SHOP');
+        const refineYears = Math.max(0, Math.floor(Number(safeSource.refineYears ?? sourceItem.refineYears) || 0));
+        const isRefined = source === 'REFINED' || refineYears > 0;
+        const powerRating = Math.max(
+            1,
+            Math.floor(
+                Number(safeSource.powerRating ?? sourceItem.powerRating)
+                || (isRefined ? this.getRefinedThanhTrucSwordPower(refineYears) : this.getSwordBasePowerRating())
+            )
+        );
+        const derivedMaxDurability = isRefined
+            ? this.getRefinedThanhTrucSwordDurability(refineYears)
+            : this.getSwordDurabilityBaseline();
+        const maxDurability = Math.max(
+            1,
+            Math.floor(Number(safeSource.maxDurability ?? sourceItem.maxDurability) || derivedMaxDurability)
+        );
+        const durability = Math.max(
+            0,
+            Math.min(
+                maxDurability,
+                Math.floor(Number(safeSource.durability ?? sourceItem.durability) || maxDurability)
+            )
+        );
+
+        return {
+            instanceKey,
+            source,
+            refineYears,
+            powerRating,
+            sellPriceLowStone: Math.max(
+                0,
+                Math.floor(Number(safeSource.sellPriceLowStone ?? sourceItem.sellPriceLowStone) || 0)
+            ),
+            maxDurability,
+            durability,
+            breakWear: Math.max(0, Math.floor(Number(safeSource.breakWear ?? sourceItem.breakWear) || 0)),
+            breakCount: Math.max(0, Math.floor(Number(safeSource.breakCount ?? sourceItem.breakCount) || 0)),
+            equippedAt: Math.max(0, Math.floor(Number(safeSource.equippedAt ?? sourceItem.equippedAt) || Date.now()))
+        };
+    },
+
+    createSwordArtifactStateFromItem(item) {
+        return this.normalizeSwordArtifactState({}, item);
+    },
+
+    ensureSwordArtifactState() {
+        const sourceStates = Array.isArray(this.equippedSwordArtifacts) ? this.equippedSwordArtifacts : [];
+        const seenKeys = new Set();
+        const normalizedStates = sourceStates
+            .map(entry => this.normalizeSwordArtifactState(entry))
+            .filter(entry => {
+                if (!entry || seenKeys.has(entry.instanceKey)) return false;
+                seenKeys.add(entry.instanceKey);
+                return true;
+            });
+
+        if (!normalizedStates.length && Math.max(0, Math.floor(Number(this.bondedSwordCount) || 0)) > 0) {
+            const legacyCount = Math.max(0, Math.floor(Number(this.bondedSwordCount) || 0));
+            for (let index = 0; index < legacyCount; index++) {
+                normalizedStates.push(this.normalizeSwordArtifactState({
+                    instanceKey: this.createSwordArtifactInstanceKey('LEGACY_THANH_TRUC'),
+                    source: 'LEGACY',
+                    equippedAt: Date.now() + index
+                }));
+            }
+        }
+
+        this.equippedSwordArtifacts = normalizedStates;
+        this.bondedSwordCount = normalizedStates.length;
+        return this.equippedSwordArtifacts;
+    },
+
+    getEquippedSwordArtifacts() {
+        return this.ensureSwordArtifactState();
+    },
+
+    getEquippedSwordArtifactSnapshot() {
+        return this.getEquippedSwordArtifacts().map(state => ({ ...state }));
+    },
+
+    getEquippedSwordArtifactByKey(instanceKey) {
+        return this.getEquippedSwordArtifacts().find(state => state.instanceKey === instanceKey) || null;
+    },
+
+    getUsableEquippedSwordArtifacts() {
+        return this.getEquippedSwordArtifacts().filter(state => Math.max(0, Math.floor(Number(state?.durability) || 0)) > 0);
+    },
+
+    getBrokenEquippedSwordArtifacts() {
+        return this.getEquippedSwordArtifacts().filter(state => Math.max(0, Math.floor(Number(state?.durability) || 0)) <= 0);
+    },
+
+    sortSwordArtifactsForControl(states) {
+        return [...states].sort((a, b) => {
+            const powerDiff = (Math.floor(Number(b?.powerRating) || 0)) - (Math.floor(Number(a?.powerRating) || 0));
+            if (powerDiff !== 0) return powerDiff;
+
+            const durabilityDiff = (Math.floor(Number(b?.durability) || 0)) - (Math.floor(Number(a?.durability) || 0));
+            if (durabilityDiff !== 0) return durabilityDiff;
+
+            return (Math.floor(Number(a?.equippedAt) || 0)) - (Math.floor(Number(b?.equippedAt) || 0));
+        });
+    },
+
+    getSwordConsciousnessStat() {
+        return Math.max(1, this.rankIndex + 1);
+    },
+
+    getSwordConsciousnessLabel() {
+        return formatNumber(this.getSwordConsciousnessStat());
+    },
+
+    hasThanhLinhKiemQuyetUnlocked() {
+        return this.hasCultivationArt('THANH_LINH_KIEM_QUYET');
+    },
+
+    getSwordEquipCapacity() {
+        if (!this.hasThanhLinhKiemQuyetUnlocked()) {
+            return Math.min(
+                getConfiguredSwordCount(),
+                Math.max(1, Math.floor(Number(this.getSwordControlConfig().WITHOUT_SECRET_ART) || 1))
+            );
+        }
+
+        return Math.max(1, Math.min(
+            getConfiguredSwordCount(),
+            Math.max(1, Math.floor(Number(this.getSwordControlConfig().MAX_CONSCIOUSNESS_CONTROL) || getConfiguredSwordCount())),
+            this.getSwordConsciousnessStat()
+        ));
+    },
+
+    getSwordControlLimit() {
+        const usableCount = this.getUsableEquippedSwordArtifacts().length;
+        if (usableCount <= 0) return 0;
+
+        return Math.min(usableCount, this.getSwordEquipCapacity());
+    },
+
+    getActiveSwordArtifactStates({ mode = this.attackMode } = {}) {
+        const usableStates = this.sortSwordArtifactsForControl(this.getUsableEquippedSwordArtifacts());
+        if (mode === 'SWORD' && this.canDeployDaiCanhKiemTran()) {
+            return usableStates.slice(0, getConfiguredSwordCount());
+        }
+
+        return usableStates.slice(0, this.getSwordControlLimit());
+    },
+
     getBondedSwordCount() {
-        return Math.max(0, Math.floor(Number(this.bondedSwordCount) || 0));
+        return this.getEquippedSwordArtifacts().length;
     },
 
     getFormationSwordCount() {
-        return Math.min(this.getBondedSwordCount(), getConfiguredSwordCount());
+        return Math.min(this.getUsableEquippedSwordArtifacts().length, getConfiguredSwordCount());
     },
 
     getSwordArtifactInventoryCount() {
@@ -3800,25 +4173,195 @@ const Input = {
     getSwordFormationProgress() {
         const required = getConfiguredSwordCount();
         const bonded = this.getBondedSwordCount();
+        const usableBonded = this.getUsableEquippedSwordArtifacts().length;
         const formationBonded = this.getFormationSwordCount();
         const stocked = this.getSwordArtifactInventoryCount();
         const owned = Math.max(0, bonded + stocked);
+        const capacity = this.getSwordEquipCapacity();
+        const controlled = this.getSwordControlLimit();
 
         return {
             bonded,
+            usableBonded,
             formationBonded,
+            capacity,
+            controlled,
             stocked,
             owned,
             required,
-            remaining: Math.max(0, required - bonded),
-            ready: bonded >= required,
-            overflow: Math.max(0, bonded - required)
+            remaining: Math.max(0, required - usableBonded),
+            ready: usableBonded >= required,
+            overflow: Math.max(0, bonded - required),
+            broken: Math.max(0, bonded - usableBonded),
+            inactive: Math.max(0, usableBonded - controlled),
+            freeSlots: Math.max(0, capacity - bonded),
+            consciousness: this.getSwordConsciousnessStat(),
+            thanhLinhUnlocked: this.hasThanhLinhKiemQuyetUnlocked()
         };
     },
 
     hasKnownSwordArtifact() {
         const progress = this.getSwordFormationProgress();
         return progress.bonded > 0 || progress.stocked > 0 || progress.ready;
+    },
+
+    getSwordArtifactPowerMultiplier(state) {
+        const powerRating = Math.max(1, Math.floor(Number(state?.powerRating) || this.getSwordBasePowerRating()));
+        return Math.max(0.35, powerRating / this.getSwordBasePowerRating());
+    },
+
+    isSwordArtifactDamaged(target) {
+        const state = typeof target === 'string' ? this.getEquippedSwordArtifactByKey(target) : target;
+        if (!state) return false;
+        return Math.floor(Number(state.durability) || 0) < Math.floor(Number(state.maxDurability) || 0);
+    },
+
+    recordSwordArtifactBreak(instanceKey) {
+        const state = this.getEquippedSwordArtifactByKey(instanceKey);
+        if (!state) return null;
+
+        state.breakCount = Math.max(0, Math.floor(Number(state.breakCount) || 0)) + 1;
+        state.breakWear = Math.max(0, Math.floor(Number(state.breakWear) || 0)) + 1;
+
+        const breakThreshold = Math.max(1, Math.floor(Number(this.getSwordInstanceSystemConfig().BREAKS_PER_DURABILITY_LOSS) || 4));
+        let durabilityReduced = false;
+
+        if (state.breakWear >= breakThreshold && state.durability > 0) {
+            state.breakWear = 0;
+            state.durability = Math.max(0, Math.floor(Number(state.durability) || 0) - 1);
+            durabilityReduced = true;
+        }
+
+        this.bondedSwordCount = this.getEquippedSwordArtifacts().length;
+
+        if (durabilityReduced) {
+            const swordName = this.getItemDisplayName({ category: 'SWORD_ARTIFACT', quality: 'HIGH' });
+            showNotify(
+                state.durability > 0
+                    ? `${swordName} hao tổn độ bền, còn ${formatNumber(state.durability)}/${formatNumber(state.maxDurability)}.`
+                    : `${swordName} đã cạn độ bền, cần Chưởng Thiên Bình phục hồi trước khi tiếp tục xuất trận.`,
+                this.getThanhTrucSwordArtifactConfig()?.color || '#66f0c2'
+            );
+        }
+
+        GameProgress.requestSave();
+        return state;
+    },
+
+    repairSwordArtifactDurability(target, { silent = false } = {}) {
+        const state = typeof target === 'string' ? this.getEquippedSwordArtifactByKey(target) : target;
+        if (!state) return false;
+
+        const maxDurability = Math.max(1, Math.floor(Number(state.maxDurability) || 0));
+        const currentDurability = Math.max(0, Math.floor(Number(state.durability) || 0));
+        if (currentDurability >= maxDurability) return false;
+
+        state.durability = maxDurability;
+        state.breakWear = 0;
+
+        if (typeof syncSwordFormation === 'function') {
+            syncSwordFormation({ rebuildAll: true });
+        }
+
+        if (!silent) {
+            showNotify(
+                `${this.getItemDisplayName({ category: 'SWORD_ARTIFACT', quality: 'HIGH' })} đã được phục hồi ${formatNumber(maxDurability)}/${formatNumber(maxDurability)} độ bền.`,
+                this.getThanhTrucSwordArtifactConfig()?.color || '#66f0c2'
+            );
+        }
+
+        GameProgress.requestSave();
+        return true;
+    },
+
+    equipSwordArtifactFromInventoryItem(itemKey) {
+        const item = this.inventory?.[itemKey];
+        if (!item || item.count <= 0 || item.category !== 'SWORD_ARTIFACT') return false;
+
+        const qualityConfig = this.getItemQualityConfig(item);
+        const progress = this.getSwordFormationProgress();
+        const capacity = Math.max(1, Math.floor(Number(progress.capacity) || this.getSwordEquipCapacity() || 1));
+
+        if (progress.bonded >= capacity) {
+            const notifyText = progress.thanhLinhUnlocked
+                ? `Thần thức hiện tại chỉ đủ điều khiển tối đa ${formatNumber(capacity)} thanh kiếm hộ thân. Đang trang bị ${formatNumber(progress.bonded)}/${formatNumber(capacity)} thanh, chưa thể triển khai thêm.`
+                : `Chưa lĩnh ngộ Thanh Linh Kiếm Quyết nên thần thức hiện chỉ giữ được ${formatNumber(capacity)} thanh kiếm hộ thân.`;
+
+            showNotify(notifyText, qualityConfig.color || '#66f0c2');
+            return false;
+        }
+
+        const state = this.createSwordArtifactStateFromItem(item);
+
+        item.count--;
+        if (item.count <= 0) {
+            delete this.inventory[itemKey];
+        }
+
+        this.getEquippedSwordArtifacts().push(state);
+        this.bondedSwordCount = this.getEquippedSwordArtifacts().length;
+        const wasDeployable = this.canDeployDaiCanhKiemTran();
+        const nextProgress = this.getSwordFormationProgress();
+        const deployable = this.syncDaiCanhKiemTranProgress();
+
+        if (typeof syncSwordFormation === 'function') {
+            syncSwordFormation({ rebuildAll: true });
+        }
+
+        showNotify(
+            deployable && !wasDeployable
+                ? SWORD_UI_TEXT.deployReady(this.getItemDisplayName(item), formatNumber(nextProgress.bonded), formatNumber(nextProgress.required))
+                : nextProgress.ready && !this.hasDaiCanhKiemTranUnlocked()
+                    ? SWORD_UI_TEXT.deployNeedArt(this.getItemDisplayName(item), formatNumber(nextProgress.bonded), formatNumber(nextProgress.required))
+                    : SWORD_UI_TEXT.deployCount(this.getItemDisplayName(item), formatNumber(nextProgress.bonded)),
+            qualityConfig.color || '#66f0c2'
+        );
+
+        this.refreshResourceUI();
+        return true;
+    },
+
+    unequipSwordArtifactToInventory(instanceKey) {
+        const state = this.getEquippedSwordArtifactByKey(instanceKey);
+        if (!state) return false;
+
+        const spec = {
+            kind: 'UNIQUE',
+            category: 'SWORD_ARTIFACT',
+            quality: state.source === 'REFINED' ? (state.refineYears >= 720 ? 'SUPREME' : 'HIGH') : (this.getThanhTrucSwordArtifactConfig()?.quality || 'HIGH'),
+            uniqueKey: this.getThanhTrucSwordArtifactConfig()?.uniqueKey || 'THANH_TRUC_PHONG_VAN_KIEM',
+            instanceKey: state.instanceKey,
+            source: state.source,
+            refineYears: state.refineYears,
+            powerRating: state.powerRating,
+            sellPriceLowStone: state.sellPriceLowStone,
+            maxDurability: state.maxDurability,
+            durability: state.durability,
+            breakWear: state.breakWear,
+            breakCount: state.breakCount
+        };
+
+        if (!this.hasInventorySpaceForSpec(spec)) {
+            showNotify('Túi trữ vật đã đầy, chưa thể gỡ thanh kiếm này vào túi.', '#ff8a80');
+            return false;
+        }
+
+        const nextStates = this.getEquippedSwordArtifacts().filter(entry => entry.instanceKey !== instanceKey);
+        this.equippedSwordArtifacts = nextStates;
+        this.bondedSwordCount = nextStates.length;
+        this.addInventoryItem(spec, 1);
+
+        if (typeof syncSwordFormation === 'function') {
+            syncSwordFormation({ rebuildAll: true });
+        }
+
+        this.ensureValidAttackMode();
+        showNotify(
+            `${this.getItemDisplayName({ category: 'SWORD_ARTIFACT', quality: spec.quality })} đã được gỡ trang bị và đưa về túi trữ vật.`,
+            this.getThanhTrucSwordArtifactConfig()?.color || '#66f0c2'
+        );
+        this.refreshResourceUI();
+        return true;
     },
 
     syncDaiCanhKiemTranProgress({ notifyUnlock = false } = {}) {
@@ -3857,8 +4400,82 @@ const Input = {
         return this.hasCultivationArt('KHU_TRUNG_THUAT');
     },
 
+    hasSecretArtInInventory(uniqueKey) {
+        if (!uniqueKey) return false;
+        const category = SWORD_SECRET_ART_KEYS.includes(uniqueKey) ? 'SWORD_ART' : 'FLAME_ART';
+        return Boolean(this.getInventoryEntryByUniqueKey(uniqueKey, [category]));
+    },
+
+    hasKnownThanhLinhKiemQuyet() {
+        return this.hasUniquePurchase('THANH_LINH_KIEM_QUYET')
+            || this.hasThanhLinhKiemQuyetUnlocked()
+            || this.hasSecretArtInInventory('THANH_LINH_KIEM_QUYET');
+    },
+
     getArtifactConfig(uniqueKey) {
         return CONFIG.ARTIFACTS?.[uniqueKey] || null;
+    },
+
+    getArtifactAttunementNote(uniqueKey) {
+        const artifactConfig = this.getArtifactConfig(uniqueKey) || {};
+        if (uniqueKey === 'PHONG_LOI_SI') {
+            return 'phong lôi linh dực đã hiện bên tâm ấn.';
+        }
+        if (uniqueKey === 'HUYET_SAC_PHI_PHONG') {
+            const speedBonus = Math.round((Number(artifactConfig.speedBonusPct) || 0) * 100);
+            return `huyết ảnh đã quấn quanh thân pháp, tốc độ di chuyển tăng ${formatNumber(speedBonus)}% và sẽ lưu huyết quang phía sau.`;
+        }
+        return 'pháp bảo đã hiện bên tâm ấn.';
+    },
+
+    getArtifactStatusNote(uniqueKey, { active = false, unlocked = false, purchased = false } = {}) {
+        const artifactConfig = this.getArtifactConfig(uniqueKey) || {};
+
+        if (uniqueKey === 'PHONG_LOI_SI') {
+            if (active) {
+                return this.isPhongLoiBlinkEnabled()
+                    ? 'Linh dực phong lôi đang hộ tại hai bên con trỏ, thân pháp dịch chuyển đã bật.'
+                    : 'Linh dực phong lôi đang hộ tại hai bên con trỏ, thân pháp dịch chuyển đang tắt.';
+            }
+        } else if (uniqueKey === 'HUYET_SAC_PHI_PHONG') {
+            const speedBonus = Math.round((Number(artifactConfig.speedBonusPct) || 0) * 100);
+            if (active) {
+                return `Huyết ảnh đang kéo dài sau thân pháp, tốc độ di chuyển tăng ${formatNumber(speedBonus)}% và để lại một đạo hồng tuyến.`;
+            }
+            if (unlocked) {
+                return `Đã luyện hóa, có thể triển khai để tăng ${formatNumber(speedBonus)}% tốc độ di chuyển.`;
+            }
+        }
+
+        if (unlocked) {
+            return 'Đã luyện hóa, có thể triển khai hoặc thu hồi bất kỳ lúc nào.';
+        }
+
+        if (purchased) {
+            return 'Đã kết duyên nhưng còn chờ luyện hóa trong túi trữ vật.';
+        }
+
+        return 'Chưa từng kết duyên với pháp bảo này.';
+    },
+
+    getArtifactDeploymentMessage(uniqueKey, nextActive) {
+        const artifactConfig = this.getArtifactConfig(uniqueKey) || {};
+
+        if (uniqueKey === 'PHONG_LOI_SI') {
+            return nextActive
+                ? `${artifactConfig.fullName} đã khai triển bên tâm ấn.`
+                : `${artifactConfig.fullName} đã thu vào thần hải.`;
+        }
+
+        if (uniqueKey === 'HUYET_SAC_PHI_PHONG') {
+            return nextActive
+                ? `${artifactConfig.fullName} đã triển khai sau lưng thân pháp.`
+                : `${artifactConfig.fullName} đã thu vào thần hải.`;
+        }
+
+        return nextActive
+            ? `${artifactConfig.fullName || uniqueKey} đã khai triển bên tâm ấn.`
+            : `${artifactConfig.fullName || uniqueKey} đã thu vào thần hải.`;
     },
 
     hasArtifactPurchased(uniqueKey) {
@@ -4135,14 +4752,12 @@ const Input = {
         if (uniqueKey === 'PHONG_LOI_SI') {
             this.resetPhongLoiBlinkState({ clearEffects: !normalized });
         }
+        if (uniqueKey === 'HUYET_SAC_PHI_PHONG') {
+            this.clearHuyetSacPhiPhongTrail();
+        }
 
         if (!silent) {
-            showNotify(
-                normalized
-                    ? `${artifactConfig.fullName} đã khai triển bên tâm ấn.`
-                    : `${artifactConfig.fullName} đã thu vào thần hải.`,
-                artifactConfig.color || '#9fe8ff'
-            );
+            showNotify(this.getArtifactDeploymentMessage(uniqueKey, normalized), artifactConfig.color || '#9fe8ff');
         }
 
         if (skipRefresh) {
@@ -4174,15 +4789,7 @@ const Input = {
                 active,
                 ready: unlocked,
                 accent: artifactConfig.color || '#9fe8ff',
-                note: active
-                    ? this.isPhongLoiBlinkEnabled()
-                        ? 'Linh dực phong lôi đang hộ tại hai bên con trỏ, thân pháp dịch chuyển đã bật.'
-                        : 'Linh dực phong lôi đang hộ tại hai bên con trỏ, thân pháp dịch chuyển đang tắt.'
-                    : unlocked
-                        ? 'Đã luyện hóa, có thể khai triển hoặc thu hồi bất kỳ lúc nào.'
-                        : purchased
-                            ? 'Đã kết duyên nhưng còn chờ luyện hóa trong túi trữ vật.'
-                            : 'Chưa từng kết duyên với pháp bảo này.'
+                note: this.getArtifactStatusNote(uniqueKey, { active, unlocked, purchased })
             };
         });
     },
@@ -4243,7 +4850,7 @@ const Input = {
                 unlocked: formationLearned,
                 active: this.attackMode === 'SWORD',
                 ready: formationReady,
-                accent: '#8fffe0',
+                accent: CONFIG.SECRET_ARTS?.DAI_CANH_KIEM_TRAN?.color || '#ffd36b',
                 note: formationReady
                     ? this.attackMode === 'SWORD'
                         ? SWORD_UI_TEXT.noteActive(formatNumber(swordStats.alive))
@@ -4269,7 +4876,7 @@ const Input = {
                 unlocked: this.hasKhuTrungThuatUnlocked(),
                 active: this.attackMode === 'INSECT',
                 ready: this.canUseInsectAttackMode(),
-                accent: '#79ffd4',
+                accent: CONFIG.INSECT?.UNIQUE_ITEMS?.KHU_TRUNG_THUAT?.color || '#ff92c2',
                 note: this.hasKhuTrungThuatUnlocked()
                     ? combatReadyCount > 0
                         ? `${formatNumber(combatReadyCount)} linh trùng xuất trận${reservedCount > 0 ? ` | ${formatNumber(reservedCount)} đang dưỡng đàn` : ''}`
@@ -4351,9 +4958,15 @@ const Input = {
             return true;
         }
 
+        const previousMode = this.attackMode;
         this.attackMode = 'BASE';
         syncSwordFormation();
-        showNotify(`Thu hồi bí pháp, trở về ${formatNumber(getBaseSwordCountBeforeFormation())} thanh bản mệnh kiếm.`, '#8fffe0');
+        showNotify(
+            `Thu hồi bí pháp, trở về ${formatNumber(getBaseSwordCountBeforeFormation())} thanh bản mệnh kiếm.`,
+            previousMode === 'INSECT'
+                ? (CONFIG.INSECT?.UNIQUE_ITEMS?.KHU_TRUNG_THUAT?.color || '#ff92c2')
+                : (CONFIG.SECRET_ARTS?.DAI_CANH_KIEM_TRAN?.color || '#ffd36b')
+        );
         return true;
     },
 
@@ -4399,7 +5012,9 @@ const Input = {
         syncSwordFormation();
         showNotify(
             nextMode === 'INSECT' ? 'Chuyển sang Khu Trùng Thuật.' : 'Khai triển Đại Canh Kiếm Trận.',
-            nextMode === 'INSECT' ? '#79ffd4' : '#8fffe0'
+            nextMode === 'INSECT'
+                ? (CONFIG.INSECT?.UNIQUE_ITEMS?.KHU_TRUNG_THUAT?.color || '#ff92c2')
+                : (CONFIG.SECRET_ARTS?.DAI_CANH_KIEM_TRAN?.color || '#ffd36b')
         );
         return true;
     },
@@ -4907,6 +5522,9 @@ const Input = {
                 return `Mở rộng Linh Thú Đại thêm ${formatNumber(extraSlots)} ô, tăng chỗ cho linh trùng đã nở. Có thể mua nhiều lần để cộng dồn dung lượng.`;
             }
             case 'SWORD_ART':
+                if (item.uniqueKey === 'DAI_CANH_KIEM_TRAN') {
+                    return `Trận đạo bí pháp chuyên dùng ${formatNumber(getConfiguredSwordCount())} thanh Thanh Trúc Phong Vân Kiếm để lập đại trận hộ thân và công phạt. Chỉ khi gom đủ kiếm và lĩnh ngộ bí pháp mới có thể khai triển trận đồ hoàn chỉnh.`;
+                }
                 return SWORD_UI_TEXT.secretArtDescription(formatNumber(getConfiguredSwordCount()));
             case 'FLAME_ART':
                 return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiện hóa thành lam diễm.';
@@ -5229,7 +5847,7 @@ const Input = {
             items.push({
                 id: `SECRET_ART:${uniqueKey}`,
                 kind: 'UNIQUE',
-                category: uniqueKey === 'DAI_CANH_KIEM_TRAN' ? 'SWORD_ART' : 'FLAME_ART',
+                category: SWORD_SECRET_ART_KEYS.includes(uniqueKey) ? 'SWORD_ART' : 'FLAME_ART',
                 quality: artConfig.quality || 'SUPREME',
                 uniqueKey,
                 priceLowStone: artConfig.buyPriceLowStone || 0,
@@ -5709,7 +6327,10 @@ const Input = {
             case 'ARTIFACT':
                 this.unlockCultivationArt(item.uniqueKey);
                 this.setArtifactDeployment(item.uniqueKey, true, { silent: true, skipRefresh: true });
-                showNotify(`Luyện hóa ${this.getItemDisplayName(item)}: phong lôi linh dực đã hiện bên tâm ấn.`, qualityConfig.color || '#9fe8ff');
+                showNotify(
+                    `Luyện hóa ${this.getItemDisplayName(item)}: ${this.getArtifactAttunementNote(item.uniqueKey)}`,
+                    qualityConfig.color || '#9fe8ff'
+                );
                 this.refreshResourceUI();
                 return true;
             case 'INSECT_SKILL':
@@ -6473,6 +7094,22 @@ const Input = {
                 });
                 if (primaryOutcome.landed && count >= 8) {
                     primaryTarget.applyMovementLock?.(650 + Math.min(500, count * 20));
+                }
+                break;
+            }
+            case 'LUC_DUC_SUONG_CONG': {
+                primaryOutcome = strike(primaryTarget, baseFactor * 1.04, {
+                    slowMs: 2200,
+                    slowFactor: 0.18,
+                    dodgeDisabledMs: 1200,
+                    rootMs: 480 + Math.min(520, count * 18)
+                });
+                if (primaryOutcome.landed && sortedOthers.length) {
+                    strike(sortedOthers[0], baseFactor * 0.42, {
+                        slowMs: 1200,
+                        slowFactor: 0.42,
+                        ignoreDodge: true
+                    });
                 }
                 break;
             }
@@ -8068,6 +8705,10 @@ window.addEventListener('touchcancel', () => {
 
 const baseGetItemCategoryLabel = Input.getItemCategoryLabel;
 Input.getItemCategoryLabel = function (item) {
+    if (item?.category === 'SWORD_ART' && item?.uniqueKey === 'DAI_CANH_KIEM_TRAN') {
+        return 'Trận đạo bí pháp';
+    }
+
     if (item?.category === 'SWORD_ARTIFACT') {
         return SWORD_UI_TEXT.CATEGORY_LABEL;
     }
@@ -8160,6 +8801,140 @@ Input.useInventoryItem = function (itemKey) {
     );
     this.refreshResourceUI();
     return true;
+};
+
+const baseUseInventoryItemWithSwordInstances = Input.useInventoryItem;
+Input.useInventoryItem = function (itemKey) {
+    const item = this.inventory?.[itemKey];
+    if (!item || item.count <= 0) return false;
+
+    if (item.category !== 'SWORD_ARTIFACT' && item.category !== 'SWORD_ART') {
+        return baseUseInventoryItemWithSwordInstances.call(this, itemKey);
+    }
+
+    if (this.isVoidCollapsed) {
+        showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
+        return false;
+    }
+
+    const qualityConfig = this.getItemQualityConfig(item);
+
+    if (item.category === 'SWORD_ARTIFACT') {
+        return this.equipSwordArtifactFromInventoryItem(itemKey);
+    }
+
+    if (item.uniqueKey === 'THANH_LINH_KIEM_QUYET') {
+        if (this.hasThanhLinhKiemQuyetUnlocked()) {
+            showNotify(`${this.getItemDisplayName(item)} đã nhập tâm, không thể lĩnh ngộ thêm.`, qualityConfig.color || '#72f7d0');
+            return false;
+        }
+
+        item.count--;
+        if (item.count <= 0) delete this.inventory[itemKey];
+
+        this.unlockCultivationArt('THANH_LINH_KIEM_QUYET');
+        if (typeof syncSwordFormation === 'function') {
+            syncSwordFormation({ rebuildAll: true });
+        }
+
+        showNotify(
+            `Lĩnh ngộ ${this.getItemDisplayName(item)}: thần thức hiện có thể điều tối đa ${formatNumber(this.getSwordEquipCapacity())} thanh kiếm hộ thân.`,
+            qualityConfig.color || '#72f7d0'
+        );
+        this.refreshResourceUI();
+        return true;
+    }
+
+    if (item.uniqueKey !== 'DAI_CANH_KIEM_TRAN') {
+        return baseUseInventoryItemWithSwordInstances.call(this, itemKey);
+    }
+
+    if (this.hasDaiCanhKiemTranUnlocked()) {
+        showNotify(`${this.getItemDisplayName(item)} đã nhập tâm, không thể lĩnh ngộ thêm.`, qualityConfig.color || '#8fffe0');
+        return false;
+    }
+
+    item.count--;
+    if (item.count <= 0) delete this.inventory[itemKey];
+
+    this.unlockCultivationArt('DAI_CANH_KIEM_TRAN');
+    const progress = this.getSwordFormationProgress();
+    if (this.canDeployDaiCanhKiemTran()) {
+        this.attackMode = 'SWORD';
+    }
+    if (typeof syncSwordFormation === 'function') {
+        syncSwordFormation({ rebuildAll: true });
+    }
+    showNotify(
+        this.canDeployDaiCanhKiemTran()
+            ? SWORD_UI_TEXT.learnReady(
+                this.getItemDisplayName(item),
+                formatNumber(this.getUnlockedSwordTargetCount())
+            )
+            : SWORD_UI_TEXT.learnPending(
+                this.getItemDisplayName(item),
+                formatNumber(progress.bonded),
+                formatNumber(progress.required)
+            ),
+        qualityConfig.color || '#8fffe0'
+    );
+    this.refreshResourceUI();
+    return true;
+};
+
+const baseRenderAttackModeUIWithThanhLinh = Input.renderAttackModeUI;
+Input.renderAttackModeUI = function () {
+    baseRenderAttackModeUIWithThanhLinh.call(this);
+
+    const skillBtn = document.getElementById('btn-skill-list');
+    if (!skillBtn) return;
+
+    const swordProgress = this.getSwordFormationProgress();
+    skillBtn.classList.toggle(
+        'is-disabled',
+        !this.hasDaiCanhKiemTranUnlocked()
+        && !this.hasKhuTrungThuatUnlocked()
+        && !this.hasKnownArtifact()
+        && !this.hasKnownSwordArtifact()
+        && !this.hasKnownThanhLinhKiemQuyet()
+    );
+
+    if (this.attackMode === 'INSECT') {
+        skillBtn.title = `Khu Trùng Thuật - ${formatNumber(this.getCombatReadyInsectCount())} linh trùng xuất trận`;
+        return;
+    }
+
+    if (this.attackMode === 'SWORD') {
+        skillBtn.title = `Đại Canh Kiếm Trận - ${formatNumber(this.getAliveSwordStats().alive)} kiếm hộ trận`;
+        return;
+    }
+
+    if (this.hasActiveArtifact()) {
+        skillBtn.title = `Pháp bảo hộ thể - ${this.getActiveArtifactNames().join(', ')}`;
+        return;
+    }
+
+    if (this.hasThanhLinhKiemQuyetUnlocked()) {
+        skillBtn.title = `Thanh Linh Kiếm Quyết - thần thức ${formatNumber(swordProgress.consciousness)}, giữ tối đa ${formatNumber(swordProgress.capacity)} kiếm hộ thân, hiện điều động ${formatNumber(swordProgress.controlled)}/${formatNumber(swordProgress.usableBonded)} thanh`;
+        return;
+    }
+
+    if (this.hasKnownThanhLinhKiemQuyet()) {
+        skillBtn.title = 'Thanh Linh Kiếm Quyết - chưa lĩnh ngộ, hiện chỉ có thể giữ một thanh kiếm hộ thân';
+        return;
+    }
+
+    if (this.hasDaiCanhKiemTranUnlocked()) {
+        skillBtn.title = SWORD_UI_TEXT.titleLearned(formatNumber(swordProgress.bonded), formatNumber(swordProgress.required));
+        return;
+    }
+
+    if (swordProgress.bonded > 0 || swordProgress.stocked > 0) {
+        skillBtn.title = `Thanh Trúc Phong Vân Kiếm - ${formatNumber(swordProgress.bonded)} thanh đang trang bị, ${formatNumber(swordProgress.stocked)} thanh còn trong túi`;
+        return;
+    }
+
+    skillBtn.title = 'Bảng bí pháp';
 };
 
 const hiddenSwordInputState = Object.assign(Object.create(Input), {
@@ -8368,10 +9143,10 @@ function getConfiguredSwordCount() {
 
 function getBaseSwordCountBeforeFormation() {
     const configuredBase = Math.max(0, parseInt(CONFIG.SWORD.STARTING_COUNT_BEFORE_FORMATION, 10) || 0);
-    const bondedCount = typeof Input?.getBondedSwordCount === 'function'
-        ? Input.getBondedSwordCount()
+    const controlledCount = typeof Input?.getSwordControlLimit === 'function'
+        ? Input.getSwordControlLimit()
         : configuredBase;
-    return Math.max(configuredBase, bondedCount);
+    return Math.max(configuredBase, controlledCount);
 }
 
 function getDesiredSwordCount() {
@@ -8382,7 +9157,12 @@ function getDesiredSwordCount() {
 
 function syncSwordFormation(options = {}) {
     const { rebuildAll = false } = options;
-    const targetCount = getDesiredSwordCount();
+    const targetStates = typeof Input?.getActiveSwordArtifactStates === 'function'
+        ? Input.getActiveSwordArtifactStates({ mode: Input.attackMode === 'SWORD' ? 'SWORD' : 'BASE' })
+        : [];
+    const targetCount = Input.attackMode === 'SWORD' && Input.canDeployDaiCanhKiemTran()
+        ? Math.min(getConfiguredSwordCount(), targetStates.length)
+        : targetStates.length;
 
     if (rebuildAll) {
         swords.length = 0;
@@ -8394,10 +9174,12 @@ function syncSwordFormation(options = {}) {
 
     for (let i = 0; i < targetCount; i++) {
         if (!swords[i]) {
-            const sword = new Sword(i, scaleFactor);
+            const sword = new Sword(i, scaleFactor, targetStates[i] || null);
             sword.x = guardCenter.x;
             sword.y = guardCenter.y;
             swords[i] = sword;
+        } else if (typeof swords[i].bindArtifactState === 'function') {
+            swords[i].bindArtifactState(targetStates[i] || null);
         }
     }
 
@@ -8463,7 +9245,7 @@ function updatePhysics(dt) {
     const isBlinkTransiting = Input.isPhongLoiBlinkTransiting();
     const prevGuardX = guardCenter.x;
     const prevGuardY = guardCenter.y;
-    const speedMultRaw = Input.getSpeedMultiplier();
+    const speedMultRaw = Input.getMovementSpeedMultiplier();
     const speedMult = Number.isFinite(speedMultRaw) ? speedMultRaw : 16;
 
     if (isBlinkTransiting) {
@@ -8481,6 +9263,11 @@ function updatePhysics(dt) {
     }
 
     Input.updatePhongLoiBlinkMotion(
+        guardCenter,
+        guardCenter.x - prevGuardX,
+        guardCenter.y - prevGuardY
+    );
+    Input.updateHuyetSacPhiPhongTrail(
         guardCenter,
         guardCenter.x - prevGuardX,
         guardCenter.y - prevGuardY
@@ -8600,6 +9387,7 @@ function animate() {
     }
 
     Input.drawPhongLoiBlinkEffects(ctx, scaleFactor);
+    Input.drawHuyetSacPhiPhongTrail(ctx, scaleFactor);
     renderCursor();
 
     // Vẽ và cập nhật hạt hiệu ứng

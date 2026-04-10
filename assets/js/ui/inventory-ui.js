@@ -47,7 +47,9 @@ InventoryUI = {
                 const itemKey = actionBtn.getAttribute('data-item-key');
                 const action = actionBtn.getAttribute('data-action') || 'use';
 
-                if (action === 'sell') {
+                if (typeof Input.handleInventoryItemAction === 'function') {
+                    Input.handleInventoryItemAction(itemKey, action);
+                } else if (action === 'sell') {
                     Input.sellInventoryItem(itemKey);
                 } else if (action === 'special') {
                     if (typeof Input.useInventoryItemSpecial === 'function') {
@@ -119,6 +121,34 @@ InventoryUI = {
             const secondaryActionDisabled = secondaryAction
                 ? Boolean(secondaryAction.disabled)
                 : sellPrice <= 0;
+            const defaultActions = [
+                {
+                    type: 'use',
+                    label: isArtifactBook ? 'Xem' : inventoryActionLabel,
+                    disabled: !usable,
+                    variant: 'primary'
+                },
+                {
+                    type: secondaryActionType,
+                    label: secondaryActionLabel,
+                    disabled: secondaryActionDisabled,
+                    variant: 'secondary'
+                }
+            ];
+            const actions = typeof Input.getInventoryItemActions === 'function'
+                ? Input.getInventoryItemActions(item, defaultActions)
+                : defaultActions;
+            const actionMarkup = (Array.isArray(actions) ? actions : defaultActions)
+                .filter(action => action && action.type)
+                .map(action => `
+                        <button
+                            class="btn-slot-action${action.variant === 'secondary' ? ' is-secondary' : ''}"
+                            data-action="${escapeHtml(action.type)}"
+                            data-item-key="${escapeHtml(item.key)}"
+                            ${action.disabled ? 'disabled' : ''}
+                        >${escapeHtml(action.label || 'Dùng')}</button>
+                    `)
+                .join('');
 
             return `
                 <article class="inventory-slot has-pill-art" style="--slot-accent:${qualityConfig.color}">
@@ -132,8 +162,7 @@ InventoryUI = {
                         ${sellPriceMarkup}
                     </div>
                     <div class="slot-actions">
-                        <button class="btn-slot-action" data-action="use" data-item-key="${escapeHtml(item.key)}" ${usable ? '' : 'disabled'}>${escapeHtml(isArtifactBook ? 'Xem' : inventoryActionLabel)}</button>
-                        <button class="btn-slot-action is-secondary" data-action="${escapeHtml(secondaryActionType)}" data-item-key="${escapeHtml(item.key)}" ${secondaryActionDisabled ? 'disabled' : ''}>${escapeHtml(secondaryActionLabel)}</button>
+                        ${actionMarkup}
                     </div>
                 </article>
             `;

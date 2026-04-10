@@ -34,6 +34,27 @@ function createLabeledQualityConfig(definitions) {
     return createTieredConfig(definitions, QUALITY_META_BASE);
 }
 
+const IMAGE_PATHS = {
+    UI: {
+        PROFILE_SWORD: "./assets/images/sword-light.svg"
+    },
+    BAGS: {
+        STORAGE: "./assets/images/bag.svg",
+        TREASURE: "./assets/images/tui-tru-vat.svg"
+    },
+    ARTIFACTS: {
+        CAN_LAM_BANG_DIEM: "./assets/images/artifacts/can-lam-bang-diem.svg",
+        CHUONG_THIEN_BINH: "./assets/images/artifacts/chuong-thien-binh.svg",
+        PHONG_LOI_SI: "./assets/images/artifacts/phong-loi-si.svg",
+        HUYET_SAC_PHI_PHONG: "./assets/images/artifacts/huyet-sac-phi-phong.svg"
+    },
+    ABERRATIONS: {
+        PHE_KIM_TRUNG: "./assets/images/aberrations/phe-kim-trung.svg",
+        HUYET_NGOC_TRI_CHU: "./assets/images/aberrations/huyet-ngoc-tri-chu.svg",
+        LUC_DUC_SUONG_CONG: "./assets/images/aberrations/luc-duc-suong-cong.svg"
+    }
+};
+
 const CONFIG = {
     CORE: {
         BASE_WIDTH: 1920        // Chiều rộng cơ sở để tính toán tỉ lệ scale trên các màn hình khác nhau
@@ -132,6 +153,17 @@ const CONFIG = {
                 DODGE_SUPPRESS_MS: 1200,
                 SHIELD_BLOCK_MS: 1600
             }
+        },
+        INSTANCE_SYSTEM: {
+            BASE_POWER_RATING: 100,
+            BREAKS_PER_DURABILITY_LOSS: 4,
+            MIN_DURABILITY: 1,
+            REFINED_DURABILITY_BASE: 8,
+            REFINED_DURABILITY_PER_120_YEARS: 2
+        },
+        CONTROL: {
+            WITHOUT_SECRET_ART: 1,
+            MAX_CONSCIOUSNESS_CONTROL: 72
         },
         NURTURE_SYSTEM: {
             ROOT_MATERIAL_KEY: "KIM_LOI_TRUC_ROOT",
@@ -232,6 +264,7 @@ const CONFIG = {
         SHIELD_RING_PULSE: "rgba(140, 245, 255, 1)", // Màu vòng xung lực khi khiên bị đánh
         SHIELD_RING_OUTER: "rgba(140, 245, 255, 0.2)", // Màu viền ngoài của khiên
     },
+    IMAGES: IMAGE_PATHS,
     ENEMY: {
         SPAWN_COUNT: 10,                  // Số lượng quái xuất hiện cùng lúc
         SPAWN_PADDING: 50,                // Khoảng cách an toàn từ mép màn hình khi quái xuất hiện
@@ -854,13 +887,24 @@ const CONFIG = {
         }
     },
     SECRET_ARTS: {
+        THANH_LINH_KIEM_QUYET: {
+            fullName: "Thanh Linh Kiếm Quyết",
+            quality: "HIGH",
+            color: "#72f7d0",
+            buyPriceLowStone: 280000,
+            buttonLabel: "Mua",
+            inventoryActionLabel: "Lĩnh ngộ",
+            description: "Kiếm quyết nhập thần, sau khi lĩnh ngộ mới có thể lấy thần thức điều nhiều thanh Thanh Trúc Phong Vân Kiếm bay quanh thân."
+        },
         DAI_CANH_KIEM_TRAN: {
             fullName: "Đại Canh Kiếm Trận",
             quality: "SUPREME",
-            color: "#8fffe0",
+            color: "#ffd36b",
             buyPriceLowStone: 1000000,
             buttonLabel: "Mua",
-            inventoryActionLabel: "Lĩnh ngộ"
+            inventoryActionLabel: "Lĩnh ngộ",
+            description: "Trận đạo bí pháp lấy Thanh Trúc Phong Vân Kiếm làm trận cơ. Chỉ sau khi lĩnh ngộ và gom đủ kiếm khí mới có thể bày trận hộ thân, trấn sát bốn phương.",
+            visualStyle: "formation"
         },
         CAN_LAM_BANG_DIEM: {
             fullName: "Càn Lam Băng Diễm",
@@ -868,7 +912,8 @@ const CONFIG = {
             color: "#79d9ff",
             buyPriceLowStone: 1000000,
             buttonLabel: "Mua",
-            inventoryActionLabel: "Luyện hóa"
+            inventoryActionLabel: "Luyện hóa",
+            imagePath: IMAGE_PATHS.ARTIFACTS.CAN_LAM_BANG_DIEM
         }
     },
     ARTIFACTS: {
@@ -931,6 +976,24 @@ const CONFIG = {
                 FLASH_MS: 80,
                 IMPACT_RADIUS: 26
             }
+        },
+        HUYET_SAC_PHI_PHONG: {
+            fullName: "Huyết Sắc Phi Phong",
+            quality: "SUPREME",
+            color: "#ff5d73",
+            secondaryColor: "#ffd0d6",
+            auraColor: "#b81531",
+            buyPriceLowStone: 2200000,
+            buttonLabel: "Mua",
+            inventoryActionLabel: "Luyện hóa",
+            deployLabel: "Triển khai",
+            stowLabel: "Thu hồi",
+            imagePath: IMAGE_PATHS.ARTIFACTS.HUYET_SAC_PHI_PHONG,
+            speedBonusPct: 0.42,
+            trailOffsetStanding: 18,
+            trailOffsetMoving: 9,
+            movingAnchorFollow: 0.78,
+            description: "Huyết sắc phi phong như dải máu hóa gió. Sau khi luyện hóa sẽ bám theo tâm ấn, gia tăng thân pháp và kéo ra huyết quang đỏ rực phía sau mỗi lần di chuyển."
         }
     },
     INSECT: {
@@ -939,7 +1002,7 @@ const CONFIG = {
             KHU_TRUNG_THUAT: {
                 fullName: "Khu Trùng Thuật",
                 quality: "HIGH",
-                color: "#79ffd4",
+                color: "#ff92c2",
                 buyPriceLowStone: 4200,
                 buttonLabel: "Mua",
                 inventoryActionLabel: "Lĩnh ngộ"
@@ -1064,6 +1127,7 @@ const CONFIG = {
                 eggColor: "#ffe6a8",
                 secondaryColor: "#ffe37c",
                 auraColor: "#ff8b2d",
+                imagePath: IMAGE_PATHS.ABERRATIONS.PHE_KIM_TRUNG,
                 styleLabel: "Kim thực hung trùng",
                 styleHint: "Sâu vàng kim loại, bản năng cắn nuốt mọi thứ.",
                 weight: 3,
@@ -1098,6 +1162,7 @@ const CONFIG = {
                 eggColor: "#ffd6df",
                 secondaryColor: "#ffb7c5",
                 auraColor: "#9f173f",
+                imagePath: IMAGE_PATHS.ABERRATIONS.HUYET_NGOC_TRI_CHU,
                 styleLabel: "Huyết ngọc yêu chu",
                 styleHint: "Nhện đỏ trong suốt, cảm giác ngọc và máu hòa làm một.",
                 weight: 18,
@@ -1208,6 +1273,24 @@ const CONFIG = {
                 fertility: 0.75,
                 description: "Tằm mang hàn khí, có thể đóng băng linh lực và làm chậm mọi chuyển động xung quanh."
             },
+
+            LUC_DUC_SUONG_CONG: {
+                rank: "Không rõ",
+                name: "Lục Dực Sương Công",
+                tier: "HUYEN",
+                color: "#9ae9ff",
+                eggColor: "#e9fbff",
+                secondaryColor: "#d7f8ff",
+                auraColor: "#5ebfff",
+                imagePath: IMAGE_PATHS.ABERRATIONS.LUC_DUC_SUONG_CONG,
+                styleLabel: "Lục dực hàn công",
+                styleHint: "Sáu cánh chở sương, lượn tới đâu hàn vụ phủ tới đó.",
+                weight: 8,
+                attackFactor: 1.14,
+                vitality: 0.92,
+                fertility: 0.74,
+                description: "Dị công sáu cánh mang hàn vụ và sương độc. Khi nhập đàn sẽ kéo băng vụ khóa thân pháp mục tiêu rồi rỉa dần sinh cơ."
+            },
         
             THON_LINH_TRUNG: {
                 rank: "Không rõ",
@@ -1234,10 +1317,10 @@ const CONFIG = {
         MAGNET_SPEED: 16,
         TRAIL_LENGTH: 12,
         STARTING_COUNTS: {
-            LOW: 100,     // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
-            MEDIUM: 50,   // Số lượng trung phẩm linh thạch ban đầu
-            HIGH: 25,     // Số lượng thượng phẩm linh thạch ban đầu
-            SUPREME: 13   // Số lượng cực phẩm linh thạch ban đầu
+            LOW: 400,     // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
+            MEDIUM: 200,   // Số lượng trung phẩm linh thạch ban đầu
+            HIGH: 100,     // Số lượng thượng phẩm linh thạch ban đầu
+            SUPREME: 50   // Số lượng cực phẩm linh thạch ban đầu
         },
         DROP_COUNT: {
             NORMAL: 1,
