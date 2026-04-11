@@ -440,6 +440,7 @@ ProfileUI = {
         const rageLabel = Input.getUltimateResourceLabel();
         const attackModeLabel = Input.getAttackModeDisplayName();
         const swordMetricLabel = Input.attackMode === 'SWORD' ? 'Kiếm trận' : 'Bản mệnh kiếm';
+        const swordProgress = Input.getSwordFormationProgress();
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
             + (inventorySummary.categories.SHIELD_BREAK || 0)
             + (inventorySummary.categories.BERSERK || 0)
@@ -483,6 +484,7 @@ ProfileUI = {
                     <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
                     <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
                     <span class="profile-chip is-soft">Bí pháp<strong>${escapeHtml(attackModeLabel)}</strong></span>
+                    <span class="profile-chip is-soft">Thần thức<strong>${formatNumber(swordProgress.consciousness)}</strong></span>
                 </div>
             </article>
         `;
@@ -499,6 +501,8 @@ ProfileUI = {
             { label: 'Tốc độ', value: formatBoostPercent(Input.getSpeedMultiplier()) },
             { label: 'Hồi linh', value: formatBoostPercent(Input.getManaRegenMultiplier()) },
             { label: 'Vận khí', value: formatBoostPercent(Input.getDropRateMultiplier()) },
+            { label: 'Thần thức', value: `${formatNumber(swordProgress.consciousness)}` },
+            { label: 'Giới hạn kiếm hộ thân', value: `${formatNumber(swordProgress.capacity)}` },
             { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
             { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total}` },
             { label: 'Kiếm hỏng', value: `${swordStats.broken}` },
