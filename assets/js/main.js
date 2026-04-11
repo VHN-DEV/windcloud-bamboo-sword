@@ -4401,6 +4401,12 @@ const Input = {
             showNotify('Càn Lam Băng Diễm chưa triển khai, hãy khai triển tại mục Pháp bảo trước.', '#69d9ff');
             return false;
         }
+        const castManaCost = Math.max(0, Number(this.getArtifactConfig('CAN_LAM_BANG_DIEM')?.castSkill?.MANA_COST) || 22);
+        if (this.mana < castManaCost) {
+            showNotify(`Linh lực không đủ để thi triển Càn Lam Băng Diễm (cần ${formatNumber(castManaCost)}).`, '#69d9ff');
+            this.triggerManaShake();
+            return false;
+        }
         const livingEnemies = (Array.isArray(enemies) ? enemies : []).filter(enemy => enemy && enemy.hp > 0);
         if (!livingEnemies.length) {
             showNotify('Không có mục tiêu để thi triển Càn Lam Băng Diễm.', '#69d9ff');
@@ -4427,6 +4433,7 @@ const Input = {
             travelMs: 260
         });
 
+        this.updateMana(-castManaCost);
         showNotify('Càn Lam Băng Diễm: tách một nhúm lam hỏa truy kích mục tiêu gần nhất.', '#69d9ff');
         this.refreshResourceUI();
         return true;
@@ -4879,8 +4886,9 @@ const Input = {
             label.textContent = available ? 'KHAI' : 'THU';
         }
 
+        const castManaCost = Math.max(0, Number(this.getArtifactConfig('CAN_LAM_BANG_DIEM')?.castSkill?.MANA_COST) || 22);
         const title = available
-            ? 'Thi triển Càn Lam Băng Diễm vào mục tiêu gần nhất'
+            ? `Thi triển Càn Lam Băng Diễm vào mục tiêu gần nhất (hao ${formatNumber(castManaCost)} linh lực)`
             : 'Càn Lam Băng Diễm chưa triển khai';
 
         button.title = title;

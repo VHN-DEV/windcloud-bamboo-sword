@@ -999,6 +999,9 @@ const CONFIG = {
             deployLabel: "Triển khai",
             stowLabel: "Thu hồi",
             imagePath: IMAGE_PATHS.ARTIFACTS.CAN_LAM_BANG_DIEM,
+            castSkill: {
+                MANA_COST: 22 // Linh lực tiêu hao mỗi lần thi triển
+            },
             description: "Thiên địa linh hỏa lam sắc, sau khi luyện hóa có thể triển khai lên tâm niệm. Khi triển khai, con trỏ hóa lam diễm và có thể chủ động thi triển truy kích."
         }
     },
@@ -1330,4 +1333,3 @@ const CONFIG = {
 CONFIG.ENEMY.MAX_SHIELD_CRACK_LINES = 48; // Số lượng đường nứt tối đa trên khiên hoặc lá chắn của quái vật (giúp cân bằng hiệu ứng nứt khi có nhiều đòn đánh liên tiếp)
 CONFIG.ENEMY.MAX_SHIELD_CRACK_RINGS = 4; // Số lượng vòng nứt tối đa trên khiên hoặc lá chắn của quái vật
 // <!-- Create By: Vũ Hoài Nam -->
-
