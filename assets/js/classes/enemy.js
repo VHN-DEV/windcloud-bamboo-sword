@@ -548,6 +548,7 @@ class Enemy {
         this.drawParticles(ctx, scaleFactor);
         if (this.hasShield) this.drawShield(ctx, scaleFactor);
         this.drawBody(ctx, scaleFactor);
+        this.drawCanLamStatus(ctx, scaleFactor);
         
         ctx.restore(); // Kết thúc scale cho phần thân
 
@@ -587,6 +588,165 @@ class Enemy {
         ctx.strokeRect(-barWidth / 2, barY, barWidth, barHeight);
 
         ctx.restore(); // Kết thúc toàn bộ hàm vẽ Enemy
+    }
+
+    drawCanLamStatus(ctx, scaleFactor) {
+        const now = performance.now();
+        const freezeUntil = Number(this.canLamFreezeUntil) || 0;
+        const burnUntil = Number(this.canLamBurnUntil) || 0;
+        if (now >= freezeUntil && now >= burnUntil) return;
+
+        if (now < freezeUntil) {
+            const freezeProgress = Math.max(0, Math.min(1, (freezeUntil - now) / 1300));
+            const rx = this.r * 1.42 * scaleFactor;
+            const ry = this.r * 1.88 * scaleFactor;
+            const wobble = Math.sin((now * 0.0018) + this.floatOffset) * 0.06;
+            const layerDepth = this.r * 0.22 * scaleFactor;
+            const sealSpin = (now * 0.0009) + this.floatOffset;
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.shadowBlur = 20 * scaleFactor;
+            ctx.shadowColor = `rgba(76, 178, 255, ${(0.32 + (freezeProgress * 0.2)).toFixed(3)})`;
+
+            // Vỏ chính: ellipsoid méo, không đối xứng
+            ctx.beginPath();
+            const points = 32;
+            for (let i = 0; i <= points; i++) {
+                const t = (i / points) * Math.PI * 2;
+                const asym = 1
+                    + (Math.sin((t * 3.1) + this.floatOffset) * 0.08)
+                    + (Math.cos((t * 5.2) - this.floatOffset) * 0.05)
+                    + wobble;
+                const dent = 1 - (Math.max(0, Math.sin((t * 2.4) + 1.3)) * 0.06);
+                const px = Math.cos(t) * rx * asym * dent;
+                const py = Math.sin(t) * ry * (1 + (Math.sin((t * 1.7) - 0.8) * 0.05));
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+
+            const shellGrad = ctx.createRadialGradient(
+                -rx * 0.18,
+                -ry * 0.24,
+                ry * 0.08,
+                0,
+                0,
+                ry * 1.15
+            );
+            shellGrad.addColorStop(0, `rgba(227, 250, 255, ${(0.18 + (freezeProgress * 0.14)).toFixed(3)})`);
+            shellGrad.addColorStop(0.34, `rgba(120, 213, 255, ${(0.24 + (freezeProgress * 0.2)).toFixed(3)})`);
+            shellGrad.addColorStop(0.72, `rgba(48, 124, 201, ${(0.28 + (freezeProgress * 0.24)).toFixed(3)})`);
+            shellGrad.addColorStop(1, `rgba(18, 62, 122, ${(0.46 + (freezeProgress * 0.2)).toFixed(3)})`);
+            ctx.fillStyle = shellGrad;
+            ctx.fill();
+
+            // "Niêm phong thời gian": vòng sáng mờ bên trong, vẫn thấy mục tiêu phía trong
+            ctx.save();
+            ctx.clip();
+            for (let i = 0; i < 2; i++) {
+                const ringRx = rx * (0.72 + (i * 0.18));
+                const ringRy = ry * (0.68 + (i * 0.16));
+                ctx.beginPath();
+                ctx.ellipse(
+                    Math.cos(sealSpin + i) * 2.5 * scaleFactor,
+                    Math.sin(sealSpin + (i * 1.6)) * 2.2 * scaleFactor,
+                    ringRx,
+                    ringRy,
+                    sealSpin * (i % 2 === 0 ? 1 : -1),
+                    0,
+                    Math.PI * 2
+                );
+                ctx.strokeStyle = `rgba(196, 244, 255, ${(0.08 + (freezeProgress * 0.09)).toFixed(3)})`;
+                ctx.lineWidth = Math.max(0.8, 1.1 * scaleFactor);
+                ctx.stroke();
+            }
+
+            const deepMist = ctx.createLinearGradient(0, -ry, 0, ry);
+            deepMist.addColorStop(0, 'rgba(165, 235, 255, 0.02)');
+            deepMist.addColorStop(0.52, `rgba(63, 141, 219, ${(0.12 + (freezeProgress * 0.08)).toFixed(3)})`);
+            deepMist.addColorStop(1, `rgba(15, 52, 106, ${(0.22 + (freezeProgress * 0.1)).toFixed(3)})`);
+            ctx.fillStyle = deepMist;
+            ctx.fillRect(-rx * 1.3, -ry * 1.3, rx * 2.6, ry * 2.6);
+            ctx.restore();
+
+            // Lớp chiều sâu phía sau
+            ctx.beginPath();
+            ctx.ellipse(layerDepth * 0.45, -layerDepth * 0.35, rx * 0.92, ry * 0.95, 0.08, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(176, 234, 255, ${(0.2 + (freezeProgress * 0.16)).toFixed(3)})`;
+            ctx.lineWidth = Math.max(0.8, 1.2 * scaleFactor);
+            ctx.stroke();
+
+            // Mép ngoài với gờ tinh thể nhô ra
+            const spikeCount = 9;
+            for (let i = 0; i < spikeCount; i++) {
+                const t = (i / spikeCount) * Math.PI * 2 + (this.floatOffset * 0.08);
+                const baseX = Math.cos(t) * rx * (0.96 + ((i % 2) * 0.05));
+                const baseY = Math.sin(t) * ry * (0.94 + (((i + 1) % 2) * 0.06));
+                const tipX = Math.cos(t) * rx * (1.14 + ((i % 3) * 0.05));
+                const tipY = Math.sin(t) * ry * (1.16 + (((i + 1) % 3) * 0.04));
+                const sideAngle = t + Math.PI / 2;
+                const sideX = Math.cos(sideAngle) * this.r * 0.12 * scaleFactor;
+                const sideY = Math.sin(sideAngle) * this.r * 0.12 * scaleFactor;
+
+                ctx.beginPath();
+                ctx.moveTo(baseX - sideX * 0.4, baseY - sideY * 0.4);
+                ctx.lineTo(tipX, tipY);
+                ctx.lineTo(baseX + sideX * 0.42, baseY + sideY * 0.42);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(208, 246, 255, ${(0.22 + (freezeProgress * 0.18)).toFixed(3)})`;
+                ctx.fill();
+            }
+
+            ctx.strokeStyle = `rgba(230, 252, 255, ${(0.34 + (freezeProgress * 0.24)).toFixed(3)})`;
+            ctx.lineWidth = Math.max(1, 1.45 * scaleFactor);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        if (now < burnUntil) {
+            const burnProgress = Math.max(0, Math.min(1, (burnUntil - now) / 3000));
+            const pulse = 0.74 + (Math.sin((now * 0.02) + this.floatOffset) * 0.16);
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+
+            const coreRadius = this.r * 1.12 * scaleFactor * pulse;
+            const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreRadius * 1.9);
+            grad.addColorStop(0, `rgba(255, 247, 225, ${(0.6 + (burnProgress * 0.2)).toFixed(3)})`);
+            grad.addColorStop(0.28, `rgba(255, 189, 120, ${(0.45 + (burnProgress * 0.2)).toFixed(3)})`);
+            grad.addColorStop(0.6, `rgba(98, 211, 255, ${(0.35 + (burnProgress * 0.2)).toFixed(3)})`);
+            grad.addColorStop(1, 'rgba(98, 211, 255, 0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, coreRadius * 1.9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lưỡi lửa xanh-cam
+            const flameCount = 5;
+            for (let i = 0; i < flameCount; i++) {
+                const angle = (-Math.PI * 0.55) + ((Math.PI * 1.1) * (i / Math.max(1, flameCount - 1)));
+                const flicker = 0.88 + (Math.sin((now * 0.024) + (i * 1.8) + this.floatOffset) * 0.22);
+                const flameLen = this.r * (0.92 + (i % 2 ? 0.24 : 0.12)) * scaleFactor * flicker;
+                const flameWidth = this.r * 0.42 * scaleFactor;
+                const baseX = Math.cos(angle) * this.r * 0.52 * scaleFactor;
+                const baseY = Math.sin(angle) * this.r * 0.52 * scaleFactor;
+                const tipX = Math.cos(angle) * (this.r * 0.52 * scaleFactor + flameLen);
+                const tipY = Math.sin(angle) * (this.r * 0.52 * scaleFactor + flameLen) - (this.r * 0.22 * scaleFactor);
+
+                ctx.beginPath();
+                ctx.moveTo(baseX - (flameWidth * 0.32), baseY + (flameWidth * 0.22));
+                ctx.quadraticCurveTo(baseX, baseY - flameWidth, tipX, tipY);
+                ctx.quadraticCurveTo(baseX + (flameWidth * 0.38), baseY - (flameWidth * 0.12), baseX + (flameWidth * 0.26), baseY + (flameWidth * 0.2));
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0
+                    ? `rgba(101, 225, 255, ${(0.3 + (burnProgress * 0.26)).toFixed(3)})`
+                    : `rgba(255, 173, 96, ${(0.28 + (burnProgress * 0.22)).toFixed(3)})`;
+                ctx.fill();
+            }
+            ctx.restore();
+        }
     }
 
     drawParticles(ctx, scaleFactor) {
