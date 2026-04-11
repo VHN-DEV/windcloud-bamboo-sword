@@ -370,10 +370,14 @@ textarea {
         .btn-inventory {
             border-color: rgba(#77d8ff, 0.45);
             box-shadow: 0 4px 0 $shadow-color, 0 0 12px rgba(#77d8ff, 0.22);
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
 
             .sword-icon {
-                width: 30%;
-                height: 30%;
+                width: 75%;
+                height: 75%;
+                filter: none;
             }
         }
 
