@@ -879,7 +879,7 @@ const CONFIG = {
                 fullName: "Tẫn Đạo Diệt Nguyên Đan",
                 quality: "SUPREME",
                 auraMode: "void",
-                durationMs: 1000,
+                durationMs: 10000,
                 color: "#231130",
                 radius: 8,
                 buyPriceLowStone: 4444444

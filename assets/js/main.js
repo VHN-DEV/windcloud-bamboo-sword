@@ -5468,7 +5468,7 @@ const Input = {
         }
 
         if (item.specialKey === 'TAN_DAO_DIET_NGUYEN_DAN') {
-            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Đạo Tổ đỉnh phong trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
+            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Đạo Tổ đỉnh phong trong 1 phút rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
         }
 
         if (item.category === 'SPIRIT_HABITAT') {
@@ -5645,7 +5645,7 @@ const Input = {
         }
 
         if (item.specialKey === 'TAN_DAO_DIET_NGUYEN_DAN') {
-            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Đạo tổ đỉnh phong trong 1 giây rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
+            return 'Cấm kỵ hắc đan, cưỡng ép bước vào Đạo tổ đỉnh phong trong 1 phút rồi tan vào hư vô. Chỉ có thể hồi phục khi tải lại giới vực.';
         }
 
         switch (item.category) {
