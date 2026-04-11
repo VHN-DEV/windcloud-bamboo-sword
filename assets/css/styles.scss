@@ -807,6 +807,10 @@ body.is-touch-device {
         background: radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.2), rgba(9, 18, 28, 0.94) 72%);
         border: 1px solid rgba($primary-color, 0.34);
         box-shadow: 0 4px 0 rgba(0, 0, 0, 0.44), 0 0 14px rgba($primary-color, 0.2);
+
+        &.is-hidden {
+            display: none !important;
+        }
     }
 
     .btn-skill-list {
@@ -920,6 +924,68 @@ body.is-touch-device {
             border-color: rgba(#ffe8a6, 0.54);
             background: linear-gradient(180deg, rgba(255, 211, 107, 0.28), rgba(124, 84, 14, 0.34));
             box-shadow: 0 0 14px rgba(#ffd36b, 0.24);
+        }
+    }
+
+    .btn-can-lam-cast {
+        width: 46px;
+        height: 46px;
+        right: 145px;
+        bottom: 26px;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+            radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.24), transparent 28%),
+            linear-gradient(160deg, rgba(98, 220, 255, 0.3), rgba(37, 138, 194, 0.22) 52%, rgba(8, 18, 30, 0.95) 100%);
+        border: 1px solid rgba(#7fdcff, 0.44);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.44), 0 0 16px rgba(#6fdcff, 0.2);
+
+        &.is-hidden {
+            display: none !important;
+        }
+
+        .icon-can-lam {
+            position: relative;
+            z-index: 1;
+            width: 64%;
+            height: 64%;
+            filter: drop-shadow(0 0 7px rgba(#9befff, 0.88)) drop-shadow(0 0 12px rgba(#56bfff, 0.48));
+            transition: transform 0.18s ease, filter 0.18s ease;
+        }
+
+        .can-lam-toggle__state {
+            position: absolute;
+            left: 50%;
+            bottom: 4px;
+            transform: translateX(-50%);
+            z-index: 2;
+            min-width: 24px;
+            padding: 1px 5px;
+            border-radius: 999px;
+            background: rgba(7, 16, 27, 0.84);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: rgba(221, 247, 255, 0.78);
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            line-height: 1.25;
+            text-transform: uppercase;
+        }
+
+        &.is-active {
+            border-color: rgba(#b2f7ff, 0.86);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 0 22px rgba(#7fdcff, 0.34);
+        }
+
+        &.is-active .icon-can-lam {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 8px rgba(#e8fdff, 0.92)) drop-shadow(0 0 16px rgba(#59c8ff, 0.5));
+        }
+
+        &.is-active .can-lam-toggle__state {
+            color: #f2fdff;
+            border-color: rgba(#b2f7ff, 0.44);
+            background: linear-gradient(180deg, rgba(113, 225, 255, 0.3), rgba(22, 81, 111, 0.4));
         }
     }
 
@@ -2540,6 +2606,16 @@ select.shop-control-input {
     overscroll-behavior: contain;
     padding-right: 4px;
     scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+.shop-card.has-pill-art .pill-visual.is-bag .pill-visual__core--bag,
+.shop-card.has-pill-art .pill-visual.is-spirit-bag .pill-visual__core--bag,
+.shop-card.has-pill-art .pill-visual.is-habitat .pill-visual__core--bag {
+    background: none;
+    box-shadow: none;
+    border: none;
 }
 
 .insect-toggle-chip {
@@ -5548,6 +5624,13 @@ select.shop-control-input {
             bottom: 55px;
         }
 
+        .btn-can-lam-cast {
+            width: 46px;
+            height: 46px;
+            right: 135px;
+            bottom: 96px;
+        }
+
         .btn-attack {
             width: 84px;
             height: 84px;
@@ -5758,6 +5841,11 @@ select.shop-control-input {
     body.is-mobile-landscape .attack-group .btn-phong-loi-blink {
         right: 96px;
         bottom: 108px;
+    }
+
+    body.is-mobile-landscape .attack-group .btn-can-lam-cast {
+        right: 142px;
+        bottom: 58px;
     }
 }
 

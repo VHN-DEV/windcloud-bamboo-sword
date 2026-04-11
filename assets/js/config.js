@@ -894,7 +894,7 @@ const CONFIG = {
             buyPriceLowStone: 280000,
             buttonLabel: "Mua",
             inventoryActionLabel: "Lĩnh ngộ",
-            description: "Kiếm quyết nhập thần, sau khi lĩnh ngộ mới có thể lấy thần thức điều nhiều thanh Thanh Trúc Phong Vân Kiếm bay quanh thân."
+            description: "Kiếm quyết nhập thần, sau khi lĩnh ngộ mới có thể lấy thần thức điều khiển nhiều thanh Thanh Trúc Phong Vân Kiếm bay quanh thân."
         },
         DAI_CANH_KIEM_TRAN: {
             fullName: "Đại Canh Kiếm Trận",
@@ -986,6 +986,20 @@ const CONFIG = {
             trailOffsetMoving: 9, // Khoảng cách giữa nhân vật và vệt máu khi di chuyển
             movingAnchorFollow: 0.78, // Tỉ lệ bám theo tâm ấn khi di chuyển (giá trị càng cao thì vệt máu càng bám sát tâm ấn)
             description: "Huyết sắc phi phong như dải máu hóa gió. Sau khi luyện hóa sẽ bám theo tâm ấn, gia tăng thân pháp và kéo ra huyết quang đỏ rực phía sau mỗi lần di chuyển."
+        },
+        CAN_LAM_BANG_DIEM: {
+            fullName: "Càn Lam Băng Diễm",
+            quality: "SUPREME",
+            color: "#79d9ff",
+            secondaryColor: "#d7f7ff",
+            auraColor: "#46b7ff",
+            buyPriceLowStone: 1000000,
+            buttonLabel: "Mua",
+            inventoryActionLabel: "Luyện hóa",
+            deployLabel: "Triển khai",
+            stowLabel: "Thu hồi",
+            imagePath: IMAGE_PATHS.ARTIFACTS.CAN_LAM_BANG_DIEM,
+            description: "Thiên địa linh hỏa lam sắc, sau khi luyện hóa có thể triển khai lên tâm niệm. Khi triển khai, con trỏ hóa lam diễm và có thể chủ động thi triển truy kích."
         }
     },
     INSECT: {
@@ -1316,6 +1330,4 @@ const CONFIG = {
 CONFIG.ENEMY.MAX_SHIELD_CRACK_LINES = 48; // Số lượng đường nứt tối đa trên khiên hoặc lá chắn của quái vật (giúp cân bằng hiệu ứng nứt khi có nhiều đòn đánh liên tiếp)
 CONFIG.ENEMY.MAX_SHIELD_CRACK_RINGS = 4; // Số lượng vòng nứt tối đa trên khiên hoặc lá chắn của quái vật
 // <!-- Create By: Vũ Hoài Nam -->
-
-
 

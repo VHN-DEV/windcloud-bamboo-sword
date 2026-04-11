@@ -297,6 +297,9 @@ function repairLegacyUiText() {
         ['#btn-phong-loi-blink', 'title', UI_TEXT.PHONG_LOI_SI_RESTING],
         ['#btn-phong-loi-blink', 'aria-label', UI_TEXT.PHONG_LOI_SI_RESTING],
         ['#btn-phong-loi-blink img', 'alt', UI_TEXT.ARIA.PHONG_LOI_SI],
+        ['#btn-can-lam-cast', 'title', 'Càn Lam Băng Diễm chưa triển khai'],
+        ['#btn-can-lam-cast', 'aria-label', 'Càn Lam Băng Diễm chưa triển khai'],
+        ['#btn-can-lam-cast img', 'alt', 'Càn Lam Băng Diễm'],
         ['#btn-skill-list', 'title', UI_TEXT.ARIA.SKILL_LIST],
         ['#btn-attack img', 'alt', UI_TEXT.ARIA.ATTACK]
     ].forEach(([selector, attribute, value]) => setAttrIfPresent(selector, attribute, value));
