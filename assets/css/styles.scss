@@ -2540,6 +2540,16 @@ select.shop-control-input {
     overscroll-behavior: contain;
     padding-right: 4px;
     scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+.shop-card.has-pill-art .pill-visual.is-bag .pill-visual__core--bag,
+.shop-card.has-pill-art .pill-visual.is-spirit-bag .pill-visual__core--bag,
+.shop-card.has-pill-art .pill-visual.is-habitat .pill-visual__core--bag {
+    background: none;
+    box-shadow: none;
+    border: none;
 }
 
 .insect-toggle-chip {

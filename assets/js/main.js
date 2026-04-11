@@ -6047,9 +6047,8 @@ const Input = {
             ProfileUI.render();
         }
 
-        if (SkillsUI && typeof SkillsUI.isOpen === 'function' && SkillsUI.isOpen()) {
-            SkillsUI.render();
-        }
+        // Không render SkillsUI liên tục trong refresh tổng để tránh giật danh sách kiếm khi người dùng đang cuộn.
+        // SkillsUI sẽ tự render khi mở popup hoặc khi người dùng tương tác trực tiếp trong popup.
 
         if (InsectBookUI && typeof InsectBookUI.isOpen === 'function' && InsectBookUI.isOpen()) {
             InsectBookUI.render();
@@ -9478,5 +9477,4 @@ function animate() {
     animate();
 })();
 // <!-- Create By: Vũ Hoài Nam -->
-
 
