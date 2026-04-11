@@ -4355,6 +4355,7 @@ const Input = {
             syncSwordFormation({ rebuildAll: true });
         }
 
+        this.enforcePhongLoiSiSwordRequirement();
         this.ensureValidAttackMode();
         showNotify(
             `${this.getItemDisplayName({ category: 'SWORD_ARTIFACT', quality: spec.quality })} đã được gỡ trang bị và đưa về túi trữ vật.`,
@@ -4746,6 +4747,15 @@ const Input = {
 
         const normalized = Boolean(nextActive);
         if (Boolean(this.activeArtifacts[uniqueKey]) === normalized) return false;
+        if (uniqueKey === 'PHONG_LOI_SI' && normalized) {
+            const equippedSwordCount = Array.isArray(this.getEquippedSwordArtifacts?.())
+                ? this.getEquippedSwordArtifacts().length
+                : 0;
+            if (equippedSwordCount < 1) {
+                showNotify('Cần trang bị ít nhất 1 Thanh Trúc Phong Vân Kiếm mới có thể triển khai Phong Lôi Sí.', artifactConfig.color || '#9fe8ff');
+                return false;
+            }
+        }
 
         this.activeArtifacts[uniqueKey] = normalized;
 
@@ -4771,6 +4781,20 @@ const Input = {
 
     toggleArtifactDeployment(uniqueKey) {
         return this.setArtifactDeployment(uniqueKey, !this.isArtifactDeployed(uniqueKey));
+    },
+
+    enforcePhongLoiSiSwordRequirement({ silent = false } = {}) {
+        if (!this.isArtifactDeployed('PHONG_LOI_SI')) return false;
+        const equippedSwordCount = Array.isArray(this.getEquippedSwordArtifacts?.())
+            ? this.getEquippedSwordArtifacts().length
+            : 0;
+        if (equippedSwordCount > 0) return false;
+
+        this.setArtifactDeployment('PHONG_LOI_SI', false, { silent: true, skipRefresh: true });
+        if (!silent) {
+            showNotify('Đã thu hồi Phong Lôi Sí vì không còn Thanh Trúc Phong Vân Kiếm để dẫn lôi vận hành.', this.getArtifactConfig('PHONG_LOI_SI')?.color || '#9fe8ff');
+        }
+        return true;
     },
 
     getArtifactSkillList() {
@@ -4920,10 +4944,6 @@ const Input = {
         }
 
         this.renderPhongLoiBlinkButton();
-
-        if (SkillsUI && typeof SkillsUI.render === 'function' && SkillsUI.isOpen()) {
-            SkillsUI.render();
-        }
 
         GameProgress.requestSave();
     },
@@ -6025,6 +6045,7 @@ const Input = {
     },
 
     refreshResourceUI() {
+        this.enforcePhongLoiSiSwordRequirement({ silent: true });
         this.renderExpUI();
 
         if (BeastBagUI && typeof BeastBagUI.syncAvailability === 'function') {
@@ -6047,9 +6068,8 @@ const Input = {
             ProfileUI.render();
         }
 
-        if (SkillsUI && typeof SkillsUI.isOpen === 'function' && SkillsUI.isOpen()) {
-            SkillsUI.render();
-        }
+        // Không render SkillsUI liên tục trong refresh tổng để tránh giật danh sách kiếm khi người dùng đang cuộn.
+        // SkillsUI sẽ tự render khi mở popup hoặc khi người dùng tương tác trực tiếp trong popup.
 
         if (InsectBookUI && typeof InsectBookUI.isOpen === 'function' && InsectBookUI.isOpen()) {
             InsectBookUI.render();
@@ -8887,9 +8907,14 @@ Input.renderAttackModeUI = function () {
     baseRenderAttackModeUIWithThanhLinh.call(this);
 
     const skillBtn = document.getElementById('btn-skill-list');
+    const formBtn = document.getElementById('btn-form');
     if (!skillBtn) return;
 
     const swordProgress = this.getSwordFormationProgress();
+    const canShowFormButton = this.attackMode === 'SWORD' && this.canDeployDaiCanhKiemTran();
+    if (formBtn) {
+        formBtn.classList.toggle('is-hidden', !canShowFormButton);
+    }
     skillBtn.classList.toggle(
         'is-disabled',
         !this.hasDaiCanhKiemTranUnlocked()
@@ -9478,5 +9503,3 @@ function animate() {
     animate();
 })();
 // <!-- Create By: Vũ Hoài Nam -->
-
-

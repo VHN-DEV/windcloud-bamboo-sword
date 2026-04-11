@@ -440,6 +440,7 @@ ProfileUI = {
         const rageLabel = Input.getUltimateResourceLabel();
         const attackModeLabel = Input.getAttackModeDisplayName();
         const swordMetricLabel = Input.attackMode === 'SWORD' ? 'Kiếm trận' : 'Bản mệnh kiếm';
+        const swordProgress = Input.getSwordFormationProgress();
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
             + (inventorySummary.categories.SHIELD_BREAK || 0)
             + (inventorySummary.categories.BERSERK || 0)
@@ -483,6 +484,7 @@ ProfileUI = {
                     <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
                     <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
                     <span class="profile-chip is-soft">Bí pháp<strong>${escapeHtml(attackModeLabel)}</strong></span>
+                    <span class="profile-chip is-soft">Thần thức<strong>${formatNumber(swordProgress.consciousness)}</strong></span>
                 </div>
             </article>
         `;
@@ -499,6 +501,8 @@ ProfileUI = {
             { label: 'Tốc độ', value: formatBoostPercent(Input.getSpeedMultiplier()) },
             { label: 'Hồi linh', value: formatBoostPercent(Input.getManaRegenMultiplier()) },
             { label: 'Vận khí', value: formatBoostPercent(Input.getDropRateMultiplier()) },
+            { label: 'Thần thức', value: `${formatNumber(swordProgress.consciousness)}` },
+            { label: 'Giới hạn kiếm hộ thân', value: `${formatNumber(swordProgress.capacity)}` },
             { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
             { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total}` },
             { label: 'Kiếm hỏng', value: `${swordStats.broken}` },
@@ -581,6 +585,8 @@ ProfileUI = {
 
 Object.assign(SkillsUI, {
     expandedSwordArtifactPanel: false,
+    swordRosterScrollTop: 0,
+    swordRosterScrollLockUntil: 0,
 
     init() {
         if (!this.overlay || !this.btnOpen || !this.list) return;
@@ -691,6 +697,13 @@ Object.assign(SkillsUI, {
         this.overlay.addEventListener('pointerdown', (e) => {
             if (e.target === this.overlay) this.close();
         });
+
+        this.list.addEventListener('scroll', (e) => {
+            const rosterList = e.target?.closest?.('.attack-skill-card__sword-roster-list');
+            if (!rosterList) return;
+            this.swordRosterScrollTop = rosterList.scrollTop;
+            this.swordRosterScrollLockUntil = Date.now() + 180;
+        }, true);
     },
 
     renderTabsMarkup() {
@@ -1105,6 +1118,12 @@ Object.assign(SkillsUI, {
 
     render() {
         if (!this.list) return;
+        if (Date.now() < (this.swordRosterScrollLockUntil || 0)) return;
+
+        const previousRosterList = this.list.querySelector('.attack-skill-card__sword-roster-list');
+        if (previousRosterList) {
+            this.swordRosterScrollTop = previousRosterList.scrollTop;
+        }
 
         const panelMarkup = this.currentTab === 'PHAP_BAO'
             ? this.renderArtifactStateMarkup() + this.renderArtifactCardsMarkup()
@@ -1116,5 +1135,10 @@ Object.assign(SkillsUI, {
                 ${panelMarkup}
             </div>
         `;
+
+        const rosterList = this.list.querySelector('.attack-skill-card__sword-roster-list');
+        if (rosterList && this.swordRosterScrollTop > 0) {
+            rosterList.scrollTop = this.swordRosterScrollTop;
+        }
     }
 });
