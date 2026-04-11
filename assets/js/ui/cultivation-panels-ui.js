@@ -582,7 +582,6 @@ ProfileUI = {
 Object.assign(SkillsUI, {
     expandedSwordArtifactPanel: false,
     swordRosterScrollTop: 0,
-    swordRosterScrollLockUntil: 0,
 
     init() {
         if (!this.overlay || !this.btnOpen || !this.list) return;
@@ -698,7 +697,6 @@ Object.assign(SkillsUI, {
             const rosterList = e.target?.closest?.('.attack-skill-card__sword-roster-list');
             if (!rosterList) return;
             this.swordRosterScrollTop = rosterList.scrollTop;
-            this.swordRosterScrollLockUntil = Date.now() + 180;
         }, true);
     },
 
@@ -1115,6 +1113,11 @@ Object.assign(SkillsUI, {
     render() {
         if (!this.list) return;
         if (Date.now() < (this.swordRosterScrollLockUntil || 0)) return;
+
+        const previousRosterList = this.list.querySelector('.attack-skill-card__sword-roster-list');
+        if (previousRosterList) {
+            this.swordRosterScrollTop = previousRosterList.scrollTop;
+        }
 
         const previousRosterList = this.list.querySelector('.attack-skill-card__sword-roster-list');
         if (previousRosterList) {
