@@ -894,7 +894,7 @@ const CONFIG = {
             buyPriceLowStone: 280000,
             buttonLabel: "Mua",
             inventoryActionLabel: "Lĩnh ngộ",
-            description: "Kiếm quyết nhập thần, sau khi lĩnh ngộ mới có thể lấy thần thức điều nhiều thanh Thanh Trúc Phong Vân Kiếm bay quanh thân."
+            description: "Kiếm quyết nhập thần, sau khi lĩnh ngộ mới có thể lấy thần thức điều khiển nhiều thanh Thanh Trúc Phong Vân Kiếm bay quanh thân."
         },
         DAI_CANH_KIEM_TRAN: {
             fullName: "Đại Canh Kiếm Trận",
@@ -1316,6 +1316,5 @@ const CONFIG = {
 CONFIG.ENEMY.MAX_SHIELD_CRACK_LINES = 48; // Số lượng đường nứt tối đa trên khiên hoặc lá chắn của quái vật (giúp cân bằng hiệu ứng nứt khi có nhiều đòn đánh liên tiếp)
 CONFIG.ENEMY.MAX_SHIELD_CRACK_RINGS = 4; // Số lượng vòng nứt tối đa trên khiên hoặc lá chắn của quái vật
 // <!-- Create By: Vũ Hoài Nam -->
-
 
 

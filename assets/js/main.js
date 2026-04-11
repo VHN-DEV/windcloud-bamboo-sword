@@ -4355,6 +4355,7 @@ const Input = {
             syncSwordFormation({ rebuildAll: true });
         }
 
+        this.enforcePhongLoiSiSwordRequirement();
         this.ensureValidAttackMode();
         showNotify(
             `${this.getItemDisplayName({ category: 'SWORD_ARTIFACT', quality: spec.quality })} đã được gỡ trang bị và đưa về túi trữ vật.`,
@@ -4390,6 +4391,76 @@ const Input = {
 
     hasCanLamBangDiemUnlocked() {
         return this.hasCultivationArt('CAN_LAM_BANG_DIEM');
+    },
+
+    castCanLamBangDiem() {
+        if (this.isVoidCollapsed || !this.hasCanLamBangDiemUnlocked()) return false;
+        const livingEnemies = (Array.isArray(enemies) ? enemies : []).filter(enemy => enemy && enemy.hp > 0);
+        if (!livingEnemies.length) {
+            showNotify('Không có mục tiêu để thi triển Càng Lam Băng Diễm.', '#69d9ff');
+            return false;
+        }
+
+        const anchorX = Number.isFinite(this.x) ? this.x : guardCenter.x;
+        const anchorY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        const target = livingEnemies.reduce((closest, enemy) => {
+            if (!closest) return enemy;
+            const currentDist = Math.hypot((enemy.x || 0) - anchorX, (enemy.y || 0) - anchorY);
+            const bestDist = Math.hypot((closest.x || 0) - anchorX, (closest.y || 0) - anchorY);
+            return currentDist < bestDist ? enemy : closest;
+        }, null);
+        if (!target) return false;
+
+        guardCenter.x = target.x;
+        guardCenter.y = target.y;
+        this.x = target.x;
+        this.y = target.y;
+        this.px = this.x;
+        this.py = this.y;
+
+        target.applyMovementLock?.(900);
+        target.applySlow?.(3000, 0.08);
+        target.applyDodgeSuppression?.(3000);
+
+        const dotSword = { powerPenalty: 0.36, ignoreDodge: true, shieldBreakMultiplier: 1.2 };
+        for (let tick = 1; tick <= 3; tick++) {
+            setTimeout(() => {
+                if (!target || target.hp <= 0) return;
+                const hpBefore = target.hp;
+                target.hit(dotSword);
+                if (hpBefore > 0 && target.hp <= 0) {
+                    this.createCanLamDissolveBurst(target.x, target.y);
+                }
+            }, tick * 1000);
+        }
+
+        showNotify('Thi triển Càng Lam Băng Diễm: lao tới mục tiêu gần nhất, thiêu băng trong 3 giây.', '#69d9ff');
+        this.refreshResourceUI();
+        return true;
+    },
+
+    createCanLamDissolveBurst(x, y) {
+        trimVisualParticles(260);
+        for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = random(1.8, 5.8);
+            visualParticles.push({
+                type: 'spark',
+                x,
+                y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - random(0.1, 1),
+                gravity: 0.04,
+                friction: 0.95,
+                size: random(2, 4.5),
+                sizeVelocity: -0.03,
+                life: 0.9,
+                decay: random(0.03, 0.05),
+                opacity: 0.86,
+                color: i % 2 === 0 ? '#78e6ff' : '#9fd6ff',
+                glow: 12
+            });
+        }
     },
 
     getUnlockedSwordTargetCount() {
@@ -4746,6 +4817,15 @@ const Input = {
 
         const normalized = Boolean(nextActive);
         if (Boolean(this.activeArtifacts[uniqueKey]) === normalized) return false;
+        if (uniqueKey === 'PHONG_LOI_SI' && normalized) {
+            const equippedSwordCount = Array.isArray(this.getEquippedSwordArtifacts?.())
+                ? this.getEquippedSwordArtifacts().length
+                : 0;
+            if (equippedSwordCount < 1) {
+                showNotify('Cần trang bị ít nhất 1 Thanh Trúc Phong Vân Kiếm mới có thể triển khai Phong Lôi Sí.', artifactConfig.color || '#9fe8ff');
+                return false;
+            }
+        }
 
         this.activeArtifacts[uniqueKey] = normalized;
 
@@ -4771,6 +4851,20 @@ const Input = {
 
     toggleArtifactDeployment(uniqueKey) {
         return this.setArtifactDeployment(uniqueKey, !this.isArtifactDeployed(uniqueKey));
+    },
+
+    enforcePhongLoiSiSwordRequirement({ silent = false } = {}) {
+        if (!this.isArtifactDeployed('PHONG_LOI_SI')) return false;
+        const equippedSwordCount = Array.isArray(this.getEquippedSwordArtifacts?.())
+            ? this.getEquippedSwordArtifacts().length
+            : 0;
+        if (equippedSwordCount > 0) return false;
+
+        this.setArtifactDeployment('PHONG_LOI_SI', false, { silent: true, skipRefresh: true });
+        if (!silent) {
+            showNotify('Đã thu hồi Phong Lôi Sí vì không còn Thanh Trúc Phong Vân Kiếm để dẫn lôi vận hành.', this.getArtifactConfig('PHONG_LOI_SI')?.color || '#9fe8ff');
+        }
+        return true;
     },
 
     getArtifactSkillList() {
@@ -4920,10 +5014,6 @@ const Input = {
         }
 
         this.renderPhongLoiBlinkButton();
-
-        if (SkillsUI && typeof SkillsUI.render === 'function' && SkillsUI.isOpen()) {
-            SkillsUI.render();
-        }
 
         GameProgress.requestSave();
     },
@@ -6025,6 +6115,7 @@ const Input = {
     },
 
     refreshResourceUI() {
+        this.enforcePhongLoiSiSwordRequirement({ silent: true });
         this.renderExpUI();
 
         if (BeastBagUI && typeof BeastBagUI.syncAvailability === 'function') {
@@ -6047,9 +6138,8 @@ const Input = {
             ProfileUI.render();
         }
 
-        if (SkillsUI && typeof SkillsUI.isOpen === 'function' && SkillsUI.isOpen()) {
-            SkillsUI.render();
-        }
+        // Không render SkillsUI liên tục trong refresh tổng để tránh giật danh sách kiếm khi người dùng đang cuộn.
+        // SkillsUI sẽ tự render khi mở popup hoặc khi người dùng tương tác trực tiếp trong popup.
 
         if (InsectBookUI && typeof InsectBookUI.isOpen === 'function' && InsectBookUI.isOpen()) {
             InsectBookUI.render();
@@ -8550,6 +8640,7 @@ const Input = {
     },
 
     drawCursor(ctx, scaleFactor) {
+        this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
         if (this.hasCanLamBangDiemUnlocked()) {
             this.drawFlame(ctx, scaleFactor);
         } else {
@@ -8557,6 +8648,50 @@ const Input = {
         }
 
         this.drawPhongLoiArtifact(ctx, scaleFactor);
+    },
+
+    drawHuyetSacPhiPhongCloak(ctx, scaleFactor) {
+        if (!this.isArtifactDeployed('HUYET_SAC_PHI_PHONG')) return;
+
+        const artifactConfig = this.getArtifactConfig('HUYET_SAC_PHI_PHONG') || {};
+        const primaryColor = artifactConfig.color || '#ff5d73';
+        const secondaryColor = artifactConfig.secondaryColor || '#ffd0d6';
+        const auraColor = artifactConfig.auraColor || '#b81531';
+        const dx = Number.isFinite(this.x - this.px) ? this.x - this.px : 0;
+        const dy = Number.isFinite(this.y - this.py) ? this.y - this.py : 1;
+        const moveLen = Math.max(0.001, Math.hypot(dx, dy));
+        const nx = dx / moveLen;
+        const ny = dy / moveLen;
+        const backX = -nx;
+        const backY = -ny;
+        const sideX = -backY;
+        const sideY = backX;
+        const base = 18 * scaleFactor;
+        const length = (42 + Math.min(18, moveLen * 0.6)) * scaleFactor;
+
+        const leftX = this.x + sideX * base * 0.65;
+        const leftY = this.y + sideY * base * 0.65;
+        const rightX = this.x - sideX * base * 0.65;
+        const rightY = this.y - sideY * base * 0.65;
+        const tailX = this.x + backX * length;
+        const tailY = this.y + backY * length;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+        grad.addColorStop(0, withAlpha(secondaryColor, 0.72));
+        grad.addColorStop(0.45, withAlpha(primaryColor, 0.58));
+        grad.addColorStop(1, withAlpha(auraColor, 0.08));
+        ctx.fillStyle = grad;
+        ctx.shadowBlur = 18 * scaleFactor;
+        ctx.shadowColor = withAlpha(primaryColor, 0.74);
+        ctx.beginPath();
+        ctx.moveTo(leftX, leftY);
+        ctx.quadraticCurveTo(this.x + backX * (length * 0.35), this.y + backY * (length * 0.35), tailX, tailY);
+        ctx.quadraticCurveTo(this.x + sideX * 2, this.y + sideY * 2, rightX, rightY);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     },
 
     drawFlame(ctx, scaleFactor) {
@@ -8887,9 +9022,14 @@ Input.renderAttackModeUI = function () {
     baseRenderAttackModeUIWithThanhLinh.call(this);
 
     const skillBtn = document.getElementById('btn-skill-list');
+    const formBtn = document.getElementById('btn-form');
     if (!skillBtn) return;
 
     const swordProgress = this.getSwordFormationProgress();
+    const canShowFormButton = this.attackMode === 'SWORD' && this.canDeployDaiCanhKiemTran();
+    if (formBtn) {
+        formBtn.classList.toggle('is-hidden', !canShowFormButton);
+    }
     skillBtn.classList.toggle(
         'is-disabled',
         !this.hasDaiCanhKiemTranUnlocked()
@@ -9478,5 +9618,3 @@ function animate() {
     animate();
 })();
 // <!-- Create By: Vũ Hoài Nam -->
-
-

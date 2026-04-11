@@ -440,6 +440,7 @@ ProfileUI = {
         const rageLabel = Input.getUltimateResourceLabel();
         const attackModeLabel = Input.getAttackModeDisplayName();
         const swordMetricLabel = Input.attackMode === 'SWORD' ? 'Kiếm trận' : 'Bản mệnh kiếm';
+        const swordProgress = Input.getSwordFormationProgress();
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
             + (inventorySummary.categories.SHIELD_BREAK || 0)
             + (inventorySummary.categories.BERSERK || 0)
@@ -483,6 +484,7 @@ ProfileUI = {
                     <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
                     <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
                     <span class="profile-chip is-soft">Bí pháp<strong>${escapeHtml(attackModeLabel)}</strong></span>
+                    <span class="profile-chip is-soft">Thần thức<strong>${formatNumber(swordProgress.consciousness)}</strong></span>
                 </div>
             </article>
         `;
@@ -499,6 +501,8 @@ ProfileUI = {
             { label: 'Tốc độ', value: formatBoostPercent(Input.getSpeedMultiplier()) },
             { label: 'Hồi linh', value: formatBoostPercent(Input.getManaRegenMultiplier()) },
             { label: 'Vận khí', value: formatBoostPercent(Input.getDropRateMultiplier()) },
+            { label: 'Thần thức', value: `${formatNumber(swordProgress.consciousness)}` },
+            { label: 'Giới hạn kiếm hộ thân', value: `${formatNumber(swordProgress.capacity)}` },
             { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
             { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total}` },
             { label: 'Kiếm hỏng', value: `${swordStats.broken}` },
@@ -581,6 +585,8 @@ ProfileUI = {
 
 Object.assign(SkillsUI, {
     expandedSwordArtifactPanel: false,
+    swordRosterScrollTop: 0,
+    swordRosterScrollLockUntil: 0,
 
     init() {
         if (!this.overlay || !this.btnOpen || !this.list) return;
@@ -647,6 +653,18 @@ Object.assign(SkillsUI, {
                 return;
             }
 
+            const secretArtCastBtn = e.target.closest('[data-secret-art-cast]');
+            if (secretArtCastBtn) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                if (typeof Input.castCanLamBangDiem === 'function' && Input.castCanLamBangDiem()) {
+                    this.render();
+                    this.close();
+                }
+                return;
+            }
+
             const swordPanelBtn = e.target.closest('[data-sword-artifact-toggle]');
             if (swordPanelBtn) {
                 e.stopPropagation();
@@ -691,6 +709,13 @@ Object.assign(SkillsUI, {
         this.overlay.addEventListener('pointerdown', (e) => {
             if (e.target === this.overlay) this.close();
         });
+
+        this.list.addEventListener('scroll', (e) => {
+            const rosterList = e.target?.closest?.('.attack-skill-card__sword-roster-list');
+            if (!rosterList) return;
+            this.swordRosterScrollTop = rosterList.scrollTop;
+            this.swordRosterScrollLockUntil = Date.now() + 180;
+        }, true);
     },
 
     renderTabsMarkup() {
@@ -800,6 +825,30 @@ Object.assign(SkillsUI, {
                 rosterSummary: khuTrungLearned
                     ? `${formatNumber(combatReadyCount)} xuất trận / ${formatNumber(totalInsects)} trong đàn`
                     : ''
+            });
+        }
+
+        const canLamItem = Input.getInventoryEntryByUniqueKey('CAN_LAM_BANG_DIEM', ['FLAME_ART']);
+        const canLamLearned = Input.hasCanLamBangDiemUnlocked();
+        if (canLamLearned || canLamItem || Input.hasUniquePurchase('CAN_LAM_BANG_DIEM')) {
+            secretArts.push({
+                key: 'CAN_LAM_BANG_DIEM',
+                name: CONFIG.SECRET_ARTS?.CAN_LAM_BANG_DIEM?.fullName || 'Càng Lam Băng Diễm',
+                description: 'Lao tới mục tiêu gần nhất, thiêu băng đối thủ trong 3 giây và rút máu dần.',
+                unlocked: canLamLearned,
+                active: false,
+                ready: canLamLearned,
+                accent: CONFIG.SECRET_ARTS?.CAN_LAM_BANG_DIEM?.color || '#69d9ff',
+                statusLabel: canLamLearned ? 'Đã lĩnh ngộ' : canLamItem ? 'Chờ lĩnh ngộ' : 'Đã kết duyên',
+                note: canLamLearned
+                    ? 'Kích hoạt để truy kích mục tiêu gần nhất, đóng băng thiêu đốt rồi tan rã khi sinh lực cạn.'
+                    : 'Cần lĩnh ngộ bí pháp trong túi trước khi có thể thi triển.',
+                modeKey: null,
+                buttonLabel: canLamLearned ? 'Thi triển' : 'Lĩnh ngộ',
+                buttonDisabled: canLamLearned ? false : !canLamItem,
+                inventoryKey: canLamItem?.key || null,
+                castActionKey: canLamLearned ? 'CAN_LAM_BANG_DIEM' : null,
+                roster: []
             });
         }
 
@@ -933,6 +982,14 @@ Object.assign(SkillsUI, {
         if (skill.modeKey) {
             return `
                 <button class="btn-slot-action" type="button" data-attack-skill="${escapeHtml(skill.modeKey)}" ${skill.buttonDisabled ? 'disabled' : ''}>
+                    ${escapeHtml(skill.buttonLabel)}
+                </button>
+            `;
+        }
+
+        if (skill.castActionKey) {
+            return `
+                <button class="btn-slot-action" type="button" data-secret-art-cast="${escapeHtml(skill.castActionKey)}" ${skill.buttonDisabled ? 'disabled' : ''}>
                     ${escapeHtml(skill.buttonLabel)}
                 </button>
             `;
@@ -1105,6 +1162,12 @@ Object.assign(SkillsUI, {
 
     render() {
         if (!this.list) return;
+        if (Date.now() < (this.swordRosterScrollLockUntil || 0)) return;
+
+        const previousRosterList = this.list.querySelector('.attack-skill-card__sword-roster-list');
+        if (previousRosterList) {
+            this.swordRosterScrollTop = previousRosterList.scrollTop;
+        }
 
         const panelMarkup = this.currentTab === 'PHAP_BAO'
             ? this.renderArtifactStateMarkup() + this.renderArtifactCardsMarkup()
@@ -1116,5 +1179,10 @@ Object.assign(SkillsUI, {
                 ${panelMarkup}
             </div>
         `;
+
+        const rosterList = this.list.querySelector('.attack-skill-card__sword-roster-list');
+        if (rosterList && this.swordRosterScrollTop > 0) {
+            rosterList.scrollTop = this.swordRosterScrollTop;
+        }
     }
 });

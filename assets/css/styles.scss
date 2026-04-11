@@ -807,6 +807,10 @@ body.is-touch-device {
         background: radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.2), rgba(9, 18, 28, 0.94) 72%);
         border: 1px solid rgba($primary-color, 0.34);
         box-shadow: 0 4px 0 rgba(0, 0, 0, 0.44), 0 0 14px rgba($primary-color, 0.2);
+
+        &.is-hidden {
+            display: none !important;
+        }
     }
 
     .btn-skill-list {
@@ -2540,6 +2544,16 @@ select.shop-control-input {
     overscroll-behavior: contain;
     padding-right: 4px;
     scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+}
+
+.shop-card.has-pill-art .pill-visual.is-bag .pill-visual__core--bag,
+.shop-card.has-pill-art .pill-visual.is-spirit-bag .pill-visual__core--bag,
+.shop-card.has-pill-art .pill-visual.is-habitat .pill-visual__core--bag {
+    background: none;
+    box-shadow: none;
+    border: none;
 }
 
 .insect-toggle-chip {
