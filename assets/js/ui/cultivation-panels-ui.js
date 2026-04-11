@@ -828,6 +828,30 @@ Object.assign(SkillsUI, {
             });
         }
 
+        const canLamItem = Input.getInventoryEntryByUniqueKey('CAN_LAM_BANG_DIEM', ['FLAME_ART']);
+        const canLamLearned = Input.hasCanLamBangDiemUnlocked();
+        if (canLamLearned || canLamItem || Input.hasUniquePurchase('CAN_LAM_BANG_DIEM')) {
+            secretArts.push({
+                key: 'CAN_LAM_BANG_DIEM',
+                name: CONFIG.SECRET_ARTS?.CAN_LAM_BANG_DIEM?.fullName || 'Càng Lam Băng Diễm',
+                description: 'Lao tới mục tiêu gần nhất, thiêu băng đối thủ trong 3 giây và rút máu dần.',
+                unlocked: canLamLearned,
+                active: false,
+                ready: canLamLearned,
+                accent: CONFIG.SECRET_ARTS?.CAN_LAM_BANG_DIEM?.color || '#69d9ff',
+                statusLabel: canLamLearned ? 'Đã lĩnh ngộ' : canLamItem ? 'Chờ lĩnh ngộ' : 'Đã kết duyên',
+                note: canLamLearned
+                    ? 'Kích hoạt để truy kích mục tiêu gần nhất, đóng băng thiêu đốt rồi tan rã khi sinh lực cạn.'
+                    : 'Cần lĩnh ngộ bí pháp trong túi trước khi có thể thi triển.',
+                modeKey: null,
+                buttonLabel: canLamLearned ? 'Thi triển' : 'Lĩnh ngộ',
+                buttonDisabled: canLamLearned ? false : !canLamItem,
+                inventoryKey: canLamItem?.key || null,
+                castActionKey: canLamLearned ? 'CAN_LAM_BANG_DIEM' : null,
+                roster: []
+            });
+        }
+
         return secretArts;
     },
 
