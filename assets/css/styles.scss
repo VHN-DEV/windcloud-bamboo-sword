@@ -1033,6 +1033,8 @@ body.is-touch-device {
         --attack-stick-x: 0px;
         --attack-stick-y: 0px;
         --attack-drag-ratio: 0;
+        --single-ult-charge: 0%;
+        --single-ult-charge-ratio: 0;
         width: 74px;
         height: 74px;
         right: 0;
@@ -1073,6 +1075,53 @@ body.is-touch-device {
             transform: translate(var(--attack-stick-x), var(--attack-stick-y)) scale(calc(1 + (var(--attack-drag-ratio) * 0.16)));
             filter: drop-shadow(0 0 5px $primary-color) drop-shadow(0 0 10px rgba($primary-color, 0.42));
             transition: transform 0.06s linear, filter 0.12s ease;
+        }
+
+        .attack-ult-charge {
+            position: absolute;
+            left: 50%;
+            bottom: -12px;
+            transform: translateX(-50%);
+            width: 82%;
+            height: 6px;
+            border-radius: 999px;
+            border: 1px solid rgba(126, 231, 255, 0.45);
+            background: rgba(0, 10, 18, 0.72);
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.14s ease;
+            pointer-events: none;
+
+            &::before {
+                content: "";
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: var(--single-ult-charge);
+                background: linear-gradient(90deg, rgba(126, 231, 255, 0.86), rgba(216, 255, 255, 0.98));
+                box-shadow: 0 0 10px rgba(126, 231, 255, 0.6);
+                transition: width 0.06s linear;
+            }
+        }
+
+        &.is-single-ult-ready {
+            border-color: rgba(126, 231, 255, 0.72);
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.5), 0 0 28px rgba(126, 231, 255, 0.38);
+
+            .sword-icon {
+                filter: drop-shadow(0 0 7px #7ee7ff) drop-shadow(0 0 14px rgba(126, 231, 255, 0.62));
+            }
+
+            .attack-ult-charge {
+                opacity: 1;
+            }
+        }
+
+        &.is-single-ult-charging {
+            .attack-ult-charge {
+                opacity: 1;
+            }
         }
 
         &.is-joystick-active {
