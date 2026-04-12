@@ -855,9 +855,10 @@ const Input = {
     },
 
     isSingleSwordTapAttackMode() {
-        return !this.isInsectSwarmActive()
-            && !this.hasThanhLinhKiemQuyetUnlocked()
-            && this.getSwordControlLimit() <= 1;
+        if (this.isInsectSwarmActive()) return false;
+
+        const swordStats = this.getAliveSwordStats();
+        return swordStats.alive <= 1;
     },
 
     triggerSingleSwordTapAttack(windowMs = 320) {
