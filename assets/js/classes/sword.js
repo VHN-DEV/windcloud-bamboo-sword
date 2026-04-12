@@ -48,6 +48,7 @@ class Sword {
         this.deathTime = 0;
         this.lastUltimateHitAt = 0;
         this.lastCloseSlashCycle = -1;
+        this.committedCloseSlashCycle = -1;
         this.powerPenalty = 1; // hệ số sát thương theo độ bền
         this.isEnlarged = false;      // Đang trong trạng thái cường hóa phóng to
         this.currentVisualScale = 1;  // Tỉ lệ hiển thị thực tế (để animation mượt)
@@ -178,6 +179,15 @@ class Sword {
             x: safeX,
             y: safeY
         };
+    }
+
+    shouldContinueCloseRangeSlash(Input, now = null) {
+        if (!this.usesCloseRangeSlash(Input)) return false;
+        if (Input.isAttacking) return true;
+
+        const slashCycleMs = 260;
+        const slashCycle = Math.floor((getSwordFrameNow(now) + this.index * 37) / slashCycleMs);
+        return this.committedCloseSlashCycle >= 0 && slashCycle <= this.committedCloseSlashCycle;
     }
 
     startReturnToGuard() {
@@ -494,7 +504,11 @@ class Sword {
         }
 
         if (!Input.isAttacking) {
-            this.updateGuardMode(guardCenter, currentRadius, Input, scaleFactor, now);
+            if (this.shouldContinueCloseRangeSlash(Input, now)) {
+                this.updateAttackMode(enemies, Input, scaleFactor, now);
+            } else {
+                this.updateGuardMode(guardCenter, currentRadius, Input, scaleFactor, now);
+            }
         } else {
             this.updateAttackMode(enemies, Input, scaleFactor, now);
         }
@@ -542,6 +556,7 @@ class Sword {
         this.renderOpacity = 1;
         this.lastUltimateHitAt = 0;
         this.lastCloseSlashCycle = -1;
+        this.committedCloseSlashCycle = -1;
         this.trail = [];
         this.fragments = [];
     }
@@ -615,6 +630,7 @@ class Sword {
 
         this.attackFrame = 0;
         this.lastCloseSlashCycle = -1;
+        this.committedCloseSlashCycle = -1;
         this.pierceCount = 0; 
         // Giữ trail ngắn lại một chút khi ở mode rồng để không bị rối mắt
         if (this.trail.length > 10) this.trail.shift();
@@ -647,6 +663,11 @@ class Sword {
         this.currentVisualScale += (this.targetVisualScale - this.currentVisualScale) * 0.1;
 
         if (closeRangeSlashMode) {
+            const slashCycleMs = 260;
+            const slashCycle = Math.floor((frameNow + this.index * 37) / slashCycleMs);
+            if (Input.isAttacking) {
+                this.committedCloseSlashCycle = slashCycle;
+            }
             const anchor = this.getCloseRangeSlashAnchor(Input, scaleFactor);
             let target = null;
             let minTargetDistance = Infinity;
@@ -661,7 +682,6 @@ class Sword {
 
             const slashReach = 110 * scaleFactor;
             const canSlashTarget = Boolean(target) && minTargetDistance <= slashReach + (target?.r || 0);
-            const slashCycleMs = 260;
             const slashProgress = ((frameNow + this.index * 37) % slashCycleMs) / slashCycleMs;
             const attackWindowRatio = 0.72;
             const downstrokeProgress = slashProgress <= attackWindowRatio
@@ -711,10 +731,12 @@ class Sword {
             if (!canSlashTarget) {
                 this.lastCloseSlashCycle = -1;
             } else {
-                const slashCycle = Math.floor((frameNow + this.index * 37) / slashCycleMs);
-                const hitDistance = (target.r || 0) + (target.hasShield ? 15 : 0) + 14 * scaleFactor;
-                const impactWindow = slashProgress <= attackWindowRatio && downstrokeProgress >= 0.7 && downstrokeProgress <= 0.94;
-                const landedHit = impactWindow && Math.hypot(this.x - target.x, this.y - target.y) <= hitDistance;
+                const tipOffset = CONFIG.SWORD.SIZE * scaleFactor;
+                const tipX = this.x + Math.sin(this.drawAngle) * tipOffset;
+                const tipY = this.y - Math.cos(this.drawAngle) * tipOffset;
+                const hitDistance = (target.r || 0) + (target.hasShield ? 12 : 0) + 6 * scaleFactor;
+                const impactWindow = slashProgress <= attackWindowRatio && downstrokeProgress >= 0.78 && downstrokeProgress <= 0.96;
+                const landedHit = impactWindow && Math.hypot(tipX - target.x, tipY - target.y) <= hitDistance;
 
                 if (landedHit && this.lastCloseSlashCycle !== slashCycle) {
                     this.lastCloseSlashCycle = slashCycle;
@@ -751,6 +773,7 @@ class Sword {
             if (this.trail.length > 8) this.trail.shift();
             return;
         }
+        this.committedCloseSlashCycle = -1;
 
         // Tìm mục tiêu gần nhất
         let target = null, minStartDist = Infinity;
