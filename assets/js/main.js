@@ -653,6 +653,14 @@ const Input = {
     },
     canLamProjectiles: [],
     singleSwordUltimateProjectiles: [],
+    singleSwordUltimateState: {
+        active: false,
+        charging: false,
+        activatedAt: 0,
+        chargeStartedAt: 0,
+        chargeRatio: 0,
+        maxChargeMs: 1200
+    },
     phongLoiBlink: {
         enabled: false,
         accumulatedDistance: 0,
@@ -852,6 +860,101 @@ const Input = {
             clearTimeout(this.singleSwordAttackTapTimeoutId);
             this.singleSwordAttackTapTimeoutId = null;
         }
+    },
+
+    isSingleSwordUltimateReady() {
+        return Boolean(this.singleSwordUltimateState?.active);
+    },
+
+    beginSingleSwordUltimateCharge() {
+        if (!this.isSingleSwordUltimateReady()) return false;
+        const state = this.singleSwordUltimateState;
+        state.charging = true;
+        state.chargeStartedAt = performance.now();
+        state.chargeRatio = 0;
+        this.isAttacking = false;
+        return true;
+    },
+
+    updateSingleSwordUltimateChargeState(now = performance.now()) {
+        const state = this.singleSwordUltimateState;
+        if (!state || !state.active) {
+            this.updateSingleSwordUltimateChargeUI(0, false, false);
+            return;
+        }
+
+        if (state.charging) {
+            const elapsed = Math.max(0, now - state.chargeStartedAt);
+            state.chargeRatio = Math.max(0, Math.min(1, elapsed / Math.max(1, state.maxChargeMs || 1200)));
+        }
+
+        this.updateSingleSwordUltimateChargeUI(
+            state.chargeRatio || 0,
+            state.charging,
+            state.active
+        );
+    },
+
+    updateSingleSwordUltimateChargeUI(chargeRatio = 0, isCharging = false, isReady = false) {
+        const attackBtn = document.getElementById('btn-attack');
+        if (!attackBtn) return;
+        const safeRatio = Math.max(0, Math.min(1, Number(chargeRatio) || 0));
+        attackBtn.style.setProperty('--single-ult-charge', `${safeRatio * 100}%`);
+        attackBtn.style.setProperty('--single-ult-charge-ratio', safeRatio.toFixed(2));
+        attackBtn.classList.toggle('is-single-ult-charging', Boolean(isCharging));
+        attackBtn.classList.toggle('is-single-ult-ready', Boolean(isReady));
+    },
+
+    releaseSingleSwordUltimateShot() {
+        const state = this.singleSwordUltimateState;
+        if (!state?.active) return false;
+
+        const startX = Number.isFinite(this.x) ? this.x : guardCenter.x;
+        const startY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        const livingEnemies = (Array.isArray(enemies) ? enemies : []).filter(enemy => enemy && enemy.hp > 0);
+        const target = livingEnemies.reduce((closest, enemy) => {
+            if (!closest) return enemy;
+            const currentDist = Math.hypot((enemy.x || 0) - startX, (enemy.y || 0) - startY);
+            const bestDist = Math.hypot((closest.x || 0) - startX, (closest.y || 0) - startY);
+            return currentDist < bestDist ? enemy : closest;
+        }, null);
+
+        const chargeRatio = Math.max(0, Math.min(1, Number(state.chargeRatio) || 0));
+        if (target) {
+            this.singleSwordUltimateProjectiles.push({
+                fromX: startX,
+                fromY: startY,
+                targetRef: target,
+                x: startX,
+                y: startY,
+                startAt: performance.now(),
+                travelMs: Math.round(260 - (chargeRatio * 80)),
+                size: 1 + (chargeRatio * 0.9),
+                damageScale: 0.4 + (chargeRatio * 1.2),
+                chargeRatio
+            });
+            showNotify(`Kiếm quang xuất khiếu (${Math.round(chargeRatio * 100)}%)!`, '#7ee7ff');
+        } else {
+            showNotify('Kiếm quang tản mác vì không có mục tiêu gần.', '#9beeff');
+        }
+
+        state.active = false;
+        state.charging = false;
+        state.activatedAt = 0;
+        state.chargeStartedAt = 0;
+        state.chargeRatio = 0;
+        this.updateSingleSwordUltimateChargeUI(0, false, false);
+        return true;
+    },
+
+    clearSingleSwordUltimateState() {
+        const state = this.singleSwordUltimateState;
+        state.active = false;
+        state.charging = false;
+        state.activatedAt = 0;
+        state.chargeStartedAt = 0;
+        state.chargeRatio = 0;
+        this.updateSingleSwordUltimateChargeUI(0, false, false);
     },
 
     isSingleSwordTapAttackMode() {
@@ -1100,6 +1203,8 @@ const Input = {
 
         if (this.isUltimateBusy() || this.rage < this.maxRage) return false;
 
+        this.clearSingleSwordUltimateState();
+
         if (this.attackMode === 'INSECT' && this.canUseInsectAttackMode()) {
             return this.startInsectUltimate();
         }
@@ -1141,41 +1246,41 @@ const Input = {
     },
 
     castSingleSwordUltimate() {
-        const livingEnemies = (Array.isArray(enemies) ? enemies : []).filter(enemy => enemy && enemy.hp > 0);
-        if (!livingEnemies.length) {
-            showNotify('Không có mục tiêu để thi triển kiếm quang.', '#7ee7ff');
-            return false;
-        }
-
-        const startX = Number.isFinite(this.x) ? this.x : guardCenter.x;
-        const startY = Number.isFinite(this.y) ? this.y : guardCenter.y;
-        const target = livingEnemies.reduce((closest, enemy) => {
-            if (!closest) return enemy;
-            const currentDist = Math.hypot((enemy.x || 0) - startX, (enemy.y || 0) - startY);
-            const bestDist = Math.hypot((closest.x || 0) - startX, (closest.y || 0) - startY);
-            return currentDist < bestDist ? enemy : closest;
-        }, null);
-
-        if (!target) return false;
-
-        this.singleSwordUltimateProjectiles.push({
-            fromX: startX,
-            fromY: startY,
-            targetRef: target,
-            x: startX,
-            y: startY,
-            startAt: performance.now(),
-            travelMs: 240,
-            size: 1
-        });
+        const state = this.singleSwordUltimateState;
+        state.active = true;
+        state.charging = false;
+        state.activatedAt = performance.now();
+        state.chargeStartedAt = 0;
+        state.chargeRatio = 0;
 
         this.rage = 0;
         this.renderRageUI();
-        showNotify('Nhất Kiếm Tuyệt Ảnh: kiếm quang lưỡi liềm truy sát mục tiêu gần nhất!', '#7ee7ff');
+        this.updateSingleSwordUltimateChargeUI(0, false, true);
+        showNotify('Nhất Kiếm Tuyệt Ảnh: giữ nút công kích để tụ lực kiếm quang!', '#7ee7ff');
         return true;
     },
 
     drawSingleSwordUltimateProjectiles(ctx, scaleFactor) {
+        const state = this.singleSwordUltimateState;
+        if (state?.active) {
+            const glowRatio = state.charging ? (state.chargeRatio || 0) : 0.18;
+            const glowX = Number.isFinite(guardCenter?.x) ? guardCenter.x : this.x;
+            const glowY = Number.isFinite(guardCenter?.y) ? guardCenter.y - (18 * scaleFactor) : this.y;
+            const pulse = 1 + Math.sin(performance.now() * 0.015) * 0.08;
+            const auraRadius = (42 + (glowRatio * 36)) * scaleFactor * pulse;
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.translate(glowX, glowY);
+            ctx.fillStyle = `rgba(126, 231, 255, ${0.2 + (glowRatio * 0.42)})`;
+            ctx.shadowBlur = (16 + (glowRatio * 20)) * scaleFactor;
+            ctx.shadowColor = '#7ee7ff';
+            ctx.beginPath();
+            ctx.arc(0, 0, auraRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
         if (!Array.isArray(this.singleSwordUltimateProjectiles) || !this.singleSwordUltimateProjectiles.length) return;
         const now = performance.now();
         const alive = [];
@@ -1215,9 +1320,9 @@ const Input = {
                 this.createAttackBurst(targetX, targetY, '#9beeff');
                 if (target && target.hp > 0) {
                     target.hit({
-                        powerPenalty: 0.25,
+                        powerPenalty: Math.max(0.3, projectile.damageScale || 0.4),
                         ignoreDodge: true,
-                        shieldBreakMultiplier: 1.35
+                        shieldBreakMultiplier: 1.35 + ((projectile.chargeRatio || 0) * 0.9)
                     });
                 }
                 return;
@@ -1245,6 +1350,7 @@ const Input = {
         }
 
         this.resetAttackState();
+        this.clearSingleSwordUltimateState();
         this.insectCombat.visuals = [];
         this.insectCombat.focusTargets = [];
         this.ultimatePhase = 'idle';
@@ -1295,6 +1401,7 @@ const Input = {
         }
 
         this.resetAttackState();
+        this.clearSingleSwordUltimateState();
         this.isUltMode = false;
         this.ultimatePhase = 'splitting';
         this.ultimatePhaseStartedAt = performance.now();
@@ -1330,6 +1437,7 @@ const Input = {
         this.ultimateCoreIndex = -1;
         this.ultimateMode = null;
         this.resetAttackState();
+        this.clearSingleSwordUltimateState();
         this.renderRageUI();
     },
 
@@ -6905,9 +7013,11 @@ const Input = {
     update(dt) { // Nhận thêm tham số dt
         this.updateUltimateState();
         this.updateActiveEffects();
+        this.updateSingleSwordUltimateChargeState();
 
         if (this.isVoidCollapsed) {
             this.resetAttackState();
+            this.clearSingleSwordUltimateState();
             this.stopMoveJoystick();
             this.stopTouchCursor();
             this.pinchZoomActive = false;
@@ -6980,6 +7090,7 @@ const Input = {
 
         if (this.isSingleSwordTapAttackMode()) {
             e.preventDefault();
+            if (this.beginSingleSwordUltimateCharge()) return;
             this.triggerSingleSwordTapAttack();
             return;
         }
@@ -7005,7 +7116,12 @@ const Input = {
         }
         // Chỉ xử lý handleUp cho chuột trên desktop
         if (!this.isTouchDevice) {
-            if (this.isSingleSwordTapAttackMode()) return;
+            if (this.isSingleSwordTapAttackMode()) {
+                if (this.isSingleSwordUltimateReady()) {
+                    this.releaseSingleSwordUltimateShot();
+                }
+                return;
+            }
             this.resetAttackState();
         }
     },
@@ -9504,6 +9620,9 @@ const startAttack = (e) => {
     }
 
     if (Input.isSingleSwordTapAttackMode()) {
+        if (Input.beginSingleSwordUltimateCharge()) {
+            return true;
+        }
         Input.triggerSingleSwordTapAttack();
     } else {
         Input.isAttacking = true;
@@ -9514,6 +9633,10 @@ const startAttack = (e) => {
 const stopAttack = (e) => {
     e.stopPropagation();
     e.preventDefault();
+    if (Input.isSingleSwordUltimateReady()) {
+        Input.releaseSingleSwordUltimateShot();
+        return;
+    }
     Input.resetAttackState();
 };
 
@@ -9539,7 +9662,7 @@ if (moveBtn) {
 attackBtn.addEventListener('pointerdown', (e) => {
     if (Input.isTouchDevice && e.pointerType !== 'mouse') {
         if (!startAttack(e)) return;
-        if (Input.isSingleSwordTapAttackMode()) return;
+        if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
 
         if (attackBtn.setPointerCapture) {
             attackBtn.setPointerCapture(e.pointerId);
@@ -9552,7 +9675,7 @@ attackBtn.addEventListener('pointerdown', (e) => {
 });
 
 attackBtn.addEventListener('pointerup', (e) => {
-    if (Input.isSingleSwordTapAttackMode()) return;
+    if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
     if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
         attackBtn.releasePointerCapture(e.pointerId);
     }
@@ -9561,7 +9684,7 @@ attackBtn.addEventListener('pointerup', (e) => {
 });
 
 attackBtn.addEventListener('pointercancel', (e) => {
-    if (Input.isSingleSwordTapAttackMode()) return;
+    if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
     if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
         attackBtn.releasePointerCapture(e.pointerId);
     }
@@ -9570,11 +9693,15 @@ attackBtn.addEventListener('pointercancel', (e) => {
 });
 
 attackBtn.addEventListener('lostpointercapture', () => {
+    if (Input.isSingleSwordUltimateReady()) {
+        Input.releaseSingleSwordUltimateShot();
+        return;
+    }
     Input.resetAttackState();
 });
 
 attackBtn.addEventListener('pointerleave', (e) => {
-    if (Input.isSingleSwordTapAttackMode()) return;
+    if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
     if (Input.isTouchDevice && e.pointerType !== 'mouse') return;
     stopAttack(e);
 }); // Khi kéo ngón tay ra khỏi nút
