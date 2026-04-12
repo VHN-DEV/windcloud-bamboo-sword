@@ -652,6 +652,7 @@ const Input = {
         HUYET_SAC_PHI_PHONG: false
     },
     canLamProjectiles: [],
+    singleSwordUltimateProjectiles: [],
     phongLoiBlink: {
         enabled: false,
         accumulatedDistance: 0,
@@ -846,6 +847,29 @@ const Input = {
             clearTimeout(this.attackTimer);
             this.attackTimer = null;
         }
+
+        if (this.singleSwordAttackTapTimeoutId) {
+            clearTimeout(this.singleSwordAttackTapTimeoutId);
+            this.singleSwordAttackTapTimeoutId = null;
+        }
+    },
+
+    isSingleSwordTapAttackMode() {
+        return !this.isInsectSwarmActive()
+            && !this.hasThanhLinhKiemQuyetUnlocked()
+            && this.getSwordControlLimit() <= 1;
+    },
+
+    triggerSingleSwordTapAttack(windowMs = 320) {
+        this.isAttacking = true;
+        if (this.singleSwordAttackTapTimeoutId) {
+            clearTimeout(this.singleSwordAttackTapTimeoutId);
+        }
+
+        this.singleSwordAttackTapTimeoutId = setTimeout(() => {
+            this.singleSwordAttackTapTimeoutId = null;
+            this.isAttacking = false;
+        }, Math.max(120, Number(windowMs) || 320));
     },
 
     getMaxRankIndex() {
@@ -1049,6 +1073,10 @@ const Input = {
             return this.startInsectUltimate();
         }
 
+        if (this.isSingleSwordTapAttackMode()) {
+            return this.castSingleSwordUltimate();
+        }
+
         if (this.ultTimeoutId) {
             clearTimeout(this.ultTimeoutId);
             this.ultTimeoutId = null;
@@ -1079,6 +1107,95 @@ const Input = {
         showNotify("VẠN KIẾM QUY TÔNG!", "#00ffff");
         this.renderRageUI();
         return true;
+    },
+
+    castSingleSwordUltimate() {
+        const livingEnemies = (Array.isArray(enemies) ? enemies : []).filter(enemy => enemy && enemy.hp > 0);
+        if (!livingEnemies.length) {
+            showNotify('Không có mục tiêu để thi triển kiếm quang.', '#7ee7ff');
+            return false;
+        }
+
+        const startX = Number.isFinite(this.x) ? this.x : guardCenter.x;
+        const startY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        const target = livingEnemies.reduce((closest, enemy) => {
+            if (!closest) return enemy;
+            const currentDist = Math.hypot((enemy.x || 0) - startX, (enemy.y || 0) - startY);
+            const bestDist = Math.hypot((closest.x || 0) - startX, (closest.y || 0) - startY);
+            return currentDist < bestDist ? enemy : closest;
+        }, null);
+
+        if (!target) return false;
+
+        this.singleSwordUltimateProjectiles.push({
+            fromX: startX,
+            fromY: startY,
+            targetRef: target,
+            x: startX,
+            y: startY,
+            startAt: performance.now(),
+            travelMs: 240,
+            size: 1
+        });
+
+        this.rage = 0;
+        this.renderRageUI();
+        showNotify('Nhất Kiếm Tuyệt Ảnh: kiếm quang lưỡi liềm truy sát mục tiêu gần nhất!', '#7ee7ff');
+        return true;
+    },
+
+    drawSingleSwordUltimateProjectiles(ctx, scaleFactor) {
+        if (!Array.isArray(this.singleSwordUltimateProjectiles) || !this.singleSwordUltimateProjectiles.length) return;
+        const now = performance.now();
+        const alive = [];
+
+        this.singleSwordUltimateProjectiles.forEach(projectile => {
+            const target = projectile.targetRef;
+            const duration = Math.max(80, projectile.travelMs || 240);
+            const progress = Math.min(1, (now - projectile.startAt) / duration);
+            const targetX = Number.isFinite(target?.x) ? target.x : projectile.x;
+            const targetY = Number.isFinite(target?.y) ? target.y : projectile.y;
+            projectile.x = projectile.fromX + ((targetX - projectile.fromX) * progress);
+            projectile.y = projectile.fromY + ((targetY - projectile.fromY) * progress);
+
+            const heading = Math.atan2(targetY - projectile.fromY, targetX - projectile.fromX);
+            const arcRadius = (28 + (Math.sin(now * 0.024) * 4)) * scaleFactor * (projectile.size || 1);
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.translate(projectile.x, projectile.y);
+            ctx.rotate(heading);
+            ctx.lineWidth = 4 * scaleFactor;
+            ctx.strokeStyle = 'rgba(194, 248, 255, 0.95)';
+            ctx.shadowBlur = 16 * scaleFactor;
+            ctx.shadowColor = '#89eeff';
+            ctx.beginPath();
+            ctx.arc(-arcRadius * 0.15, 0, arcRadius, -0.75, 0.75);
+            ctx.stroke();
+
+            ctx.lineWidth = 2 * scaleFactor;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.arc(-arcRadius * 0.24, 0, arcRadius * 0.74, -0.7, 0.7);
+            ctx.stroke();
+            ctx.restore();
+
+            if (progress >= 1) {
+                this.createAttackBurst(targetX, targetY, '#9beeff');
+                if (target && target.hp > 0) {
+                    target.hit({
+                        powerPenalty: 0.25,
+                        ignoreDodge: true,
+                        shieldBreakMultiplier: 1.35
+                    });
+                }
+                return;
+            }
+
+            alive.push(projectile);
+        });
+
+        this.singleSwordUltimateProjectiles = alive;
     },
 
     startInsectUltimate() {
@@ -6830,6 +6947,12 @@ const Input = {
         // LOGIC MỚI: Nếu là mobile, chạm màn hình KHÔNG kích hoạt tấn công
         if (this.isTouchDevice) return;
 
+        if (this.isSingleSwordTapAttackMode()) {
+            e.preventDefault();
+            this.triggerSingleSwordTapAttack();
+            return;
+        }
+
         // Nếu là Desktop (chuột), vẫn giữ logic nhấn giữ để tấn công
         e.preventDefault();
         if (this.attackTimer) {
@@ -6851,6 +6974,7 @@ const Input = {
         }
         // Chỉ xử lý handleUp cho chuột trên desktop
         if (!this.isTouchDevice) {
+            if (this.isSingleSwordTapAttackMode()) return;
             this.resetAttackState();
         }
     },
@@ -9348,7 +9472,11 @@ const startAttack = (e) => {
         return false;
     }
 
-    Input.isAttacking = true;
+    if (Input.isSingleSwordTapAttackMode()) {
+        Input.triggerSingleSwordTapAttack();
+    } else {
+        Input.isAttacking = true;
+    }
     return true;
 };
 
@@ -9380,6 +9508,7 @@ if (moveBtn) {
 attackBtn.addEventListener('pointerdown', (e) => {
     if (Input.isTouchDevice && e.pointerType !== 'mouse') {
         if (!startAttack(e)) return;
+        if (Input.isSingleSwordTapAttackMode()) return;
 
         if (attackBtn.setPointerCapture) {
             attackBtn.setPointerCapture(e.pointerId);
@@ -9392,6 +9521,7 @@ attackBtn.addEventListener('pointerdown', (e) => {
 });
 
 attackBtn.addEventListener('pointerup', (e) => {
+    if (Input.isSingleSwordTapAttackMode()) return;
     if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
         attackBtn.releasePointerCapture(e.pointerId);
     }
@@ -9400,6 +9530,7 @@ attackBtn.addEventListener('pointerup', (e) => {
 });
 
 attackBtn.addEventListener('pointercancel', (e) => {
+    if (Input.isSingleSwordTapAttackMode()) return;
     if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
         attackBtn.releasePointerCapture(e.pointerId);
     }
@@ -9412,6 +9543,7 @@ attackBtn.addEventListener('lostpointercapture', () => {
 });
 
 attackBtn.addEventListener('pointerleave', (e) => {
+    if (Input.isSingleSwordTapAttackMode()) return;
     if (Input.isTouchDevice && e.pointerType !== 'mouse') return;
     stopAttack(e);
 }); // Khi kéo ngón tay ra khỏi nút
@@ -9679,6 +9811,7 @@ function animate() {
     Input.drawPhongLoiBlinkEffects(ctx, scaleFactor);
     Input.drawHuyetSacPhiPhongTrail(ctx, scaleFactor);
     Input.drawCanLamProjectiles(ctx, scaleFactor);
+    Input.drawSingleSwordUltimateProjectiles(ctx, scaleFactor);
     renderCursor();
 
     // Vẽ và cập nhật hạt hiệu ứng
