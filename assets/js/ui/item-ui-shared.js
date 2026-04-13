@@ -265,7 +265,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
                     ? buildItemImageVisualMarkup(artifactConfig.imagePath, {
                         coreClass: 'pill-visual__core--artifact',
                         imageClass: 'pill-visual__item-icon--artifact',
-                        extraMarkup: isCanLamArtifact ? '' : `
+                        extraMarkup: `
                             <span class="pill-visual__wing-artifact pill-visual__wing-artifact--left"></span>
                             <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
                         `
