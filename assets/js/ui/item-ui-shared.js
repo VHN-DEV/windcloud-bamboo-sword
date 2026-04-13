@@ -185,6 +185,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const isPhongLoiArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'PHONG_LOI_SI';
     const isChuongThienBinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CHUONG_THIEN_BINH';
     const isHuyetSacArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'HUYET_SAC_PHI_PHONG';
+    const isCanLamArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CAN_LAM_BANG_DIEM';
     const isThanhTrucSwordArtifact = item.category === 'SWORD_ARTIFACT';
     const isFormationSecretArt = item.category === 'SWORD_ART'
         && (item.uniqueKey === 'DAI_CANH_KIEM_TRAN' || uniqueConfig?.visualStyle === 'formation');
@@ -262,7 +263,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
                     ? buildItemImageVisualMarkup(artifactConfig.imagePath, {
                         coreClass: 'pill-visual__core--artifact',
                         imageClass: 'pill-visual__item-icon--artifact',
-                        extraMarkup: `
+                        extraMarkup: isCanLamArtifact ? '' : `
                             <span class="pill-visual__wing-artifact pill-visual__wing-artifact--left"></span>
                             <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
                         `
