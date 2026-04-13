@@ -337,6 +337,13 @@ function init() {
 
 function resetRunState() {
     Input.isGameOver = false;
+    Input.isVoidCollapsed = false;
+    Input.temporaryAscensionOrigin = null;
+    if (Input.voidCollapseTimeoutId) {
+        clearTimeout(Input.voidCollapseTimeoutId);
+        Input.voidCollapseTimeoutId = null;
+    }
+    Input.setSpecialAura?.(null);
     Input.syncDerivedStats();
     Input.hp = Input.maxHp;
     Input.renderHealthUI();

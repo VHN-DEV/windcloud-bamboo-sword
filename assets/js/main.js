@@ -588,6 +588,11 @@ const Input = {
         this.renderManaUI();
         this.renderRageUI();
         showNotify('Tẫn Đạo Diệt Nguyên Đan phản phệ: thân thể tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
+
+        this.isGameOver = true;
+        if (typeof window !== 'undefined' && typeof window.__onPlayerGameOver === 'function') {
+            window.__onPlayerGameOver('Tẫn Đạo Diệt Nguyên Đan phản phệ');
+        }
     },
 
     applyTanDaoDietNguyenDan(item, qualityConfig) {
@@ -6134,9 +6139,6 @@ const Input = {
         });
 
         Object.entries(CONFIG.SECRET_ARTS || {}).forEach(([uniqueKey, artConfig]) => {
-            if (uniqueKey === 'CAN_LAM_BANG_DIEM' && CONFIG.ARTIFACTS?.CAN_LAM_BANG_DIEM) {
-                return;
-            }
             items.push({
                 id: `SECRET_ART:${uniqueKey}`,
                 kind: 'UNIQUE',

@@ -886,7 +886,7 @@ const CONFIG = {
                 fullName: "Tẫn Đạo Diệt Nguyên Đan",
                 quality: "SUPREME",
                 auraMode: "void",
-                durationMs: 10000, // Thời gian tồn tại của hiệu ứng sau khi sử dụng
+                durationMs: 60000, // Thời gian tồn tại của hiệu ứng sau khi sử dụng (1 phút)
                 color: "#231130",
                 radius: 8,
                 buyPriceLowStone: 4444444
@@ -914,13 +914,14 @@ const CONFIG = {
             visualStyle: "formation"
         },
         CAN_LAM_BANG_DIEM: {
-            fullName: "Càn Lam Băng Diễm",
+            fullName: "Càn Lam Dẫn Hỏa Quyết",
             quality: "SUPREME",
             color: "#79d9ff",
             buyPriceLowStone: 1000000,
             buttonLabel: "Mua",
             inventoryActionLabel: "Luyện hóa",
-            imagePath: IMAGE_PATHS.ARTIFACTS.CAN_LAM_BANG_DIEM
+            imagePath: IMAGE_PATHS.ARTIFACTS.CAN_LAM_BANG_DIEM,
+            description: "Dẫn hỏa tâm quyết dùng để khai mở linh hỏa Càn Lam. Lĩnh ngộ xong mới có thể luyện hóa pháp bảo Càn Lam Băng Diễm."
         }
     },
     ARTIFACTS: {
