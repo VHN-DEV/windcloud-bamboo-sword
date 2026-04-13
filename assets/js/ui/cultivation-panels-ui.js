@@ -357,9 +357,8 @@ InsectBookUI = {
             return `
                 <article class="insect-book-card ${discovered ? 'is-discovered' : 'is-locked'}" style="${buildInsectBookStyleVars(species)}">
                     <div class="insect-book-card__image-wrap">
-                        ${buildInsectArtMarkup(speciesKey)}
+                        ${buildInsectArtMarkup(speciesKey, { useRealImage: discovered })}
                         <span class="insect-book-card__tier">${escapeHtml(tier.label)}</span>
-                        ${discovered ? '' : '<span class="insect-book-card__veil">Chưa thu thập</span>'}
                     </div>
                     <div class="insect-book-card__body">
                         <h4>${escapeHtml(species.name)}</h4>

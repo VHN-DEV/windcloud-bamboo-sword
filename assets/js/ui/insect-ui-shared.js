@@ -233,10 +233,10 @@ function buildInsectImageMarkup(species, slug, { egg = false } = {}) {
     `;
 }
 
-function buildInsectArtMarkup(speciesKey, { egg = false } = {}) {
+function buildInsectArtMarkup(speciesKey, { egg = false, useRealImage = true } = {}) {
     const species = Input.getInsectSpecies(speciesKey) || {};
     const slug = getInsectVisualSlug(speciesKey);
-    if (species.imagePath) {
+    if (useRealImage && species.imagePath) {
         return buildInsectImageMarkup(species, slug, { egg });
     }
 
