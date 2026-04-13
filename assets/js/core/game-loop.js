@@ -417,7 +417,7 @@ function animate() {
     ctx.restore();
 
     enemies.forEach(e => e.draw(ctx, scaleFactor));
-    Input.updateIncomingEnemyAttacks(enemies, guardCenter.x, guardCenter.y);
+    Input.updateIncomingEnemyAttacks(enemies, guardCenter.x, guardCenter.y, dt);
     let nextPillIndex = 0;
     for (let i = 0; i < pills.length; i++) {
         const pill = pills[i];

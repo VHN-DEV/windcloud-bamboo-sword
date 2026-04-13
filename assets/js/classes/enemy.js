@@ -46,6 +46,8 @@ class Enemy {
             dodgeDisabledUntil: 0,
             shieldRecoveryBlockedUntil: 0
         };
+        this.attackPattern = null;
+        this.lastAttackAt = 0;
 
         // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
         const playerRank = Input.rankIndex || 0;
