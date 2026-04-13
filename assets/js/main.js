@@ -4513,6 +4513,8 @@ const Input = {
     applyCanLamImpact(target) {
         if (!target || target.hp <= 0) return false;
 
+        const effectSpawnVersion = Number(target.spawnVersion) || 0;
+
         target.applyMovementLock?.(1200);
         target.applySlow?.(3000, 0.08);
         target.suppressDodge?.(3000);
@@ -4523,6 +4525,7 @@ const Input = {
         for (let tick = 1; tick <= 3; tick++) {
             setTimeout(() => {
                 if (!target || target.hp <= 0) return;
+                if ((Number(target.spawnVersion) || 0) !== effectSpawnVersion) return;
                 const hpBefore = target.hp;
                 target.hit(dotSword);
                 if (hpBefore > 0 && target.hp <= 0) {

@@ -25,6 +25,8 @@ class Enemy {
     }
 
     respawn() {
+        this.spawnVersion = (this.spawnVersion || 0) + 1;
+
         const zoom = Camera.currentZoom;
         const visibleWidth = window.innerWidth / zoom;
         const visibleHeight = window.innerHeight / zoom;
@@ -46,6 +48,8 @@ class Enemy {
             dodgeDisabledUntil: 0,
             shieldRecoveryBlockedUntil: 0
         };
+        this.canLamFreezeUntil = 0;
+        this.canLamBurnUntil = 0;
         this.attackPattern = null;
         this.lastAttackAt = 0;
 
