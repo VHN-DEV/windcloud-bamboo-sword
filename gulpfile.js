@@ -18,6 +18,10 @@ gulp.task('build-css', function () {
 gulp.task('build-js', function () {
   return gulp.src([
     'assets/js/config.js',
+    'assets/js/core/shared-constants.js',
+    'assets/js/core/shared-utils.js',
+    'assets/js/core/runtime-globals.js',
+    'assets/js/core/gameplay-definitions.js',
     'assets/js/classes/enemy.js',
     'assets/js/classes/sword.js',
     'assets/js/classes/starField.js',
@@ -34,6 +38,8 @@ gulp.task('build-js', function () {
     'assets/js/ui/cultivation-panels-ui.js',
     'assets/js/game-progress.js',
     'assets/js/main.js',
+    'assets/js/core/input-and-sword-overrides.js',
+    'assets/js/core/game-loop.js',
     'assets/js/thunder-bamboo-system.js'
   ])
     .pipe(concat('scripts.js'))
