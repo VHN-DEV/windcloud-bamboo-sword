@@ -21,6 +21,7 @@ gulp.task('build-js', function () {
     'assets/js/core/shared-constants.js',
     'assets/js/core/shared-utils.js',
     'assets/js/core/runtime-globals.js',
+    'assets/js/core/gameplay-definitions.js',
     'assets/js/classes/enemy.js',
     'assets/js/classes/sword.js',
     'assets/js/classes/starField.js',
