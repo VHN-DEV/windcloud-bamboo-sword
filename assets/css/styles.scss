@@ -139,6 +139,53 @@ textarea {
     pointer-events: none;
 }
 
+.start-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 25% 20%, rgba(65, 136, 168, 0.35), rgba(3, 10, 16, 0.95));
+
+    &.is-visible {
+        display: flex;
+    }
+
+    .start-card {
+        width: min(92vw, 420px);
+        padding: 24px 22px;
+        border-radius: 18px;
+        border: 1px solid rgba(159, 232, 255, 0.28);
+        background: linear-gradient(180deg, rgba(10, 28, 42, 0.95), rgba(4, 14, 22, 0.96));
+        box-shadow: 0 24px 40px rgba(0, 0, 0, 0.3);
+        text-align: center;
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 24px;
+            color: #b9f3ff;
+        }
+
+        p {
+            margin: 0 0 18px;
+            color: #d5ebf6;
+            font-size: 14px;
+        }
+    }
+
+    #btn-start-game {
+        border: 1px solid rgba(183, 255, 224, 0.45);
+        background: linear-gradient(135deg, rgba(81, 217, 177, 0.35), rgba(45, 115, 214, 0.52));
+        color: #f0ffff;
+        border-radius: 999px;
+        padding: 10px 22px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+    }
+}
+
 // ====================================================================
 // 4. MANA SYSTEM UI
 // ====================================================================
@@ -191,6 +238,68 @@ textarea {
             text-shadow: 1px 1px 2px black;
             pointer-events: none;
             z-index: 10;
+        }
+    }
+
+    #health-bar-bg {
+        position: relative;
+        width: 100%;
+        height: 12px;
+        background: rgba(0, 0, 0, 0.62);
+        border: 2px solid #ff6b6b;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: border-color 0.3s, box-shadow 0.3s;
+
+        #health-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff4d57, #ff9f68);
+            transition: width 0.25s ease-out;
+            box-shadow: 0 0 14px rgba(255, 107, 107, 0.78);
+        }
+
+        #health-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+            pointer-events: none;
+            z-index: 10;
+        }
+    }
+
+    #negative-status-list {
+        min-height: 19px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        align-items: center;
+
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 2px 7px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #f5fbff;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, var(--status-color, #ff6b6b), rgba(12, 24, 34, 0.85));
+        }
+
+        .status-chip.is-empty {
+            opacity: 0.72;
+            font-weight: 500;
+            border-style: dashed;
+            background: rgba(84, 117, 138, 0.24);
         }
     }
 

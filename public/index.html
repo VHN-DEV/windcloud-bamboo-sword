@@ -16,6 +16,14 @@
 <body>
     <canvas id="c"></canvas>
 
+    <div id="start-overlay" class="start-overlay is-visible">
+        <div class="start-card">
+            <h1 id="start-title">Đại Canh Kiếm Trận</h1>
+            <p id="start-subtitle">Đạo tâm sơ ngộ, điểm Bắt đầu để nhập giới tu hành.</p>
+            <button id="btn-start-game" type="button">Bắt đầu</button>
+        </div>
+    </div>
+
     <div id="mana-container" class="game-ui">
         <div class="status-head">
             <button id="btn-profile" class="profile-avatar" type="button" aria-label="Mở hồ sơ kiếm tu">
@@ -25,11 +33,16 @@
 
             <div class="status-main">
                 <div id="cultivation-rank">Cảnh giới: Luyện khí sơ kỳ (Tầng 1)</div>
+                <div id="health-bar-bg">
+                    <div id="health-bar"></div>
+                    <div id="health-text">Sinh lực: 100/100</div>
+                </div>
 
                 <div id="mana-bar-bg">
                     <div id="mana-bar"></div>
                     <div id="mana-text">Linh lực: 100/100</div>
                 </div>
+                <div id="negative-status-list" aria-live="polite"></div>
             </div>
         </div>
     </div>

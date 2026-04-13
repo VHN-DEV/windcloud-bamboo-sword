@@ -231,6 +231,25 @@ let pills = [];
 const swords = [];
 let starField;
 const guardCenter = { x: width / 2, y: height / 2, vx: 0, vy: 0 };
+let gameInitialized = false;
+let gameStarted = false;
+
+const startOverlay = document.getElementById('start-overlay');
+const startTitle = document.getElementById('start-title');
+const startSubtitle = document.getElementById('start-subtitle');
+const startButton = document.getElementById('btn-start-game');
+
+function showStartOverlay(title, subtitle) {
+    if (startTitle && title) startTitle.textContent = title;
+    if (startSubtitle && subtitle) startSubtitle.textContent = subtitle;
+    document.body.classList.remove('game-native-cursor-hidden');
+    startOverlay?.classList.add('is-visible');
+}
+
+function hideStartOverlay() {
+    startOverlay?.classList.remove('is-visible');
+    document.body.classList.add('game-native-cursor-hidden');
+}
 
 function getConfiguredSwordCount() {
     return Math.max(1, parseInt(CONFIG.SWORD.COUNT, 10) || 1);
@@ -297,6 +316,8 @@ function init() {
     SettingsUI.init();
     GameProgress.init();
     Input.renderManaUI();
+    Input.renderHealthUI();
+    Input.renderNegativeStatusUI();
     Input.renderExpUI();
     Input.renderRageUI();
     if (ShopUI) ShopUI.init();
@@ -311,7 +332,49 @@ function init() {
     syncSwordFormation({ rebuildAll: true });
     updateSwordCounter(swords);
     GameProgress.requestSave();
+    gameInitialized = true;
 }
+
+function resetRunState() {
+    Input.isGameOver = false;
+    Input.isVoidCollapsed = false;
+    Input.temporaryAscensionOrigin = null;
+    if (Input.voidCollapseTimeoutId) {
+        clearTimeout(Input.voidCollapseTimeoutId);
+        Input.voidCollapseTimeoutId = null;
+    }
+    Input.setSpecialAura?.(null);
+    Input.syncDerivedStats();
+    Input.hp = Input.maxHp;
+    Input.renderHealthUI();
+    Input.clearNegativeStatuses();
+    Input.renderNegativeStatusUI();
+    const hostileProjectiles = typeof Input.ensureEnemyHostileProjectiles === 'function'
+        ? Input.ensureEnemyHostileProjectiles()
+        : null;
+    if (hostileProjectiles) hostileProjectiles.length = 0;
+    Input.resetAttackState();
+    pills = [];
+    visualParticles.length = 0;
+    enemies.forEach(enemy => enemy.respawn());
+    syncSwordFormation({ rebuildAll: true });
+}
+
+function startGame() {
+    if (!gameInitialized) {
+        init();
+    } else {
+        resetRunState();
+    }
+    gameStarted = true;
+    hideStartOverlay();
+}
+
+window.__onPlayerGameOver = () => {
+    showNotify('Đạo thể trọng thương, thiên địa hồi chuyển ngươi về trạng thái toàn thịnh.', '#ff9f9f');
+    resetRunState();
+    gameStarted = true;
+};
 
 document.addEventListener('fullscreenchange', () => Input.syncLandscapeMode());
 window.addEventListener('orientationchange', () => Input.syncLandscapeMode());
@@ -378,6 +441,11 @@ function renderCursor() {
 }
 
 function animate() {
+    if (!gameStarted) {
+        requestAnimationFrame(animate);
+        return;
+    }
+
     // 1. Tính Delta Time (dt) tính bằng giây
     const now = performance.now();
     const dt = (now - lastTime) / 1000;
@@ -415,6 +483,7 @@ function animate() {
     ctx.restore();
 
     enemies.forEach(e => e.draw(ctx, scaleFactor));
+    Input.updateIncomingEnemyAttacks(enemies, Input.x, Input.y, dt);
     let nextPillIndex = 0;
     for (let i = 0; i < pills.length; i++) {
         const pill = pills[i];
@@ -491,6 +560,9 @@ function animate() {
     let nextParticleIndex = 0;
     for (let i = 0; i < visualParticles.length; i++) {
         const p = visualParticles[i];
+        if (!p) {
+            continue;
+        }
         const friction = p.friction ?? 1;
         const nextVx = (p.vx || 0) * friction;
         const nextVy = ((p.vy || 0) + (p.gravity || 0)) * friction;
@@ -566,12 +638,22 @@ function animate() {
     ctx.globalAlpha = 1;
 
     ctx.restore();
+
     requestAnimationFrame(animate);
 }
 
 (async function boot() {
     await preloadEnemyIcons();
-    init();
+    if (startButton) {
+        startButton.addEventListener('click', () => startGame());
+    }
+
+    const hasSavedProgress = Boolean(localStorage.getItem(GameProgress.storageKey));
+    if (hasSavedProgress) {
+        startGame();
+    } else {
+        showStartOverlay('Đại Canh Kiếm Trận', 'Đạo tâm sơ ngộ, hãy điểm Bắt đầu để nhập giới tu hành.');
+    }
     animate();
 })();
 // <!-- Create By: Vũ Hoài Nam -->

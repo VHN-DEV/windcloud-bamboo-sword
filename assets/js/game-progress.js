@@ -254,6 +254,7 @@ const GameProgress = {
             rankIndex: Input.rankIndex,
             exp: Input.exp,
             mana: Input.mana,
+            hp: Input.hp,
             rage: Input.rage,
             inventory: Input.inventory,
             inventoryCapacity: Input.inventoryCapacity,
@@ -402,6 +403,9 @@ const GameProgress = {
             Input.rage = 0;
             Input.maxRage = Math.max(1, parseInt(CONFIG.ULTIMATE.MAX_RAGE, 10) || 100);
             Input.lastManaRegenTick = performance.now();
+            Input.syncVitalStats();
+            Input.hp = Input.maxHp;
+            Input.clearNegativeStatuses();
             Input.clearSpecialPillState();
             Input.activeEffects = [];
             Input.isUltMode = false;
@@ -494,6 +498,9 @@ const GameProgress = {
             Input.rage = Math.max(0, Number(parsed.rage) || 0);
             Input.maxRage = Math.max(1, parseInt(CONFIG.ULTIMATE.MAX_RAGE, 10) || 100);
             Input.lastManaRegenTick = performance.now();
+            Input.syncVitalStats();
+            Input.hp = Math.max(1, Math.min(Input.maxHp, Number(parsed.hp) || Input.maxHp));
+            Input.clearNegativeStatuses();
             Input.clearSpecialPillState();
             if (typeof parsed.specialAuraMode === 'string' && parsed.specialAuraMode) {
                 Input.setSpecialAura(parsed.specialAuraMode);
@@ -571,4 +578,3 @@ const GameProgress = {
         location.reload();
     }
 };
-

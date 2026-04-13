@@ -13,6 +13,18 @@ const Input = {
     isTouchDevice: IS_TOUCH_ENVIRONMENT,
     mana: CONFIG.MANA.START || 100,
     maxMana: CONFIG.MANA.MAX || 100,
+    hp: 100,
+    maxHp: 100,
+    isGameOver: false,
+    lastEnemyDamageAt: 0,
+    lastAilmentTickAt: performance.now(),
+    negativeStatuses: {
+        bleeding: { stacks: 0, until: 0 },
+        brokenBone: { stacks: 0, until: 0 },
+        blind: { stacks: 0, until: 0 },
+        poison: { stacks: 0, until: 0 },
+        qiBurn: { stacks: 0, until: 0 }
+    },
     lastManaRegenTick: performance.now(),
     initialPinchDist: 0,
     lastFrameTime: performance.now(),
@@ -576,6 +588,11 @@ const Input = {
         this.renderManaUI();
         this.renderRageUI();
         showNotify('Tẫn Đạo Diệt Nguyên Đan phản phệ: thân thể tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
+
+        this.isGameOver = true;
+        if (typeof window !== 'undefined' && typeof window.__onPlayerGameOver === 'function') {
+            window.__onPlayerGameOver('Tẫn Đạo Diệt Nguyên Đan phản phệ');
+        }
     },
 
     applyTanDaoDietNguyenDan(item, qualityConfig) {
@@ -940,6 +957,394 @@ const Input = {
         GameProgress.requestSave();
     },
 
+    syncVitalStats() {
+        const rank = this.getCurrentRank();
+        const nextMaxHp = Math.max(1, Math.round(rank?.hp || 100));
+        const prevMaxHp = this.maxHp;
+        this.maxHp = nextMaxHp;
+        if (!Number.isFinite(this.hp) || this.hp <= 0) {
+            this.hp = this.maxHp;
+        } else if (this.hp > this.maxHp || prevMaxHp !== this.maxHp) {
+            this.hp = Math.min(this.hp, this.maxHp);
+        }
+        this.renderHealthUI();
+    },
+
+    renderHealthUI() {
+        const bar = document.getElementById('health-bar');
+        const text = document.getElementById('health-text');
+        if (bar && text) {
+            const percentage = getSafeProgressPercent(this.hp, this.maxHp);
+            bar.style.width = `${percentage}%`;
+            text.innerText = `Sinh lực: ${formatNumber(this.hp)}/${formatNumber(this.maxHp)}`;
+        }
+    },
+
+    renderNegativeStatusUI() {
+        const wrap = document.getElementById('negative-status-list');
+        if (!wrap) return;
+        const statusCfg = this.getNegativeStatusConfig();
+        const now = performance.now();
+        const active = Object.entries(this.negativeStatuses || {}).filter(([key, state]) => {
+            return state && state.stacks > 0 && now < (state.until || 0) && statusCfg[key];
+        });
+
+        if (!active.length) {
+            wrap.innerHTML = '<span class="status-chip is-empty">Trạng thái: ổn định</span>';
+            return;
+        }
+
+        wrap.innerHTML = active.map(([key, state]) => {
+            const cfg = statusCfg[key];
+            const remain = Math.max(0, (state.until - now) / 1000);
+            return `<span class="status-chip" style="--status-color:${cfg.color}" title="${cfg.description}">${cfg.label} x${state.stacks} (${remain.toFixed(1)}s)</span>`;
+        }).join('');
+    },
+
+    updateHealth(amount, source = '') {
+        if (this.isVoidCollapsed || this.isGameOver) return;
+        this.hp = Math.max(0, Math.min(this.maxHp, this.hp + amount));
+        this.renderHealthUI();
+        if (this.hp <= 0) {
+            this.hp = 0;
+            this.isGameOver = true;
+            this.resetAttackState();
+            this.clearSingleSwordUltimateState?.();
+            this.clearNegativeStatuses();
+            this.renderHealthUI();
+            if (typeof window !== 'undefined' && typeof window.__onPlayerGameOver === 'function') {
+                window.__onPlayerGameOver(source || 'tà lực');
+            }
+            this.renderNegativeStatusUI();
+        }
+    },
+
+    clearNegativeStatuses() {
+        const now = performance.now();
+        Object.keys(this.negativeStatuses || {}).forEach(key => {
+            this.negativeStatuses[key] = { stacks: 0, until: now };
+        });
+    },
+
+    cleanseNegativeStatusStacks(stackBudget = 1) {
+        let remaining = Math.max(0, Math.floor(stackBudget || 0));
+        if (remaining <= 0) return 0;
+        let removed = 0;
+        const order = ['bleeding', 'poison', 'qiBurn', 'brokenBone', 'blind'];
+
+        order.forEach(key => {
+            if (remaining <= 0) return;
+            const state = this.negativeStatuses?.[key];
+            if (!state || state.stacks <= 0) return;
+            const reduce = Math.min(state.stacks, remaining);
+            state.stacks -= reduce;
+            if (state.stacks <= 0) state.until = performance.now();
+            remaining -= reduce;
+            removed += reduce;
+        });
+
+        this.renderNegativeStatusUI();
+        return removed;
+    },
+
+    consumePurificationPill(item, qualityConfig) {
+        const manaRestore = qualityConfig.manaRestore || 0;
+        const quality = String(item?.quality || '').toUpperCase();
+        const cleanseByQuality = {
+            LOW: 1,
+            MEDIUM: 2,
+            HIGH: 4,
+            SUPREME: 99
+        };
+
+        this.updateMana(manaRestore);
+        const removed = quality === 'SUPREME'
+            ? (this.clearNegativeStatuses(), 99)
+            : this.cleanseNegativeStatusStacks(cleanseByQuality[quality] || 1);
+
+        showNotify(
+            `Dùng ${this.getItemDisplayName(item)}: hồi ${Math.round(manaRestore)} linh lực${removed > 0 ? `, tịnh hóa ${removed >= 99 ? 'toàn bộ' : removed} trạng thái xấu` : ''}`,
+            qualityConfig.color
+        );
+    },
+
+    consumeRegenPill(item, qualityConfig) {
+        this.bonusStats.manaRegenPct += qualityConfig.manaRegenPct || 0;
+        const quality = String(item?.quality || '').toUpperCase();
+        const buffScaleByQuality = { LOW: 0.04, MEDIUM: 0.07, HIGH: 0.1, SUPREME: 0.14 };
+        const durationByQuality = { LOW: 6500, MEDIUM: 9000, HIGH: 12000, SUPREME: 15000 };
+        const cleanseByQuality = { LOW: 0, MEDIUM: 1, HIGH: 2, SUPREME: 4 };
+        const buffScale = buffScaleByQuality[quality] || 0.05;
+
+        this.activeEffects.push({
+            key: `REGEN_AEGIS_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            group: 'REGEN_AEGIS',
+            name: 'Thanh Tâm Hộ Thể',
+            expiresAt: performance.now() + (durationByQuality[quality] || 7000),
+            attackPct: buffScale * 0.55,
+            speedPct: buffScale,
+            maxManaFlat: 0,
+            auraMode: 'calm',
+            endColor: qualityConfig.color
+        });
+
+        const removed = this.cleanseNegativeStatusStacks(cleanseByQuality[quality] || 0);
+        showNotify(
+            `Dùng ${this.getItemDisplayName(item)}: +${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% hồi linh, nhận Thanh Tâm Hộ Thể${removed > 0 ? `, xóa ${removed} trạng thái xấu` : ''}`,
+            qualityConfig.color
+        );
+        this.syncDerivedStats();
+    },
+
+    getNegativeStatusConfig() {
+        return {
+            bleeding: { label: 'Xuất huyết', color: '#ff4d57', description: 'Mất máu theo thời gian', chance: 0.2, durationMs: 7800, maxStacks: 4 },
+            brokenBone: { label: 'Gãy xương', color: '#ff9f5d', description: 'Thân pháp bị chậm mạnh', chance: 0.16, durationMs: 6500, maxStacks: 3 },
+            blind: { label: 'Mù', color: '#4fb4ff', description: 'Đòn đánh dễ trượt hơn', chance: 0.14, durationMs: 5200, maxStacks: 3 },
+            poison: { label: 'Kịch độc', color: '#53d676', description: 'Ăn mòn máu và linh lực', chance: 0.12, durationMs: 7200, maxStacks: 4 },
+            qiBurn: { label: 'Nhiễu linh', color: '#58e0ff', description: 'Thiêu đốt linh lực', chance: 0.1, durationMs: 6000, maxStacks: 3 }
+        };
+    },
+
+    tryApplyRandomNegativeStatus(baseChance = 0.2) {
+        const cfg = this.getNegativeStatusConfig();
+        const keys = Object.keys(cfg);
+        if (!keys.length || Math.random() > baseChance) return false;
+        const totalWeight = keys.reduce((acc, key) => acc + Math.max(0.01, cfg[key].chance || 0.1), 0);
+        let cursor = Math.random() * totalWeight;
+        let chosen = keys[0];
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            cursor -= Math.max(0.01, cfg[key].chance || 0.1);
+            if (cursor <= 0) {
+                chosen = key;
+                break;
+            }
+        }
+
+        const state = this.negativeStatuses[chosen] || { stacks: 0, until: 0 };
+        const status = cfg[chosen];
+        state.stacks = Math.min(status.maxStacks || 3, (state.stacks || 0) + 1);
+        state.until = performance.now() + (status.durationMs || 5000);
+        this.negativeStatuses[chosen] = state;
+        this.renderNegativeStatusUI();
+        return true;
+    },
+
+    updateNegativeStatuses(dt) {
+        const now = performance.now();
+        if (now - (this.lastAilmentTickAt || 0) < 180) return;
+        this.lastAilmentTickAt = now;
+        const elapsed = Math.max(0.08, dt || 0.1);
+        const status = this.negativeStatuses || {};
+
+        const bleedingStacks = (status.bleeding?.until > now) ? (status.bleeding.stacks || 0) : 0;
+        const poisonStacks = (status.poison?.until > now) ? (status.poison.stacks || 0) : 0;
+        const qiBurnStacks = (status.qiBurn?.until > now) ? (status.qiBurn.stacks || 0) : 0;
+
+        if (bleedingStacks > 0) {
+            this.updateHealth(-(this.maxHp * 0.0024 * bleedingStacks * elapsed), 'xuất huyết');
+        }
+        if (poisonStacks > 0) {
+            this.updateHealth(-(this.maxHp * 0.0018 * poisonStacks * elapsed), 'kịch độc');
+            this.updateMana(-(this.maxMana * 0.001 * poisonStacks * elapsed));
+        }
+        if (qiBurnStacks > 0) {
+            this.updateMana(-(this.maxMana * 0.0023 * qiBurnStacks * elapsed));
+        }
+
+        Object.keys(status).forEach(key => {
+            if ((status[key]?.until || 0) <= now && (status[key]?.stacks || 0) > 0) {
+                status[key].stacks = 0;
+            }
+        });
+        this.renderNegativeStatusUI();
+    },
+
+    getBlindMissChance() {
+        const state = this.negativeStatuses?.blind;
+        if (!state || state.stacks <= 0 || performance.now() >= (state.until || 0)) return 0;
+        return Math.min(0.75, 0.2 * state.stacks);
+    },
+
+    ensureEnemyHostileProjectiles() {
+        if (!Array.isArray(this.enemyHostileProjectiles)) {
+            this.enemyHostileProjectiles = [];
+        }
+        return this.enemyHostileProjectiles;
+    },
+
+    getEnemyAttackPattern(enemy) {
+        if (enemy?.attackPattern) return enemy.attackPattern;
+        const patterns = ['CHARGE', 'BITE', 'CLAW', 'ORB', 'BEAM', 'ARC_MISSILE', 'SPIKE_RING'];
+        const rankId = Number(enemy?.rankData?.id) || 1;
+        enemy.attackPattern = patterns[(rankId + Math.floor((enemy?.floatOffset || 0) * 0.01)) % patterns.length];
+        return enemy.attackPattern;
+    },
+
+    inflictEnemyAttackDamage(amount, ailmentChance = 0.2, source = 'đòn đánh của yêu thú') {
+        const safeDamage = Math.max(0, Number(amount) || 0);
+        if (safeDamage <= 0) return;
+        this.lastEnemyDamageAt = performance.now();
+        this.updateHealth(-safeDamage, source);
+        this.tryApplyRandomNegativeStatus(ailmentChance);
+    },
+
+    castEnemyProjectile(enemy, targetX, targetY, options = {}) {
+        const projectiles = this.ensureEnemyHostileProjectiles();
+        const startX = enemy.x || targetX;
+        const startY = enemy.y || targetY;
+        const angle = Math.atan2(targetY - startY, targetX - startX);
+        const speed = Math.max(120, Number(options.speed) || 220);
+        projectiles.push({
+            type: options.type || 'orb',
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: Math.max(0.4, Number(options.life) || 2.4),
+            radius: Math.max(3, Number(options.radius) || 8),
+            color: options.color || enemy.rankData?.lightColor || '#8ee7ff',
+            damage: Math.max(1, Number(options.damage) || Math.max(1, (enemy.damage || 1) * 0.85)),
+            homing: Boolean(options.homing),
+            arc: Number(options.arc) || 0,
+            ownerId: enemy.floatOffset || 0
+        });
+    },
+
+    updateEnemyHostileProjectiles(dt, centerX, centerY) {
+        const projectiles = this.ensureEnemyHostileProjectiles();
+        if (!projectiles.length) return;
+        const elapsed = Math.max(0.016, dt || 0.016);
+        let writeIndex = 0;
+
+        for (let i = 0; i < projectiles.length; i++) {
+            const shot = projectiles[i];
+            shot.life -= elapsed;
+            if (shot.life <= 0) continue;
+
+            if (shot.homing) {
+                const homingAngle = Math.atan2(centerY - shot.y, centerX - shot.x);
+                const targetVx = Math.cos(homingAngle) * Math.hypot(shot.vx, shot.vy);
+                const targetVy = Math.sin(homingAngle) * Math.hypot(shot.vx, shot.vy);
+                shot.vx += (targetVx - shot.vx) * Math.min(0.12, elapsed * 0.6);
+                shot.vy += (targetVy - shot.vy) * Math.min(0.12, elapsed * 0.6);
+            }
+
+            if (shot.arc !== 0) {
+                const turn = Math.sin((performance.now() * 0.002) + shot.ownerId) * shot.arc;
+                const cos = Math.cos(turn * elapsed);
+                const sin = Math.sin(turn * elapsed);
+                const nextVx = shot.vx * cos - shot.vy * sin;
+                const nextVy = shot.vx * sin + shot.vy * cos;
+                shot.vx = nextVx;
+                shot.vy = nextVy;
+            }
+
+            shot.x += shot.vx * elapsed;
+            shot.y += shot.vy * elapsed;
+
+            const hitDistance = Math.hypot(shot.x - centerX, shot.y - centerY);
+            if (hitDistance <= Math.max(12, shot.radius + 6)) {
+                this.inflictEnemyAttackDamage(shot.damage, 0.28, 'phi đạn tà lực');
+                continue;
+            }
+
+            visualParticles.push({
+                x: shot.x,
+                y: shot.y,
+                vx: 0,
+                vy: 0,
+                life: 0.35,
+                decay: 0.07,
+                size: Math.max(1.8, shot.radius * 0.35),
+                color: shot.color,
+                glow: shot.color
+            });
+
+            projectiles[writeIndex++] = shot;
+        }
+
+        projectiles.length = writeIndex;
+    },
+
+    updateIncomingEnemyAttacks(enemies, centerX, centerY, dt = 0.016) {
+        if (!Array.isArray(enemies) || this.isVoidCollapsed) return;
+        const now = performance.now();
+        const contactRadius = Math.max(20, (CONFIG.ENEMY?.CONTACT_RADIUS || 44) * (Camera.currentZoom || 1));
+
+        for (let i = 0; i < enemies.length; i++) {
+            const enemy = enemies[i];
+            if (!enemy || enemy.hp <= 0) continue;
+            const baseDamage = Math.max(1, Number(enemy.damage) || Number(enemy.rankData?.damage) || 1);
+            const dist = Math.hypot((enemy.x || 0) - centerX, (enemy.y || 0) - centerY);
+            const retaliating = now < (enemy.retaliateUntil || 0);
+            const triggerRange = contactRadius * (retaliating ? 4.2 : 2.8);
+            if (dist > triggerRange) continue;
+
+            const attackPattern = this.getEnemyAttackPattern(enemy);
+            const attackCooldown = enemy.isElite ? 820 : 1050;
+            if (now - (enemy.lastAttackAt || 0) < attackCooldown) continue;
+            enemy.lastAttackAt = now;
+
+            switch (attackPattern) {
+                case 'CHARGE':
+                    if (dist <= contactRadius * 1.4) {
+                        this.inflictEnemyAttackDamage(baseDamage * 1.2, 0.24, 'lao húc');
+                    }
+                    break;
+                case 'BITE':
+                    if (dist <= contactRadius * 1.15) {
+                        this.inflictEnemyAttackDamage(baseDamage * 1.35, 0.34, 'cắn xé');
+                    }
+                    break;
+                case 'CLAW':
+                    if (dist <= contactRadius * 1.3) {
+                        this.inflictEnemyAttackDamage(baseDamage, 0.3, 'cào cấu');
+                        if (Math.random() < 0.55) {
+                            this.inflictEnemyAttackDamage(baseDamage * 0.48, 0.2, 'liên trảo');
+                        }
+                    }
+                    break;
+                case 'ORB':
+                    this.castEnemyProjectile(enemy, centerX, centerY, { type: 'orb', speed: 240, radius: 9, damage: baseDamage * 0.95, color: '#8fd8ff' });
+                    break;
+                case 'BEAM': {
+                    const beamRange = contactRadius * 4.8;
+                    if (dist <= beamRange) {
+                        this.inflictEnemyAttackDamage(baseDamage * 1.12, 0.22, 'tia năng lượng');
+                    }
+                    break;
+                }
+                case 'ARC_MISSILE':
+                    this.castEnemyProjectile(enemy, centerX, centerY, { type: 'arc', speed: 210, radius: 7, damage: baseDamage * 0.82, arc: 2.4, homing: true, color: '#ffc670' });
+                    break;
+                case 'SPIKE_RING': {
+                    const burstCount = enemy.isElite ? 8 : 6;
+                    for (let spike = 0; spike < burstCount; spike++) {
+                        const angle = (Math.PI * 2 * spike) / burstCount;
+                        this.castEnemyProjectile(enemy, centerX + Math.cos(angle) * 110, centerY + Math.sin(angle) * 110, {
+                            type: 'needle',
+                            speed: 265,
+                            radius: 5,
+                            damage: baseDamage * 0.68,
+                            arc: 1.2,
+                            color: '#ff9fb2'
+                        });
+                    }
+                    break;
+                }
+                default:
+                    if (dist <= contactRadius * 1.2) {
+                        this.inflictEnemyAttackDamage(baseDamage, 0.2, 'công kích trực diện');
+                    }
+                    break;
+            }
+        }
+
+        this.updateEnemyHostileProjectiles(dt, centerX, centerY);
+    },
+
     triggerManaShake() {
         const el = document.getElementById('mana-container');
         el.classList.remove('mana-shake', 'mana-empty-error');
@@ -1169,8 +1574,7 @@ const Input = {
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round(qualityConfig.rageGain || 0)} nộ`, qualityConfig.color);
                 break;
             case 'MANA':
-                this.updateMana(qualityConfig.manaRestore || 0);
-                showNotify(`Dùng ${this.getItemDisplayName(item)}: hồi ${Math.round(qualityConfig.manaRestore || 0)} linh lực`, qualityConfig.color);
+                this.consumePurificationPill(item, qualityConfig);
                 break;
             case 'MAX_MANA':
                 this.bonusStats.maxManaFlat += qualityConfig.maxManaFlat || 0;
@@ -1179,8 +1583,7 @@ const Input = {
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round(qualityConfig.maxManaFlat || 0)} giới hạn linh lực`, qualityConfig.color);
                 break;
             case 'REGEN':
-                this.bonusStats.manaRegenPct += qualityConfig.manaRegenPct || 0;
-                showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% hồi linh`, qualityConfig.color);
+                this.consumeRegenPill(item, qualityConfig);
                 break;
             case 'SPEED':
                 this.bonusStats.speedPct += qualityConfig.speedPct || 0;
@@ -1344,8 +1747,7 @@ const Input = {
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round(qualityConfig.rageGain || 0)} nộ`, qualityConfig.color);
                 break;
             case 'MANA':
-                this.updateMana(qualityConfig.manaRestore || 0);
-                showNotify(`Dùng ${this.getItemDisplayName(item)}: hồi ${Math.round(qualityConfig.manaRestore || 0)} linh lực`, qualityConfig.color);
+                this.consumePurificationPill(item, qualityConfig);
                 break;
             case 'MAX_MANA':
                 this.bonusStats.maxManaFlat += qualityConfig.maxManaFlat || 0;
@@ -1354,8 +1756,7 @@ const Input = {
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round(qualityConfig.maxManaFlat || 0)} giới hạn linh lực`, qualityConfig.color);
                 break;
             case 'REGEN':
-                this.bonusStats.manaRegenPct += qualityConfig.manaRegenPct || 0;
-                showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% hồi linh`, qualityConfig.color);
+                this.consumeRegenPill(item, qualityConfig);
                 break;
             case 'SPEED':
                 this.bonusStats.speedPct += qualityConfig.speedPct || 0;
@@ -1696,6 +2097,7 @@ const Input = {
         if ((prevMaxMana !== this.maxMana || prevMana !== this.mana) && typeof document !== 'undefined') {
             this.renderManaUI();
         }
+        this.syncVitalStats();
     },
 
     updateActiveEffects() {
@@ -1760,7 +2162,13 @@ const Input = {
     },
 
     getMovementSpeedMultiplier() {
-        return Math.max(0.35, this.getSpeedMultiplier() + this.getArtifactMovementSpeedBonusPct());
+        const base = this.getSpeedMultiplier() + this.getArtifactMovementSpeedBonusPct();
+        const broken = this.negativeStatuses?.brokenBone;
+        if (broken && broken.stacks > 0 && performance.now() < (broken.until || 0)) {
+            const penalty = Math.min(0.72, broken.stacks * 0.2);
+            return Math.max(0.12, base * (1 - penalty));
+        }
+        return Math.max(0.35, base);
     },
 
     ensureHuyetSacPhiPhongTrail() {
@@ -5414,7 +5822,7 @@ const Input = {
                 }
                 return SWORD_UI_TEXT.secretArtDescription(formatNumber(getConfiguredSwordCount()));
             case 'FLAME_ART':
-                return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiện hóa thành lam diễm.';
+                return 'Pháp bảo Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiện hóa thành lam diễm.';
             case 'ARTIFACT':
                 return qualityConfig.description || 'Pháp bảo hộ thân sau khi luyện hóa có thể khai triển quanh tâm ấn trong Bảng Bí Pháp.';
             case 'INSECT_SKILL':
@@ -5451,11 +5859,11 @@ const Input = {
             case 'RAGE':
                 return `Tăng ngay ${Math.round(qualityConfig.rageGain || 0)} nộ tuyệt kỹ.`;
             case 'MANA':
-                return `Hồi ngay ${Math.round(qualityConfig.manaRestore || 0)} linh lực.`;
+                return `Hồi ngay ${Math.round(qualityConfig.manaRestore || 0)} linh lực, đồng thời tịnh hóa một phần trạng thái xấu (phẩm càng cao tịnh hóa càng mạnh).`;
             case 'MAX_MANA':
                 return `Tăng vĩnh viễn ${Math.round(qualityConfig.maxManaFlat || 0)} giới hạn linh lực.`;
             case 'REGEN':
-                return `Tăng vĩnh viễn ${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% tốc độ hồi linh lực.`;
+                return `Tăng vĩnh viễn ${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% tốc độ hồi linh lực và kích hoạt Thanh Tâm Hộ Thể tạm thời (cường hóa thân pháp, có thể xóa trạng thái xấu).`;
             case 'SPEED':
                 return `Tăng vĩnh viễn ${Math.round((qualityConfig.speedPct || 0) * 100)}% tốc độ vận chuyển kiếm trận.`;
             case 'FORTUNE':
@@ -5498,7 +5906,7 @@ const Input = {
             SPIRIT_BAG: 'Linh thú Đại',
             ARTIFACT: 'Pháp bảo',
             SWORD_ART: 'Kiếm đạo bí pháp',
-            FLAME_ART: 'Thiên địa linh hỏa',
+            FLAME_ART: 'Pháp bảo',
             INSECT_SKILL: 'Trùng đạo bí pháp',
             INSECT_ARTIFACT: 'Kỳ trùng bảo vật',
             INSECT_EGG: 'Trứng noãn'
@@ -5547,7 +5955,7 @@ const Input = {
             case 'SWORD_ART':
                 return 'Kiếm đạo bí pháp chỉ truyền một lần. Sau khi lĩnh ngộ mới từ một thanh bản mệnh kiếm hóa thành Đại Canh Kiếm Trận như hiện tại.';
             case 'FLAME_ART':
-                return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiển hóa thành lam diễm, trước đó chỉ là một điểm sáng nhỏ.';
+                return 'Pháp bảo Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiển hóa thành lam diễm, trước đó chỉ là một điểm sáng nhỏ.';
             case 'ARTIFACT':
                 return qualityConfig.description || 'Pháp bảo hộ thân sau khi luyện hóa có thể khai triển quanh tâm ấn trong Bảng Bí Pháp.';
             case 'INSECT_SKILL':
@@ -5584,11 +5992,11 @@ const Input = {
             case 'RAGE':
                 return `Tăng ngay ${Math.round(qualityConfig.rageGain || 0)} nộ tuyệt kỹ.`;
             case 'MANA':
-                return `Hồi ngay ${Math.round(qualityConfig.manaRestore || 0)} linh lực.`;
+                return `Hồi ngay ${Math.round(qualityConfig.manaRestore || 0)} linh lực, đồng thời tịnh hóa một phần trạng thái xấu (phẩm càng cao tịnh hóa càng mạnh).`;
             case 'MAX_MANA':
                 return `Tăng vĩnh viễn ${Math.round(qualityConfig.maxManaFlat || 0)} giới hạn linh lực.`;
             case 'REGEN':
-                return `Tăng vĩnh viễn ${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% tốc độ hồi linh lực.`;
+                return `Tăng vĩnh viễn ${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% tốc độ hồi linh lực và kích hoạt Thanh Tâm Hộ Thể tạm thời (cường hóa thân pháp, có thể xóa trạng thái xấu).`;
             case 'SPEED':
                 return `Tăng vĩnh viễn ${Math.round((qualityConfig.speedPct || 0) * 100)}% tốc độ vận chuyển kiếm trận.`;
             case 'FORTUNE':
@@ -5731,6 +6139,7 @@ const Input = {
         });
 
         Object.entries(CONFIG.SECRET_ARTS || {}).forEach(([uniqueKey, artConfig]) => {
+            if (uniqueKey === 'CAN_LAM_BANG_DIEM') return;
             items.push({
                 id: `SECRET_ART:${uniqueKey}`,
                 kind: 'UNIQUE',
@@ -6246,8 +6655,7 @@ const Input = {
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round(qualityConfig.rageGain || 0)} nộ`, qualityConfig.color);
                 break;
             case 'MANA':
-                this.updateMana(qualityConfig.manaRestore || 0);
-                showNotify(`Dùng ${this.getItemDisplayName(item)}: hồi ${Math.round(qualityConfig.manaRestore || 0)} linh lực`, qualityConfig.color);
+                this.consumePurificationPill(item, qualityConfig);
                 break;
             case 'MAX_MANA':
                 this.bonusStats.maxManaFlat += qualityConfig.maxManaFlat || 0;
@@ -6256,8 +6664,7 @@ const Input = {
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round(qualityConfig.maxManaFlat || 0)} giới hạn linh lực`, qualityConfig.color);
                 break;
             case 'REGEN':
-                this.bonusStats.manaRegenPct += qualityConfig.manaRegenPct || 0;
-                showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round((qualityConfig.manaRegenPct || 0) * 100)}% hồi linh`, qualityConfig.color);
+                this.consumeRegenPill(item, qualityConfig);
                 break;
             case 'SPEED':
                 this.bonusStats.speedPct += qualityConfig.speedPct || 0;
@@ -6422,6 +6829,13 @@ const Input = {
         this.updateActiveEffects();
         this.updateSingleSwordUltimateChargeState();
 
+        if (this.isGameOver) {
+            this.resetAttackState();
+            this.stopMoveJoystick();
+            this.stopTouchCursor();
+            return;
+        }
+
         if (this.isVoidCollapsed) {
             this.resetAttackState();
             this.clearSingleSwordUltimateState();
@@ -6461,6 +6875,7 @@ const Input = {
 
         // Gọi hàm xử lý tiêu hao mana
         this.processActiveConsumption(dt);
+        this.updateNegativeStatuses(dt);
     },
 
     handleMove(e) {

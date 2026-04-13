@@ -46,6 +46,8 @@ class Enemy {
             dodgeDisabledUntil: 0,
             shieldRecoveryBlockedUntil: 0
         };
+        this.attackPattern = null;
+        this.lastAttackAt = 0;
 
         // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
         const playerRank = Input.rankIndex || 0;
@@ -94,6 +96,7 @@ class Enemy {
 
         // 3. THIẾT LẬP CHỈ SỐ SINH TỒN
         const baseRankHp = this.rankData.hp || 1000;
+        this.damage = Math.max(1, Number(this.rankData.damage) || 1);
         const eliteMult = this.isElite ? 4.0 : 1.0;
         this.maxHp = Math.floor(baseRankHp * (1 + Math.random() * 0.05) * eliteMult);
         this.hp = this.maxHp;
@@ -219,6 +222,15 @@ class Enemy {
         const now = Date.now();
         const effectNow = performance.now();
         const dodgeSuppressed = effectNow < (this.controlEffects?.dodgeDisabledUntil || 0) || Boolean(sword?.ignoreDodge);
+        const blindMissChance = Input?.getBlindMissChance ? Input.getBlindMissChance() : 0;
+
+        if (blindMissChance > 0 && Math.random() < blindMissChance) {
+            if (now - (this.lastNotifyTime || 0) > CONFIG.ENEMY.NOTIFY_COOLDOWN_MS) {
+                showNotify("Mù loà: kiếm chiêu lệch hướng!", "#6ec5ff");
+                this.lastNotifyTime = now;
+            }
+            return "missed";
+        }
 
         // --- 1. LOGIC NÉ TRÁNH THEO % VÀ CHÊNH LỆCH CẢNH GIỚI ---
         // Tỉ lệ cơ bản (ví dụ 10%) + Tinh anh (15%) + Mỗi cấp chênh lệch (5%)
@@ -267,6 +279,8 @@ class Enemy {
         }
 
         this.lastHitTime = Date.now(); 
+        this.retaliateUntil = performance.now() + 1800;
+        this.lastRetaliateAt = performance.now();
 
         // --- 4. XỬ LÝ KHIÊN ---
         if (this.hasShield && this.shieldHp > 0) {
