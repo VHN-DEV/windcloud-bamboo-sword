@@ -5822,7 +5822,7 @@ const Input = {
                 }
                 return SWORD_UI_TEXT.secretArtDescription(formatNumber(getConfiguredSwordCount()));
             case 'FLAME_ART':
-                return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiện hóa thành lam diễm.';
+                return 'Pháp bảo Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiện hóa thành lam diễm.';
             case 'ARTIFACT':
                 return qualityConfig.description || 'Pháp bảo hộ thân sau khi luyện hóa có thể khai triển quanh tâm ấn trong Bảng Bí Pháp.';
             case 'INSECT_SKILL':
@@ -5906,7 +5906,7 @@ const Input = {
             SPIRIT_BAG: 'Linh thú Đại',
             ARTIFACT: 'Pháp bảo',
             SWORD_ART: 'Kiếm đạo bí pháp',
-            FLAME_ART: 'Thiên địa linh hỏa',
+            FLAME_ART: 'Pháp bảo',
             INSECT_SKILL: 'Trùng đạo bí pháp',
             INSECT_ARTIFACT: 'Kỳ trùng bảo vật',
             INSECT_EGG: 'Trứng noãn'
@@ -5955,7 +5955,7 @@ const Input = {
             case 'SWORD_ART':
                 return 'Kiếm đạo bí pháp chỉ truyền một lần. Sau khi lĩnh ngộ mới từ một thanh bản mệnh kiếm hóa thành Đại Canh Kiếm Trận như hiện tại.';
             case 'FLAME_ART':
-                return 'Thiên địa linh hỏa Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiển hóa thành lam diễm, trước đó chỉ là một điểm sáng nhỏ.';
+                return 'Pháp bảo Càn Lam Băng Diễm. Sau khi luyện hóa, con trỏ tâm niệm mới hiển hóa thành lam diễm, trước đó chỉ là một điểm sáng nhỏ.';
             case 'ARTIFACT':
                 return qualityConfig.description || 'Pháp bảo hộ thân sau khi luyện hóa có thể khai triển quanh tâm ấn trong Bảng Bí Pháp.';
             case 'INSECT_SKILL':
@@ -6139,6 +6139,7 @@ const Input = {
         });
 
         Object.entries(CONFIG.SECRET_ARTS || {}).forEach(([uniqueKey, artConfig]) => {
+            if (uniqueKey === 'CAN_LAM_BANG_DIEM') return;
             items.push({
                 id: `SECRET_ART:${uniqueKey}`,
                 kind: 'UNIQUE',

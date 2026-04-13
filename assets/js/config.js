@@ -912,16 +912,6 @@ const CONFIG = {
             inventoryActionLabel: "Lĩnh ngộ",
             description: "Trận đạo bí pháp lấy Thanh Trúc Phong Vân Kiếm làm trận cơ. Chỉ sau khi lĩnh ngộ và gom đủ kiếm khí mới có thể bày trận hộ thân, trấn sát bốn phương.",
             visualStyle: "formation"
-        },
-        CAN_LAM_BANG_DIEM: {
-            fullName: "Càn Lam Dẫn Hỏa Quyết",
-            quality: "SUPREME",
-            color: "#79d9ff",
-            buyPriceLowStone: 1000000,
-            buttonLabel: "Mua",
-            inventoryActionLabel: "Luyện hóa",
-            imagePath: IMAGE_PATHS.ARTIFACTS.CAN_LAM_BANG_DIEM,
-            description: "Dẫn hỏa tâm quyết dùng để khai mở linh hỏa Càn Lam. Lĩnh ngộ xong mới có thể luyện hóa pháp bảo Càn Lam Băng Diễm."
         }
     },
     ARTIFACTS: {
@@ -1010,7 +1000,7 @@ const CONFIG = {
             castSkill: {
                 MANA_COST: 22 // Linh lực tiêu hao mỗi lần thi triển
             },
-            description: "Thiên địa linh hỏa lam sắc, sau khi luyện hóa có thể triển khai lên tâm niệm. Khi triển khai, con trỏ hóa lam diễm và có thể chủ động thi triển truy kích."
+            description: "Pháp bảo lam sắc, sau khi luyện hóa có thể triển khai lên tâm niệm. Khi triển khai, con trỏ hóa lam diễm và có thể chủ động thi triển truy kích."
         }
     },
     INSECT: {
