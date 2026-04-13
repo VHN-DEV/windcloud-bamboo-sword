@@ -221,6 +221,8 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         ? buildChuongThienBinhVisualMarkup()
         : isCanLamFlameArt && uniqueConfig?.imagePath
         ? buildStaticArtifactImageVisualMarkup(uniqueConfig.imagePath, 'is-can-lam')
+        : isCanLamArtifact && artifactConfig?.imagePath
+        ? buildStaticArtifactImageVisualMarkup(artifactConfig.imagePath, 'is-can-lam')
         : isHuyetSacArtifact && artifactConfig?.imagePath
         ? buildStaticArtifactImageVisualMarkup(artifactConfig.imagePath, 'is-huyet-sac')
         : isThanhTrucSwordArtifact
