@@ -69,6 +69,7 @@ const Input = {
         PHONG_LOI_SI: false,
         HUYET_SAC_PHI_PHONG: false
     },
+    enemyMeleeStrikes: [],
     canLamProjectiles: [],
     singleSwordUltimateProjectiles: [],
     singleSwordUltimateState: {
@@ -1174,6 +1175,18 @@ const Input = {
         return this.enemyHostileProjectiles;
     },
 
+    ensureEnemyMeleeStrikes() {
+        if (!Array.isArray(this.enemyMeleeStrikes)) {
+            this.enemyMeleeStrikes = [];
+        }
+        return this.enemyMeleeStrikes;
+    },
+
+    getCursorCoreHitRadius() {
+        const cursorConfig = CONFIG.CURSOR || {};
+        return Math.max(3, (cursorConfig.BASE_DOT_RADIUS || 3.2) + 1.1);
+    },
+
     getEnemyAttackPattern(enemy) {
         if (enemy?.attackPattern) return enemy.attackPattern;
         const patterns = ['CHARGE', 'BITE', 'CLAW', 'ORB', 'BEAM', 'ARC_MISSILE', 'SPIKE_RING'];
@@ -1188,6 +1201,90 @@ const Input = {
         this.lastEnemyDamageAt = performance.now();
         this.updateHealth(-safeDamage, source);
         this.tryApplyRandomNegativeStatus(ailmentChance);
+
+        const burstCount = 6;
+        for (let i = 0; i < burstCount; i++) {
+            const angle = (Math.PI * 2 * i) / burstCount + random(-0.2, 0.2);
+            const speed = random(1.2, 3.2);
+            visualParticles.push({
+                type: 'spark',
+                x: this.x,
+                y: this.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: random(1.4, 2.6),
+                life: 0.52,
+                decay: random(0.045, 0.07),
+                color: '#ff8e8e',
+                glow: 8
+            });
+        }
+    },
+
+    queueEnemyMeleeStrike(enemy, pattern, centerX, centerY, options = {}) {
+        if (!enemy) return;
+        const strikes = this.ensureEnemyMeleeStrikes();
+        const fromX = Number(enemy.x) || centerX;
+        const fromY = Number(enemy.y) || centerY;
+        const toX = centerX;
+        const toY = centerY;
+        strikes.push({
+            type: pattern,
+            enemyRef: enemy,
+            startedAt: performance.now(),
+            durationMs: Math.max(120, Number(options.durationMs) || (pattern === 'CHARGE' ? 220 : 180)),
+            fromX,
+            fromY,
+            toX,
+            toY,
+            x: fromX,
+            y: fromY,
+            damage: Math.max(1, Number(options.damage) || 1),
+            ailmentChance: Math.max(0, Number(options.ailmentChance) || 0.2),
+            source: options.source || 'cận chiến yêu thú',
+            hasDamaged: false
+        });
+    },
+
+    updateEnemyMeleeStrikes(centerX, centerY) {
+        const strikes = this.ensureEnemyMeleeStrikes();
+        if (!strikes.length) return;
+        const now = performance.now();
+        const coreRadius = this.getCursorCoreHitRadius();
+        let writeIndex = 0;
+
+        for (let i = 0; i < strikes.length; i++) {
+            const strike = strikes[i];
+            const progress = clampNumber((now - strike.startedAt) / Math.max(1, strike.durationMs), 0, 1);
+            const jumpArc = strike.type === 'BITE' ? (Math.sin(progress * Math.PI) * 34) : 0;
+            const dx = strike.toX - strike.fromX;
+            const dy = strike.toY - strike.fromY;
+            const dist = Math.max(1, Math.hypot(dx, dy));
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            strike.x = strike.fromX + (dx * progress) - (ny * jumpArc);
+            strike.y = strike.fromY + (dy * progress) + (nx * jumpArc);
+
+            if (strike.enemyRef?.hp > 0) {
+                strike.enemyRef.x = strike.x;
+                strike.enemyRef.y = strike.y;
+            }
+
+            if (!strike.hasDamaged) {
+                const touchDistance = Math.hypot((centerX || 0) - strike.x, (centerY || 0) - strike.y);
+                if (touchDistance <= coreRadius) {
+                    this.inflictEnemyAttackDamage(strike.damage, strike.ailmentChance, strike.source);
+                    strike.hasDamaged = true;
+                }
+            }
+
+            if (progress < 1) {
+                strikes[writeIndex++] = strike;
+            }
+        }
+
+        strikes.length = writeIndex;
     },
 
     castEnemyProjectile(enemy, targetX, targetY, options = {}) {
@@ -1245,7 +1342,7 @@ const Input = {
             shot.y += shot.vy * elapsed;
 
             const hitDistance = Math.hypot(shot.x - centerX, shot.y - centerY);
-            if (hitDistance <= Math.max(12, shot.radius + 6)) {
+            if (hitDistance <= this.getCursorCoreHitRadius()) {
                 this.inflictEnemyAttackDamage(shot.damage, 0.28, 'phi đạn tà lực');
                 continue;
             }
@@ -1289,20 +1386,40 @@ const Input = {
 
             switch (attackPattern) {
                 case 'CHARGE':
-                    if (dist <= contactRadius * 1.4) {
-                        this.inflictEnemyAttackDamage(baseDamage * 1.2, 0.24, 'lao húc');
+                    if (dist <= contactRadius * 1.8) {
+                        this.queueEnemyMeleeStrike(enemy, 'CHARGE', centerX, centerY, {
+                            durationMs: enemy.isElite ? 180 : 240,
+                            damage: baseDamage * 1.2,
+                            ailmentChance: 0.24,
+                            source: 'lao húc'
+                        });
                     }
                     break;
                 case 'BITE':
-                    if (dist <= contactRadius * 1.15) {
-                        this.inflictEnemyAttackDamage(baseDamage * 1.35, 0.34, 'cắn xé');
+                    if (dist <= contactRadius * 1.6) {
+                        this.queueEnemyMeleeStrike(enemy, 'BITE', centerX, centerY, {
+                            durationMs: enemy.isElite ? 130 : 170,
+                            damage: baseDamage * 1.35,
+                            ailmentChance: 0.34,
+                            source: 'cắn xé'
+                        });
                     }
                     break;
                 case 'CLAW':
-                    if (dist <= contactRadius * 1.3) {
-                        this.inflictEnemyAttackDamage(baseDamage, 0.3, 'cào cấu');
+                    if (dist <= contactRadius * 1.45) {
+                        this.queueEnemyMeleeStrike(enemy, 'CLAW', centerX, centerY, {
+                            durationMs: enemy.isElite ? 160 : 210,
+                            damage: baseDamage,
+                            ailmentChance: 0.3,
+                            source: 'cào cấu'
+                        });
                         if (Math.random() < 0.55) {
-                            this.inflictEnemyAttackDamage(baseDamage * 0.48, 0.2, 'liên trảo');
+                            this.queueEnemyMeleeStrike(enemy, 'CLAW', centerX, centerY, {
+                                durationMs: enemy.isElite ? 190 : 250,
+                                damage: baseDamage * 0.48,
+                                ailmentChance: 0.2,
+                                source: 'liên trảo'
+                            });
                         }
                     }
                     break;
@@ -1343,6 +1460,7 @@ const Input = {
         }
 
         this.updateEnemyHostileProjectiles(dt, centerX, centerY);
+        this.updateEnemyMeleeStrikes(centerX, centerY);
     },
 
     triggerManaShake() {
@@ -4614,6 +4732,71 @@ const Input = {
         });
 
         this.canLamProjectiles = alive;
+    },
+
+    drawEnemyMeleeStrikes(ctx, scaleFactor) {
+        const strikes = this.ensureEnemyMeleeStrikes();
+        if (!strikes.length) return;
+        const now = performance.now();
+
+        strikes.forEach(strike => {
+            const progress = clampNumber((now - strike.startedAt) / Math.max(1, strike.durationMs), 0, 1);
+            const alpha = Math.max(0, 1 - (progress * 0.82));
+            const dx = strike.toX - strike.fromX;
+            const dy = strike.toY - strike.fromY;
+            const angle = Math.atan2(dy, dx || 0.0001);
+
+            if (strike.type === 'CHARGE') {
+                const length = Math.max(24, Math.hypot(dx, dy) * 0.46) * (1 - (progress * 0.35));
+                const trailGradient = ctx.createLinearGradient(
+                    strike.x - Math.cos(angle) * length,
+                    strike.y - Math.sin(angle) * length,
+                    strike.x,
+                    strike.y
+                );
+                trailGradient.addColorStop(0, `rgba(126, 231, 255, ${0})`);
+                trailGradient.addColorStop(0.4, `rgba(126, 231, 255, ${0.24 * alpha})`);
+                trailGradient.addColorStop(1, `rgba(255, 255, 255, ${0.86 * alpha})`);
+
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = trailGradient;
+                ctx.lineWidth = Math.max(1.3, 5.8 * scaleFactor);
+                ctx.beginPath();
+                ctx.moveTo(strike.x - Math.cos(angle) * length, strike.y - Math.sin(angle) * length);
+                ctx.lineTo(strike.x, strike.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (strike.type === 'BITE') {
+                const jawSpread = (0.46 - (progress * 0.26)) * Math.PI;
+                const jawRadius = Math.max(8, 16 * scaleFactor);
+                const jawAlpha = 0.18 + (0.55 * alpha);
+
+                ctx.save();
+                ctx.translate(strike.x, strike.y);
+                ctx.rotate(angle);
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.fillStyle = `rgba(255, 244, 244, ${jawAlpha})`;
+                ctx.shadowBlur = 10 * scaleFactor;
+                ctx.shadowColor = 'rgba(255, 227, 227, 0.72)';
+
+                ctx.beginPath();
+                ctx.arc(0, 0, jawRadius, -jawSpread, -0.08, false);
+                ctx.lineTo(0, 0);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, 0, jawRadius, 0.08, jawSpread, false);
+                ctx.lineTo(0, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        });
     },
 
     createCanLamDissolveBurst(x, y) {
@@ -8878,6 +9061,36 @@ const Input = {
         }
 
         this.drawPhongLoiArtifact(ctx, scaleFactor);
+        this.drawCursorDamageFeedback(ctx, scaleFactor);
+    },
+
+    drawCursorDamageFeedback(ctx, scaleFactor) {
+        const elapsed = performance.now() - (this.lastEnemyDamageAt || 0);
+        if (elapsed > 340) return;
+        const t = clampNumber(elapsed / 340, 0, 1);
+        const pulse = 1 - t;
+        const radius = (14 + (12 * t)) * scaleFactor;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(255, 118, 118, ${0.82 * pulse})`;
+        ctx.lineWidth = Math.max(1.2, 2.8 * scaleFactor * pulse);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        for (let i = 0; i < 5; i++) {
+            const angle = (Math.PI * 2 * i) / 5 + (t * 0.45);
+            const innerR = (4 + (2 * i * 0.2)) * scaleFactor;
+            const outerR = (9 + (12 * pulse)) * scaleFactor;
+            ctx.beginPath();
+            ctx.moveTo(this.x + Math.cos(angle) * innerR, this.y + Math.sin(angle) * innerR);
+            ctx.lineTo(this.x + Math.cos(angle) * outerR, this.y + Math.sin(angle) * outerR);
+            ctx.strokeStyle = `rgba(255, 208, 208, ${0.68 * pulse})`;
+            ctx.lineWidth = Math.max(0.8, 1.4 * scaleFactor * pulse);
+            ctx.stroke();
+        }
+        ctx.restore();
     },
 
     drawHuyetSacPhiPhongCloak(ctx, scaleFactor) {
