@@ -39,7 +39,12 @@ gulp.task('build-js', function () {
     'assets/js/game-progress.js',
     'assets/js/input/input-state.js',
     'assets/js/main.js',
-    'assets/js/main-input-methods.js',
+    'assets/js/input/input-methods-part1.js',
+    'assets/js/input/input-methods-part2.js',
+    'assets/js/input/input-methods-part3.js',
+    'assets/js/input/input-methods-part4.js',
+    'assets/js/input/input-methods-part5.js',
+    'assets/js/input/input-methods-part6.js',
     'assets/js/core/input-and-sword-overrides.js',
     'assets/js/core/game-loop.js',
     'assets/js/thunder-bamboo-system.js'
