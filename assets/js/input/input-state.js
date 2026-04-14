@@ -31,10 +31,7 @@ const INPUT_INITIAL_STATE = {
     exp: 0,
     rankIndex: 0, // Vị trí hiện tại trong mảng RANKS
     inventory: {},
-    inventoryCapacity: Math.max(
-        parseInt(CONFIG.ITEMS.INVENTORY_BASE_CAPACITY, 10) || 0,
-        parseInt(CONFIG.ITEMS.INVENTORY_MIN_SLOTS, 10) || 16
-    ),
+    inventoryCapacity: getDefaultInventoryCapacity(),
     spiritStones: getStartingSpiritStoneCounts(),
     playerName: 'Thanh Trúc Kiếm Chủ',
     playerAvatarInitials: 'TT',
@@ -43,31 +40,11 @@ const INPUT_INITIAL_STATE = {
     attackMode: 'BASE',
     selectedInventoryTab: 'items',
     selectedBeastBagTab: 'all',
-    uniquePurchases: {
-        THANH_LINH_KIEM_QUYET: false,
-        DAI_CANH_KIEM_TRAN: false,
-        CAN_LAM_BANG_DIEM: false,
-        CHUONG_THIEN_BINH: false,
-        KHU_TRUNG_THUAT: false,
-        PHONG_LOI_SI: false,
-        HUYET_SAC_PHI_PHONG: false,
-        KY_TRUNG_BANG: false,
-        LINH_THU_DAI: false,
-        THAT_SAC_TRU_VAT_NANG: false,
-        THAT_SAC_LINH_THU_DAI: false
-    },
-    cultivationArts: {
-        THANH_LINH_KIEM_QUYET: false,
-        DAI_CANH_KIEM_TRAN: false,
-        CAN_LAM_BANG_DIEM: false,
-        KHU_TRUNG_THUAT: false,
-        PHONG_LOI_SI: false,
-        HUYET_SAC_PHI_PHONG: false
-    },
+    uniquePurchases: getDefaultUniquePurchases(),
+    cultivationArts: getDefaultCultivationArts(),
     activeArtifacts: {
         CAN_LAM_BANG_DIEM: false,
-        PHONG_LOI_SI: false,
-        HUYET_SAC_PHI_PHONG: false
+        ...getDefaultActiveArtifacts()
     },
     enemyMeleeStrikes: [],
     canLamProjectiles: [],
@@ -81,18 +58,7 @@ const INPUT_INITIAL_STATE = {
         chargeRatio: 0,
         maxChargeMs: 1200
     },
-    phongLoiBlink: {
-        enabled: false,
-        accumulatedDistance: 0,
-        lastBlinkAt: 0,
-        lastFailAt: 0,
-        lastMoveVectorX: 0,
-        lastMoveVectorY: 0,
-        charging: null,
-        transiting: null,
-        trails: [],
-        afterimages: []
-    },
+    phongLoiBlink: getDefaultPhongLoiBlinkState(),
     insectEggs: {},
     tamedInsects: {},
     insectColonies: {},
@@ -102,12 +68,9 @@ const INPUT_INITIAL_STATE = {
     insectHabitats: {},
     insectHabitatCapacities: {},
     beastFoodStorage: {},
-    beastBagCapacity: Math.max(1, parseInt(CONFIG.INSECT?.STARTING_BEAST_BAG_CAPACITY, 10) || 6),
+    beastBagCapacity: getDefaultBeastBagCapacity(),
     beastBagCapacityMigrated: false,
-    beastCare: {
-        lastTickAt: performance.now(),
-        lastAlertAt: 0
-    },
+    beastCare: getDefaultBeastCareState(),
     insectCombat: {
         lastHitAt: 0,
         visuals: [],
@@ -133,15 +96,7 @@ const INPUT_INITIAL_STATE = {
     landscapeMode: {
         lastRequestAt: 0
     },
-    bonusStats: {
-        attackPct: 0,
-        maxManaFlat: 0,
-        speedPct: 0,
-        expGainPct: 0,
-        manaRegenPct: 0,
-        shieldBreakPct: 0,
-        dropRatePct: 0
-    },
+    bonusStats: getDefaultBonusStats(),
     activeEffects: [],
     breakthroughBonus: 0,
     isReadyToBreak: false, // Thêm biến trạng thái này
