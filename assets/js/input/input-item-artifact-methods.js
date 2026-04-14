@@ -4360,53 +4360,127 @@ Object.assign(Input, {
         ctx.scale(scaleFactor, scaleFactor);
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        ctx.strokeStyle = withAlpha(secondaryColor, 0.36);
-        ctx.fillStyle = withAlpha(primaryColor, 0.03 + (ratio * 0.02));
-        ctx.shadowBlur = 6 * scaleFactor;
-        ctx.shadowColor = withAlpha(auraColor, 0.22);
-        ctx.lineWidth = 1.3;
 
+        const bodyGradient = ctx.createLinearGradient(0, -30, 0, 30);
+        bodyGradient.addColorStop(0, withAlpha(secondaryColor, 0.22 + (ratio * 0.06)));
+        bodyGradient.addColorStop(0.45, withAlpha(primaryColor, 0.16 + (ratio * 0.04)));
+        bodyGradient.addColorStop(1, withAlpha(auraColor, 0.08 + (ratio * 0.03)));
+
+        // Thân đỉnh (lư đỉnh cổ 3 chân)
+        ctx.fillStyle = bodyGradient;
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.5);
+        ctx.lineWidth = 1.2;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = withAlpha(auraColor, 0.34);
         ctx.beginPath();
-        ctx.moveTo(-14, -20);
-        ctx.quadraticCurveTo(-24, -10, -22, 8);
-        ctx.quadraticCurveTo(-18, 24, 0, 26);
-        ctx.quadraticCurveTo(18, 24, 22, 8);
-        ctx.quadraticCurveTo(24, -10, 14, -20);
-        ctx.lineTo(9, -20);
-        ctx.lineTo(9, -9);
-        ctx.lineTo(-9, -9);
-        ctx.lineTo(-9, -20);
+        ctx.moveTo(-16.8, -12.5);
+        ctx.bezierCurveTo(-23.4, -9.6, -25.8, 1.4, -22.8, 12.2);
+        ctx.bezierCurveTo(-20.8, 19.4, -13.4, 25.6, 0, 26.6);
+        ctx.bezierCurveTo(13.4, 25.6, 20.8, 19.4, 22.8, 12.2);
+        ctx.bezierCurveTo(25.8, 1.4, 23.4, -9.6, 16.8, -12.5);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
+        // Nắp đỉnh
+        ctx.fillStyle = withAlpha(secondaryColor, 0.18 + (ratio * 0.05));
+        ctx.strokeStyle = withAlpha('#ffffff', 0.36);
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(-6.5, -20);
-        ctx.lineTo(-6.5, -8.5);
-        ctx.moveTo(6.5, -20);
-        ctx.lineTo(6.5, -8.5);
-        ctx.moveTo(-10.5, -8.5);
-        ctx.lineTo(10.5, -8.5);
-        ctx.strokeStyle = withAlpha('#ffffff', 0.26);
-        ctx.lineWidth = 0.9;
+        ctx.ellipse(0, -14.6, 12.8, 4.2, 0, 0, Math.PI * 2);
+        ctx.fill();
         ctx.stroke();
 
-        const crackCount = Math.min(7, 2 + Math.floor(crackLevel * 8));
+        // Quai đỉnh hai bên
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.42);
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(-16.5, -7.6);
+        ctx.quadraticCurveTo(-24.8, -6.8, -21.8, 1.8);
+        ctx.moveTo(16.5, -7.6);
+        ctx.quadraticCurveTo(24.8, -6.8, 21.8, 1.8);
+        ctx.stroke();
+
+        // Núm trên nắp
+        ctx.fillStyle = withAlpha('#ffffff', 0.38);
+        ctx.beginPath();
+        ctx.arc(0, -19.8, 1.9, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ba chân đỉnh
+        const legLight = withAlpha(secondaryColor, 0.44);
+        const legShade = withAlpha(primaryColor, 0.22);
+        const drawLeg = (x, spread = 1) => {
+            ctx.fillStyle = legShade;
+            ctx.strokeStyle = legLight;
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.moveTo(x - (1.4 * spread), 23.3);
+            ctx.quadraticCurveTo(x - (2.3 * spread), 29, x - (0.8 * spread), 31.8);
+            ctx.lineTo(x + (0.8 * spread), 31.8);
+            ctx.quadraticCurveTo(x + (2.3 * spread), 29, x + (1.4 * spread), 23.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        };
+        drawLeg(-8.8, 1);
+        drawLeg(0, 1.14);
+        drawLeg(8.8, 1);
+
+        // Đai thân đỉnh
+        ctx.strokeStyle = withAlpha('#ffffff', 0.28);
+        ctx.lineWidth = 0.85;
+        ctx.beginPath();
+        ctx.ellipse(0, -2.6, 15.8, 6.2, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(0, 8.8, 14.8, 5.4, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Hiệu ứng nứt vỡ - tập trung từ thân ra ngoài, có nhánh phụ mềm hơn
+        const crackCount = Math.min(12, 3 + Math.floor(crackLevel * 11));
+        ctx.strokeStyle = withAlpha('#f7fdff', 0.06 + (crackLevel * 0.3));
         for (let i = 0; i < crackCount; i++) {
             const t = (i + 1) / (crackCount + 1);
-            const angle = (-Math.PI * 0.75) + (t * Math.PI * 1.5);
-            const innerR = 7 + (Math.sin((i * 2.1) + pulse) * 1.8);
-            const outerR = 22 + (Math.cos((i * 1.6) + pulse) * 2.8);
-            const sx = Math.cos(angle) * innerR;
-            const sy = Math.sin(angle) * innerR * 0.9;
-            const ex = Math.cos(angle + 0.22) * outerR;
-            const ey = Math.sin(angle + 0.22) * outerR * 0.9;
+            const angle = (-Math.PI * 0.82) + (t * Math.PI * 1.64) + (Math.sin((pulse * 2.2) + i) * 0.05);
+            const startR = 3.4 + (Math.sin((i * 0.93) + pulse) * 1.4);
+            const midR = 10.6 + (Math.cos((i * 1.11) + pulse) * 2.2);
+            const endR = 19.2 + (Math.sin((i * 1.49) + pulse) * 2.8);
+
+            const sx = Math.cos(angle) * startR;
+            const sy = Math.sin(angle) * startR * 0.88;
+            const mx = Math.cos(angle + 0.08) * midR;
+            const my = Math.sin(angle + 0.08) * midR * 0.9;
+            const ex = Math.cos(angle + 0.16) * endR;
+            const ey = Math.sin(angle + 0.16) * endR * 0.92;
+
+            ctx.lineWidth = 0.34 + (crackLevel * 0.34);
             ctx.beginPath();
             ctx.moveTo(sx, sy);
-            ctx.lineTo((sx + ex) * 0.56, (sy + ey) * 0.56);
+            ctx.lineTo(mx, my);
             ctx.lineTo(ex, ey);
-            ctx.strokeStyle = withAlpha('#f6fdff', 0.05 + (crackLevel * 0.24));
-            ctx.lineWidth = 0.36 + (crackLevel * 0.28);
+            ctx.stroke();
+
+            if (crackLevel > 0.24 && i % 2 === 0) {
+                const branchLen = 2.5 + (crackLevel * 5.2);
+                const branchAngle = angle + ((i % 4 === 0) ? -0.62 : 0.58);
+                ctx.lineWidth = 0.28 + (crackLevel * 0.22);
+                ctx.beginPath();
+                ctx.moveTo(mx, my);
+                ctx.lineTo(
+                    mx + (Math.cos(branchAngle) * branchLen),
+                    my + (Math.sin(branchAngle) * branchLen)
+                );
+                ctx.stroke();
+            }
+        }
+
+        // Ánh nhịp theo mức khiên giúp đỉnh "sống" hơn
+        if (ratio > 0.08) {
+            ctx.strokeStyle = withAlpha('#ffffff', 0.09 + (ratio * 0.12));
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.ellipse(0, -6.2, 10.8 + (pulse * 1.1), 3 + (pulse * 0.3), 0, 0, Math.PI * 2);
             ctx.stroke();
         }
 
