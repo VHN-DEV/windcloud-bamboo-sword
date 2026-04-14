@@ -1200,7 +1200,7 @@ Object.assign(Input, {
 
     castEnemyProjectile(enemy, targetX, targetY, options = {}) {
         const projectiles = this.ensureEnemyHostileProjectiles();
-        const maxProjectiles = Math.max(40, Number(CONFIG.ENEMY?.MAX_HOSTILE_PROJECTILES) || 220);
+        const maxProjectiles = Math.max(40, Number(CONFIG.ENEMY?.MAX_HOSTILE_PROJECTILES) || 260);
         if (projectiles.length >= maxProjectiles) {
             projectiles.shift();
         }
@@ -1208,8 +1208,18 @@ Object.assign(Input, {
         const startY = enemy.y || targetY;
         const angle = Math.atan2(targetY - startY, targetX - startX);
         const speed = Math.max(120, Number(options.speed) || 220);
+        const shotType = options.type || 'orb';
+        const trailTimingByType = {
+            orb: 40,
+            arc: 52,
+            needle: 62
+        };
+        const trailEveryMs = Math.max(
+            30,
+            Number(options.trailEveryMs) || trailTimingByType[shotType] || 48
+        );
         projectiles.push({
-            type: options.type || 'orb',
+            type: shotType,
             x: startX,
             y: startY,
             vx: Math.cos(angle) * speed,
@@ -1221,7 +1231,8 @@ Object.assign(Input, {
             homing: Boolean(options.homing),
             arc: Number(options.arc) || 0,
             ownerId: enemy.floatOffset || 0,
-            trailEveryMs: Math.max(30, Number(options.trailEveryMs) || 70),
+            trailEveryMs,
+            trailSizeMult: Math.max(0.7, Number(options.trailSizeMult) || 1),
             nextTrailAt: performance.now()
         });
     },
@@ -1266,18 +1277,34 @@ Object.assign(Input, {
 
             const trailNow = performance.now();
             if (trailNow >= (shot.nextTrailAt || 0)) {
-                trimVisualParticles(320);
+                trimVisualParticles(360);
+                const baseSize = Math.max(1.9, shot.radius * 0.34 * (shot.trailSizeMult || 1));
                 visualParticles.push({
                     x: shot.x,
                     y: shot.y,
-                    vx: 0,
-                    vy: 0,
-                    life: 0.35,
-                    decay: 0.07,
-                    size: Math.max(1.8, shot.radius * 0.35),
+                    vx: (shot.vx || 0) * 0.02,
+                    vy: (shot.vy || 0) * 0.02,
+                    life: 0.42,
+                    decay: 0.064,
+                    size: baseSize,
                     color: shot.color,
                     glow: shot.color
                 });
+                if (Math.random() < 0.48) {
+                    const offsetAngle = Math.atan2(shot.vy || 0, shot.vx || 0) + random(-0.8, 0.8);
+                    const sparkSpeed = random(0.22, 0.62);
+                    visualParticles.push({
+                        x: shot.x,
+                        y: shot.y,
+                        vx: Math.cos(offsetAngle) * sparkSpeed,
+                        vy: Math.sin(offsetAngle) * sparkSpeed,
+                        life: 0.28,
+                        decay: 0.082,
+                        size: baseSize * random(0.45, 0.7),
+                        color: '#f8fdff',
+                        glow: shot.color
+                    });
+                }
                 shot.nextTrailAt = trailNow + (shot.trailEveryMs || 70);
             }
 
