@@ -1243,6 +1243,9 @@ const Input = {
             ailmentChance: Math.max(0, Number(options.ailmentChance) || 0.2),
             source: options.source || 'cận chiến yêu thú',
             hasDamaged: false,
+            canMultiTickDamage: pattern === 'BITE',
+            damageTickEveryMs: Math.max(180, Number(options.damageTickEveryMs) || 420),
+            nextDamageTickAt: 0,
             latchUntil: 0,
             latchDurationMs: Math.max(600, Number(options.latchDurationMs) || 1800),
             latchOffsetX: random(-4, 4),
@@ -1259,6 +1262,10 @@ const Input = {
 
         for (let i = 0; i < strikes.length; i++) {
             const strike = strikes[i];
+            if (strike.type === 'BITE' && strike.latchUntil <= now) {
+                strike.toX = centerX;
+                strike.toY = centerY;
+            }
             const progress = clampNumber((now - strike.startedAt) / Math.max(1, strike.durationMs), 0, 1);
             const jumpArc = strike.type === 'BITE' ? (Math.sin(progress * Math.PI) * 34) : 0;
             const dx = strike.toX - strike.fromX;
@@ -1287,7 +1294,15 @@ const Input = {
                     strike.hasDamaged = true;
                     if (strike.type === 'BITE') {
                         strike.latchUntil = now + strike.latchDurationMs;
+                        strike.nextDamageTickAt = now + strike.damageTickEveryMs;
                     }
+                }
+            }
+
+            if (strike.type === 'BITE' && strike.latchUntil > now && strike.canMultiTickDamage && strike.hasDamaged) {
+                if (now >= (strike.nextDamageTickAt || 0)) {
+                    this.inflictEnemyAttackDamage(strike.damage * 0.28, Math.max(0.1, strike.ailmentChance * 0.45), 'cắn bám');
+                    strike.nextDamageTickAt = now + strike.damageTickEveryMs;
                 }
             }
 
@@ -1415,7 +1430,8 @@ const Input = {
                             damage: baseDamage * 1.35,
                             ailmentChance: 0.34,
                             source: 'cắn xé',
-                            latchDurationMs: enemy.isElite ? 2200 : 1700
+                            latchDurationMs: enemy.isElite ? 3200 : 2600,
+                            damageTickEveryMs: enemy.isElite ? 320 : 420
                         });
                     }
                     break;
