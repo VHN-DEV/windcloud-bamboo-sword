@@ -747,6 +747,13 @@ Object.assign(Input, {
     },
 
     updateMana(amount) {
+        const currentRank = this.getCurrentRank?.();
+        if (currentRank?.infiniteStats || this.rankIndex >= this.getMaxRankIndex()) {
+            this.maxMana = Number.POSITIVE_INFINITY;
+            this.mana = Number.POSITIVE_INFINITY;
+            this.renderManaUI();
+            return;
+        }
         this.mana = Math.max(0, Math.min(this.maxMana, this.mana + amount));
         this.renderManaUI();
     },
@@ -794,6 +801,12 @@ Object.assign(Input, {
 
     syncVitalStats() {
         const rank = this.getCurrentRank();
+        if (rank?.infiniteStats) {
+            this.maxHp = Number.POSITIVE_INFINITY;
+            this.hp = Number.POSITIVE_INFINITY;
+            this.renderHealthUI();
+            return;
+        }
         const nextMaxHp = Math.max(1, Math.round(rank?.hp || 100));
         const prevMaxHp = this.maxHp;
         this.maxHp = nextMaxHp;
@@ -838,6 +851,13 @@ Object.assign(Input, {
 
     updateHealth(amount, source = '') {
         if (this.isVoidCollapsed || this.isGameOver) return;
+        const currentRank = this.getCurrentRank?.();
+        if (currentRank?.infiniteStats || this.rankIndex >= this.getMaxRankIndex()) {
+            this.maxHp = Number.POSITIVE_INFINITY;
+            this.hp = Number.POSITIVE_INFINITY;
+            this.renderHealthUI();
+            return;
+        }
         this.hp = Math.max(0, Math.min(this.maxHp, this.hp + amount));
         this.renderHealthUI();
         if (this.hp <= 0) {
@@ -1072,6 +1092,10 @@ Object.assign(Input, {
     queueEnemyMeleeStrike(enemy, pattern, centerX, centerY, options = {}) {
         if (!enemy) return;
         const strikes = this.ensureEnemyMeleeStrikes();
+        const maxMeleeStrikes = Math.max(20, Number(CONFIG.ENEMY?.MAX_MELEE_STRIKES) || 120);
+        if (strikes.length >= maxMeleeStrikes) {
+            strikes.shift();
+        }
         const fromX = Number(enemy.x) || centerX;
         const fromY = Number(enemy.y) || centerY;
         const toX = centerX;
@@ -1176,6 +1200,10 @@ Object.assign(Input, {
 
     castEnemyProjectile(enemy, targetX, targetY, options = {}) {
         const projectiles = this.ensureEnemyHostileProjectiles();
+        const maxProjectiles = Math.max(40, Number(CONFIG.ENEMY?.MAX_HOSTILE_PROJECTILES) || 220);
+        if (projectiles.length >= maxProjectiles) {
+            projectiles.shift();
+        }
         const startX = enemy.x || targetX;
         const startY = enemy.y || targetY;
         const angle = Math.atan2(targetY - startY, targetX - startX);
@@ -1192,7 +1220,9 @@ Object.assign(Input, {
             damage: Math.max(1, Number(options.damage) || Math.max(1, (enemy.damage || 1) * 0.85)),
             homing: Boolean(options.homing),
             arc: Number(options.arc) || 0,
-            ownerId: enemy.floatOffset || 0
+            ownerId: enemy.floatOffset || 0,
+            trailEveryMs: Math.max(30, Number(options.trailEveryMs) || 70),
+            nextTrailAt: performance.now()
         });
     },
 
@@ -1234,17 +1264,22 @@ Object.assign(Input, {
                 continue;
             }
 
-            visualParticles.push({
-                x: shot.x,
-                y: shot.y,
-                vx: 0,
-                vy: 0,
-                life: 0.35,
-                decay: 0.07,
-                size: Math.max(1.8, shot.radius * 0.35),
-                color: shot.color,
-                glow: shot.color
-            });
+            const trailNow = performance.now();
+            if (trailNow >= (shot.nextTrailAt || 0)) {
+                trimVisualParticles(320);
+                visualParticles.push({
+                    x: shot.x,
+                    y: shot.y,
+                    vx: 0,
+                    vy: 0,
+                    life: 0.35,
+                    decay: 0.07,
+                    size: Math.max(1.8, shot.radius * 0.35),
+                    color: shot.color,
+                    glow: shot.color
+                });
+                shot.nextTrailAt = trailNow + (shot.trailEveryMs || 70);
+            }
 
             projectiles[writeIndex++] = shot;
         }
@@ -2092,6 +2127,15 @@ Object.assign(Input, {
 
     syncDerivedStats() {
         const rank = this.getCurrentRank();
+        if (rank?.infiniteStats) {
+            this.maxMana = Number.POSITIVE_INFINITY;
+            this.mana = Number.POSITIVE_INFINITY;
+            this.syncVitalStats();
+            if (typeof document !== 'undefined') {
+                this.renderManaUI();
+            }
+            return;
+        }
         const baseMaxMana = rank?.maxMana || CONFIG.MANA.MAX || 100;
         const active = this.getActiveEffectModifiers();
         const prevMaxMana = this.maxMana;

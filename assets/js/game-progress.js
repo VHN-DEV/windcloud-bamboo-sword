@@ -475,6 +475,7 @@ const GameProgress = {
             if (currentRank?.infiniteStats || Input.rankIndex >= Input.getMaxRankIndex()) {
                 Input.exp = currentRank?.exp || 0;
                 Input.isReadyToBreak = false;
+                Input.hp = Input.maxHp;
             } else {
                 const overflowLimit = Math.max(0, (currentRank?.exp || 0) * (CONFIG.CULTIVATION.OVERFLOW_LIMIT || 1.2));
                 Input.exp = Math.max(0, Math.min(overflowLimit, Number(parsed.exp) || 0));
