@@ -1274,6 +1274,14 @@ const Input = {
             const nx = dx / dist;
             const ny = dy / dist;
 
+            const biteReleaseDistance = Math.max(coreRadius * 1.6, 42);
+            if (strike.type === 'BITE' && strike.latchUntil > now) {
+                const leashDistance = Math.hypot((centerX || 0) - strike.fromX, (centerY || 0) - strike.fromY);
+                if (leashDistance > biteReleaseDistance) {
+                    strike.latchUntil = now;
+                }
+            }
+
             if (strike.type === 'BITE' && strike.latchUntil > now) {
                 strike.x = centerX + strike.latchOffsetX;
                 strike.y = centerY + strike.latchOffsetY;
@@ -1430,8 +1438,8 @@ const Input = {
                             damage: baseDamage * 1.35,
                             ailmentChance: 0.34,
                             source: 'cắn xé',
-                            latchDurationMs: enemy.isElite ? 3200 : 2600,
-                            damageTickEveryMs: enemy.isElite ? 320 : 420
+                            latchDurationMs: enemy.isElite ? 1700 : 1200,
+                            damageTickEveryMs: enemy.isElite ? 300 : 360
                         });
                     }
                     break;
