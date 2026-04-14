@@ -467,7 +467,6 @@ Object.assign(Input, {
                 return false;
             }
         }
-
         this.activeArtifacts[uniqueKey] = normalized;
 
         if (uniqueKey === 'PHONG_LOI_SI') {
