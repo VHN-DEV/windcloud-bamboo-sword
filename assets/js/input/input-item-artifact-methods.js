@@ -4339,7 +4339,8 @@ Object.assign(Input, {
         const secondaryColor = artifactConfig.secondaryColor || '#d9ecf3';
         const auraColor = artifactConfig.auraColor || '#5f8595';
         const crackLevel = clampNumber(1 - ratio + (shieldState.crackIntensity * 0.25), 0, 1);
-        const pulse = 0.82 + (Math.sin(performance.now() * 0.0042) * 0.18);
+        const now = performance.now();
+        const pulse = 0.82 + (Math.sin(now * 0.0042) * 0.18);
         const radius = (30 + (ratio * 6)) * scaleFactor;
 
         ctx.save();
@@ -4360,53 +4361,115 @@ Object.assign(Input, {
         ctx.scale(scaleFactor, scaleFactor);
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        ctx.strokeStyle = withAlpha(secondaryColor, 0.36);
-        ctx.fillStyle = withAlpha(primaryColor, 0.03 + (ratio * 0.02));
         ctx.shadowBlur = 6 * scaleFactor;
         ctx.shadowColor = withAlpha(auraColor, 0.22);
-        ctx.lineWidth = 1.3;
 
+        const bodyGradient = ctx.createLinearGradient(0, -24, 0, 29);
+        bodyGradient.addColorStop(0, withAlpha(secondaryColor, 0.16 + (ratio * 0.06)));
+        bodyGradient.addColorStop(0.38, withAlpha(primaryColor, 0.09 + (ratio * 0.06)));
+        bodyGradient.addColorStop(1, withAlpha(auraColor, 0.1 + (ratio * 0.05)));
+        ctx.fillStyle = bodyGradient;
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.42);
+        ctx.lineWidth = 1.2;
+
+        // Thân lư đỉnh
         ctx.beginPath();
-        ctx.moveTo(-14, -20);
-        ctx.quadraticCurveTo(-24, -10, -22, 8);
-        ctx.quadraticCurveTo(-18, 24, 0, 26);
-        ctx.quadraticCurveTo(18, 24, 22, 8);
-        ctx.quadraticCurveTo(24, -10, 14, -20);
-        ctx.lineTo(9, -20);
-        ctx.lineTo(9, -9);
-        ctx.lineTo(-9, -9);
-        ctx.lineTo(-9, -20);
+        ctx.moveTo(-18.5, -17.5);
+        ctx.quadraticCurveTo(-26.5, -6, -23.5, 8.5);
+        ctx.quadraticCurveTo(-20, 23.5, -9, 24.8);
+        ctx.quadraticCurveTo(0, 27.5, 9, 24.8);
+        ctx.quadraticCurveTo(20, 23.5, 23.5, 8.5);
+        ctx.quadraticCurveTo(26.5, -6, 18.5, -17.5);
+        ctx.quadraticCurveTo(0, -22.8, -18.5, -17.5);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
+        // Miệng đỉnh
         ctx.beginPath();
-        ctx.moveTo(-6.5, -20);
-        ctx.lineTo(-6.5, -8.5);
-        ctx.moveTo(6.5, -20);
-        ctx.lineTo(6.5, -8.5);
-        ctx.moveTo(-10.5, -8.5);
-        ctx.lineTo(10.5, -8.5);
-        ctx.strokeStyle = withAlpha('#ffffff', 0.26);
-        ctx.lineWidth = 0.9;
+        ctx.ellipse(0, -18.8, 13.8, 4.3, 0, Math.PI, Math.PI * 2);
+        ctx.strokeStyle = withAlpha('#ffffff', 0.3);
+        ctx.lineWidth = 0.92;
         ctx.stroke();
 
-        const crackCount = Math.min(7, 2 + Math.floor(crackLevel * 8));
-        for (let i = 0; i < crackCount; i++) {
-            const t = (i + 1) / (crackCount + 1);
-            const angle = (-Math.PI * 0.75) + (t * Math.PI * 1.5);
-            const innerR = 7 + (Math.sin((i * 2.1) + pulse) * 1.8);
-            const outerR = 22 + (Math.cos((i * 1.6) + pulse) * 2.8);
-            const sx = Math.cos(angle) * innerR;
-            const sy = Math.sin(angle) * innerR * 0.9;
-            const ex = Math.cos(angle + 0.22) * outerR;
-            const ey = Math.sin(angle + 0.22) * outerR * 0.9;
+        // Tai đỉnh
+        ctx.beginPath();
+        ctx.moveTo(-19.2, -14.8);
+        ctx.quadraticCurveTo(-29.8, -11.8, -24.6, -4.5);
+        ctx.moveTo(19.2, -14.8);
+        ctx.quadraticCurveTo(29.8, -11.8, 24.6, -4.5);
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.32);
+        ctx.lineWidth = 1.05;
+        ctx.stroke();
+
+        // Ba chân đỉnh
+        const legTime = now * 0.007;
+        const legSwing = Math.sin(legTime) * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(-11.8, 23.8);
+        ctx.lineTo(-15 + legSwing, 30.4);
+        ctx.lineTo(-9.8, 29.5);
+        ctx.closePath();
+        ctx.moveTo(11.8, 23.8);
+        ctx.lineTo(15 - legSwing, 30.4);
+        ctx.lineTo(9.8, 29.5);
+        ctx.closePath();
+        ctx.moveTo(0, 25.2);
+        ctx.lineTo(-2.8, 31.5);
+        ctx.lineTo(2.8, 31.5);
+        ctx.closePath();
+        ctx.fillStyle = withAlpha(primaryColor, 0.14 + (ratio * 0.05));
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.36);
+        ctx.lineWidth = 0.95;
+        ctx.fill();
+        ctx.stroke();
+
+        // Hoa văn sống lưng
+        ctx.beginPath();
+        ctx.moveTo(-8.2, -16.2);
+        ctx.quadraticCurveTo(-6.2, -1, -7, 14);
+        ctx.moveTo(8.2, -16.2);
+        ctx.quadraticCurveTo(6.2, -1, 7, 14);
+        ctx.moveTo(-5.8, 2.2);
+        ctx.quadraticCurveTo(0, 6.4, 5.8, 2.2);
+        ctx.strokeStyle = withAlpha('#ffffff', 0.2 + (ratio * 0.08));
+        ctx.lineWidth = 0.82;
+        ctx.stroke();
+
+        // Vết nứt: tách nhánh ngẫu nhiên nhẹ, đẹp hơn dạng gãy khúc cũ
+        const crackBranches = Math.min(9, 2 + Math.floor(crackLevel * 10));
+        for (let i = 0; i < crackBranches; i++) {
+            const seed = i + 1;
+            const anchorT = (seed / (crackBranches + 1));
+            const side = (i % 2 === 0) ? -1 : 1;
+            const startX = side * (4 + (anchorT * 5.5));
+            const startY = -13.5 + (anchorT * 7.2);
+            const endX = side * (11 + (anchorT * 8.5));
+            const endY = 6 + (anchorT * 18);
+            const bend = side * (1.4 + (Math.sin((seed * 3.1) + pulse) * 1.2));
+
             ctx.beginPath();
-            ctx.moveTo(sx, sy);
-            ctx.lineTo((sx + ex) * 0.56, (sy + ey) * 0.56);
-            ctx.lineTo(ex, ey);
-            ctx.strokeStyle = withAlpha('#f6fdff', 0.05 + (crackLevel * 0.24));
-            ctx.lineWidth = 0.36 + (crackLevel * 0.28);
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(startX + bend, (startY + endY) * 0.45, endX, endY);
+            if (crackLevel > 0.26) {
+                ctx.lineTo(endX + (side * (1.2 + (crackLevel * 1.6))), endY + (1.6 + (crackLevel * 2.2)));
+            }
+            if (crackLevel > 0.52 && i % 3 === 0) {
+                ctx.moveTo(startX + (side * 0.4), startY + 2.4);
+                ctx.lineTo(startX + (side * 3.2), startY + 4.5);
+            }
+            ctx.strokeStyle = withAlpha('#f6fdff', 0.06 + (crackLevel * 0.34));
+            ctx.lineWidth = 0.32 + (crackLevel * 0.46);
+            ctx.stroke();
+        }
+
+        // Nứt viền miệng khi sắp vỡ
+        if (crackLevel > 0.62) {
+            const rimAlpha = 0.1 + ((crackLevel - 0.62) * 0.65);
+            ctx.beginPath();
+            ctx.ellipse(0, -18.8, 13.4, 4.1, 0, Math.PI * 1.1, Math.PI * 1.88);
+            ctx.strokeStyle = withAlpha('#f5fcff', rimAlpha);
+            ctx.lineWidth = 0.52 + ((crackLevel - 0.62) * 1.2);
             ctx.stroke();
         }
 
