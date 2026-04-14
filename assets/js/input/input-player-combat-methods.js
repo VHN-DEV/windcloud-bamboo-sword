@@ -127,6 +127,7 @@ Object.assign(Input, {
         state.charging = true;
         state.chargeStartedAt = performance.now();
         state.chargeRatio = 0;
+        state.lastParticleEmitAt = 0;
         this.isAttacking = false;
         return true;
     },
@@ -141,6 +142,7 @@ Object.assign(Input, {
         if (state.charging) {
             const elapsed = Math.max(0, now - state.chargeStartedAt);
             state.chargeRatio = Math.max(0, Math.min(1, elapsed / Math.max(1, state.maxChargeMs || 1200)));
+            this.emitSingleSwordUltimateChargeParticles(now, state.chargeRatio);
         }
 
         this.updateSingleSwordUltimateChargeUI(
@@ -165,6 +167,45 @@ Object.assign(Input, {
         if (!state?.active) return 0;
         if (state.charging) return Math.max(0.16, Math.min(1, Number(state.chargeRatio) || 0));
         return state.awaitingAttackInput ? 0.38 : 0.18;
+    },
+
+    emitSingleSwordUltimateChargeParticles(now = performance.now(), chargeRatio = 0) {
+        const state = this.singleSwordUltimateState;
+        if (!state?.active || !state.charging) return;
+
+        const emitIntervalMs = Math.max(26, 56 - (Math.max(0, Math.min(1, chargeRatio)) * 26));
+        if ((now - (state.lastParticleEmitAt || 0)) < emitIntervalMs) return;
+        state.lastParticleEmitAt = now;
+
+        const centerX = Number.isFinite(this.x) ? this.x : guardCenter.x;
+        const centerY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        const pullRadius = 24 + (chargeRatio * 64);
+        const spawnCount = Math.round(2 + (chargeRatio * 4));
+
+        trimVisualParticles(360);
+        for (let i = 0; i < spawnCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const radius = random(pullRadius * 0.65, pullRadius);
+            const spawnX = centerX + (Math.cos(angle) * radius);
+            const spawnY = centerY + (Math.sin(angle) * radius);
+            const toCenterX = centerX - spawnX;
+            const toCenterY = centerY - spawnY;
+            const dist = Math.max(1, Math.hypot(toCenterX, toCenterY));
+            const pullSpeed = random(0.38, 0.88) + (chargeRatio * 0.55);
+
+            visualParticles.push({
+                type: 'spark',
+                x: spawnX,
+                y: spawnY,
+                vx: (toCenterX / dist) * pullSpeed,
+                vy: (toCenterY / dist) * pullSpeed,
+                size: random(1.1, 2.2) * (0.85 + (chargeRatio * 0.52)),
+                life: 0.4 + (chargeRatio * 0.18),
+                decay: random(0.058, 0.082),
+                color: i % 2 === 0 ? '#c8f6ff' : '#ffffff',
+                glow: '#7ee7ff'
+            });
+        }
     },
 
     releaseSingleSwordUltimateShot() {
@@ -192,8 +233,9 @@ Object.assign(Input, {
                 y: startY,
                 startAt: performance.now(),
                 travelMs: Math.round(260 - (chargeRatio * 80)),
-                size: 1 + (chargeRatio * 0.9),
-                damageScale: 0.4 + (chargeRatio * 1.2),
+                size: 1 + (chargeRatio * 1.15),
+                slashLengthScale: 1 + (chargeRatio * 1.25),
+                damageScale: 0.55 + (chargeRatio * 1.65),
                 chargeRatio
             });
             showNotify(`Kiếm quang xuất khiếu (${Math.round(chargeRatio * 100)}%)!`, '#7ee7ff');
@@ -206,6 +248,7 @@ Object.assign(Input, {
         state.activatedAt = 0;
         state.chargeStartedAt = 0;
         state.chargeRatio = 0;
+        state.lastParticleEmitAt = 0;
         this.updateSingleSwordUltimateChargeUI(0, false, false);
         return true;
     },
@@ -218,6 +261,7 @@ Object.assign(Input, {
         state.activatedAt = 0;
         state.chargeStartedAt = 0;
         state.chargeRatio = 0;
+        state.lastParticleEmitAt = 0;
         this.updateSingleSwordUltimateChargeUI(0, false, false);
     },
 
@@ -530,6 +574,7 @@ Object.assign(Input, {
         state.activatedAt = performance.now();
         state.chargeStartedAt = 0;
         state.chargeRatio = 0;
+        state.lastParticleEmitAt = 0;
 
         this.rage = 0;
         this.renderRageUI();
@@ -554,7 +599,8 @@ Object.assign(Input, {
             projectile.y = projectile.fromY + ((targetY - projectile.fromY) * progress);
 
             const heading = Math.atan2(targetY - projectile.fromY, targetX - projectile.fromX);
-            const arcRadius = (28 + (Math.sin(now * 0.024) * 4)) * scaleFactor * (projectile.size || 1);
+            const slashLengthScale = Math.max(1, Number(projectile.slashLengthScale) || 1);
+            const arcRadius = (28 + (Math.sin(now * 0.024) * 4)) * scaleFactor * (projectile.size || 1) * slashLengthScale;
 
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';

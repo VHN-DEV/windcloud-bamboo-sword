@@ -56,6 +56,7 @@ const INPUT_INITIAL_STATE = {
         activatedAt: 0,
         chargeStartedAt: 0,
         chargeRatio: 0,
+        lastParticleEmitAt: 0,
         maxChargeMs: 1200
     },
     phongLoiBlink: getDefaultPhongLoiBlinkState(),
