@@ -134,7 +134,9 @@ const startAttack = (e) => {
         return false;
     }
 
-    if (Input.isSingleSwordTapAttackMode()) {
+    if (Input.isSingleSwordUltimateReady()) {
+        Input.beginSingleSwordUltimateCharge();
+    } else if (Input.isSingleSwordTapAttackMode()) {
         if (Input.beginSingleSwordUltimateCharge()) {
             return true;
         }

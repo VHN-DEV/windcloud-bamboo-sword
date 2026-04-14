@@ -288,6 +288,13 @@ const CONFIG = {
         ELITE_DODGE_BONUS: 0.15, // Tinh anh né thêm 15% (tổng 25%)
         DODGE_PER_RANK_DIFF: 0.05, // Mỗi cấp chênh lệch tăng 5% né tránh
         MAX_DODGE_CHANCE: 0.75,    // Né tối đa 75% (để người chơi vẫn có cửa thắng)
+        PROACTIVE_ATTACK_RANGE_MULTIPLIER: 3.4, // Bán kính quái bắt đầu có thể chủ động mở giao tranh khi áp sát
+        PROACTIVE_ATTACK_CHANCE_BASE: 0.2, // Tỉ lệ cơ bản quái chủ động tấn công khi ở trong vùng áp sát
+        PROACTIVE_ATTACK_ELITE_BONUS: 0.12, // Tinh anh cộng thêm tỉ lệ chủ động
+        PROACTIVE_ATTACK_RANK_DIFF_BONUS: 0.035, // Mỗi cấp quái cao hơn người chơi sẽ tăng tỉ lệ chủ động
+        PROACTIVE_ATTACK_NEAR_BONUS: 0.18, // Thưởng thêm tỉ lệ khi quái áp sát hơn vùng cận chiến
+        PROACTIVE_ATTACK_CHANCE_MAX: 0.88, // Trần tỉ lệ chủ động để tránh tấn công 100%
+        PROACTIVE_RETALIATE_MS: 1300, // Thời gian quái duy trì trạng thái hung hãn sau khi chủ động mở giao tranh
         SPAWN_RANK_RANGE: {
             MIN_ID: 1, // Cảnh giới tối thiểu của quái vật
             MAX_ID: 64 // Cảnh giới tối đa của quái vật

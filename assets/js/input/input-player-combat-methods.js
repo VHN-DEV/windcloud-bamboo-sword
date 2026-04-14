@@ -169,6 +169,24 @@ Object.assign(Input, {
         return state.awaitingAttackInput ? 0.38 : 0.18;
     },
 
+    getSingleSwordUltimateChargeAnchor() {
+        if (typeof swords !== 'undefined' && Array.isArray(swords) && swords.length) {
+            const coreSword = Number.isInteger(this.ultimateCoreIndex) ? swords[this.ultimateCoreIndex] : null;
+            const livingSword = (coreSword && !coreSword.isDead)
+                ? coreSword
+                : swords.find(sword => sword && !sword.isDead);
+
+            if (livingSword && Number.isFinite(livingSword.x) && Number.isFinite(livingSword.y)) {
+                return { x: livingSword.x, y: livingSword.y };
+            }
+        }
+
+        return {
+            x: Number.isFinite(this.x) ? this.x : guardCenter.x,
+            y: Number.isFinite(this.y) ? this.y : guardCenter.y
+        };
+    },
+
     emitSingleSwordUltimateChargeParticles(now = performance.now(), chargeRatio = 0) {
         const state = this.singleSwordUltimateState;
         if (!state?.active || !state.charging) return;
@@ -177,8 +195,9 @@ Object.assign(Input, {
         if ((now - (state.lastParticleEmitAt || 0)) < emitIntervalMs) return;
         state.lastParticleEmitAt = now;
 
-        const centerX = Number.isFinite(this.x) ? this.x : guardCenter.x;
-        const centerY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        const anchor = this.getSingleSwordUltimateChargeAnchor();
+        const centerX = anchor.x;
+        const centerY = anchor.y;
         const pullRadius = 24 + (chargeRatio * 64);
         const spawnCount = Math.round(2 + (chargeRatio * 4));
 
@@ -213,8 +232,9 @@ Object.assign(Input, {
         if (!state?.active) return false;
         if (state.awaitingAttackInput) return false;
 
-        const startX = Number.isFinite(this.x) ? this.x : guardCenter.x;
-        const startY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        const anchor = this.getSingleSwordUltimateChargeAnchor();
+        const startX = anchor.x;
+        const startY = anchor.y;
         const livingEnemies = (Array.isArray(enemies) ? enemies : []).filter(enemy => enemy && enemy.hp > 0);
         const target = livingEnemies.reduce((closest, enemy) => {
             if (!closest) return enemy;
@@ -1364,18 +1384,43 @@ Object.assign(Input, {
         if (!Array.isArray(enemies) || this.isVoidCollapsed) return;
         const now = performance.now();
         const contactRadius = Math.max(20, (CONFIG.ENEMY?.CONTACT_RADIUS || 44) * (Camera.currentZoom || 1));
+        const proactiveRangeMultiplier = Math.max(2.2, Number(CONFIG.ENEMY?.PROACTIVE_ATTACK_RANGE_MULTIPLIER) || 3.4);
+        const proactiveRetaliateMs = Math.max(700, Number(CONFIG.ENEMY?.PROACTIVE_RETALIATE_MS) || 1300);
 
         for (let i = 0; i < enemies.length; i++) {
             const enemy = enemies[i];
             if (!enemy || enemy.hp <= 0) continue;
             const baseDamage = Math.max(1, Number(enemy.damage) || Number(enemy.rankData?.damage) || 1);
             const dist = Math.hypot((enemy.x || 0) - centerX, (enemy.y || 0) - centerY);
+            const proactiveRange = contactRadius * proactiveRangeMultiplier;
+            const wasRetaliating = now < (enemy.retaliateUntil || 0);
+            const enemyRankIndex = CONFIG.CULTIVATION.RANKS.indexOf(enemy.rankData);
+            const playerRankIndex = Input.rankIndex || 0;
+            const rankDiff = enemyRankIndex - playerRankIndex;
+            const baseAggroChance = Math.max(0, Math.min(1, Number(CONFIG.ENEMY?.PROACTIVE_ATTACK_CHANCE_BASE) || 0.2));
+            const eliteBonus = enemy.isElite ? Math.max(0, Number(CONFIG.ENEMY?.PROACTIVE_ATTACK_ELITE_BONUS) || 0.12) : 0;
+            const rankBonusPerDiff = Math.max(0, Number(CONFIG.ENEMY?.PROACTIVE_ATTACK_RANK_DIFF_BONUS) || 0.035);
+            const nearBonus = dist <= (contactRadius * 1.75) ? Math.max(0, Number(CONFIG.ENEMY?.PROACTIVE_ATTACK_NEAR_BONUS) || 0.18) : 0;
+            const proactiveChance = Math.max(
+                0,
+                Math.min(
+                    Number(CONFIG.ENEMY?.PROACTIVE_ATTACK_CHANCE_MAX) || 0.88,
+                    baseAggroChance + eliteBonus + (Math.max(0, rankDiff) * rankBonusPerDiff) + nearBonus
+                )
+            );
+            const proactivelyTriggered = !wasRetaliating && dist <= proactiveRange && Math.random() < proactiveChance;
+            if (proactivelyTriggered) {
+                enemy.retaliateUntil = Math.max(enemy.retaliateUntil || 0, now + proactiveRetaliateMs);
+            }
+
             const retaliating = now < (enemy.retaliateUntil || 0);
             const triggerRange = contactRadius * (retaliating ? 4.2 : 2.8);
             if (dist > triggerRange) continue;
 
             const attackPattern = this.getEnemyAttackPattern(enemy);
-            const attackCooldown = enemy.isElite ? 820 : 1050;
+            const attackCooldown = retaliating
+                ? (enemy.isElite ? 760 : 920)
+                : (enemy.isElite ? 820 : 1050);
             if (now - (enemy.lastAttackAt || 0) < attackCooldown) continue;
             enemy.lastAttackAt = now;
 
