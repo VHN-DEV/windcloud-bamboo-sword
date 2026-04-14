@@ -185,6 +185,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const isPhongLoiArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'PHONG_LOI_SI';
     const isChuongThienBinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CHUONG_THIEN_BINH';
     const isHuyetSacArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'HUYET_SAC_PHI_PHONG';
+    const isHuThienDinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'HU_THIEN_DINH';
     const isCanLamArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CAN_LAM_BANG_DIEM';
     const isThanhTrucSwordArtifact = item.category === 'SWORD_ARTIFACT';
     const isFormationSecretArt = item.category === 'SWORD_ART'
@@ -204,6 +205,9 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     }
     if (isThanhTrucSwordArtifact) {
         visualClasses.push('is-artifact-thanh-truc');
+    }
+    if (isHuThienDinhArtifact) {
+        visualClasses.push('is-artifact-hu-thien-dinh');
     }
     if (isKimLoiTrucMau) {
         visualClasses.push('is-material-kim-loi-root');
@@ -225,6 +229,8 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         ? buildStaticArtifactImageVisualMarkup(artifactConfig.imagePath, 'is-can-lam')
         : isHuyetSacArtifact && artifactConfig?.imagePath
         ? buildStaticArtifactImageVisualMarkup(artifactConfig.imagePath, 'is-huyet-sac')
+        : isHuThienDinhArtifact && artifactConfig?.imagePath
+        ? buildStaticArtifactImageVisualMarkup(artifactConfig.imagePath, 'is-hu-thien-dinh')
         : isThanhTrucSwordArtifact
         ? buildThanhTrucSwordArtifactVisualMarkup()
         : visual.className === 'is-insect-egg'

@@ -51,6 +51,7 @@ const Input = {
         KHU_TRUNG_THUAT: false,
         PHONG_LOI_SI: false,
         HUYET_SAC_PHI_PHONG: false,
+        HU_THIEN_DINH: false,
         KY_TRUNG_BANG: false,
         LINH_THU_DAI: false,
         THAT_SAC_TRU_VAT_NANG: false,
@@ -62,12 +63,14 @@ const Input = {
         CAN_LAM_BANG_DIEM: false,
         KHU_TRUNG_THUAT: false,
         PHONG_LOI_SI: false,
-        HUYET_SAC_PHI_PHONG: false
+        HUYET_SAC_PHI_PHONG: false,
+        HU_THIEN_DINH: false
     },
     activeArtifacts: {
         CAN_LAM_BANG_DIEM: false,
         PHONG_LOI_SI: false,
-        HUYET_SAC_PHI_PHONG: false
+        HUYET_SAC_PHI_PHONG: false,
+        HU_THIEN_DINH: false
     },
     enemyMeleeStrikes: [],
     canLamProjectiles: [],
@@ -92,6 +95,13 @@ const Input = {
         transiting: null,
         trails: [],
         afterimages: []
+    },
+    huThienDinhShield: {
+        maxHp: 0,
+        currentHp: 0,
+        breakRatio: 0,
+        lastHitAt: 0,
+        breakFlashUntil: 0
     },
     insectEggs: {},
     tamedInsects: {},
@@ -1196,8 +1206,13 @@ const Input = {
     },
 
     inflictEnemyAttackDamage(amount, ailmentChance = 0.2, source = 'đòn đánh của yêu thú') {
-        const safeDamage = Math.max(0, Number(amount) || 0);
+        let safeDamage = Math.max(0, Number(amount) || 0);
         if (safeDamage <= 0) return;
+        safeDamage = this.absorbHuThienDinhShieldDamage(safeDamage);
+        if (safeDamage <= 0) {
+            this.lastEnemyDamageAt = performance.now();
+            return;
+        }
         this.lastEnemyDamageAt = performance.now();
         this.updateHealth(-safeDamage, source);
         this.tryApplyRandomNegativeStatus(ailmentChance);
@@ -4894,6 +4909,76 @@ const Input = {
             || null;
     },
 
+    ensureHuThienDinhShieldState() {
+        if (!this.huThienDinhShield || typeof this.huThienDinhShield !== 'object') {
+            this.huThienDinhShield = {
+                maxHp: 0,
+                currentHp: 0,
+                breakRatio: 0,
+                lastHitAt: 0,
+                breakFlashUntil: 0
+            };
+        }
+
+        return this.huThienDinhShield;
+    },
+
+    getHuThienDinhShieldConfig() {
+        const cfg = this.getArtifactConfig('HU_THIEN_DINH')?.shieldSkill || {};
+        return {
+            baseShieldHp: Math.max(0, Number(cfg.baseShieldHp) || 220),
+            shieldRatioToMaxHp: Math.max(0, Number(cfg.shieldRatioToMaxHp) || 1.85)
+        };
+    },
+
+    getHuThienDinhShieldMaxHp() {
+        const cfg = this.getHuThienDinhShieldConfig();
+        return Math.max(1, Math.round(cfg.baseShieldHp + ((this.maxHp || 0) * cfg.shieldRatioToMaxHp)));
+    },
+
+    refreshHuThienDinhShield({ refill = false } = {}) {
+        const state = this.ensureHuThienDinhShieldState();
+        const deployed = this.isArtifactDeployed('HU_THIEN_DINH');
+        if (!deployed) {
+            state.maxHp = 0;
+            state.currentHp = 0;
+            state.breakRatio = 0;
+            return state;
+        }
+
+        const nextMaxHp = this.getHuThienDinhShieldMaxHp();
+        state.maxHp = nextMaxHp;
+        if (refill || state.currentHp <= 0) {
+            state.currentHp = nextMaxHp;
+        } else {
+            state.currentHp = Math.min(nextMaxHp, Math.max(0, state.currentHp));
+        }
+        state.breakRatio = clampNumber(1 - (state.currentHp / Math.max(1, state.maxHp)), 0, 1);
+        return state;
+    },
+
+    absorbHuThienDinhShieldDamage(amount) {
+        if (!this.isArtifactDeployed('HU_THIEN_DINH')) return Math.max(0, Number(amount) || 0);
+
+        const incoming = Math.max(0, Number(amount) || 0);
+        if (incoming <= 0) return 0;
+
+        const state = this.refreshHuThienDinhShield();
+        if (state.currentHp <= 0) return incoming;
+
+        const absorbed = Math.min(state.currentHp, incoming);
+        state.currentHp = Math.max(0, state.currentHp - absorbed);
+        state.breakRatio = clampNumber(1 - (state.currentHp / Math.max(1, state.maxHp)), 0, 1);
+        state.lastHitAt = performance.now();
+        state.breakFlashUntil = state.lastHitAt + 220;
+
+        if (state.currentHp <= 0) {
+            showNotify('Hư Thiên Đỉnh hộ thuẫn đã nứt vỡ, không thể chịu thêm sát thương.', this.getArtifactConfig('HU_THIEN_DINH')?.color || '#8fb6c9');
+        }
+
+        return Math.max(0, incoming - absorbed);
+    },
+
     getArtifactAttunementNote(uniqueKey) {
         const artifactConfig = this.getArtifactConfig(uniqueKey) || {};
         if (uniqueKey === 'PHONG_LOI_SI') {
@@ -4902,6 +4987,9 @@ const Input = {
         if (uniqueKey === 'HUYET_SAC_PHI_PHONG') {
             const speedBonus = Math.round((Number(artifactConfig.speedBonusPct) || 0) * 100);
             return `huyết ảnh đã quấn quanh thân pháp, tốc độ di chuyển tăng ${formatNumber(speedBonus)}% và sẽ lưu huyết quang phía sau.`;
+        }
+        if (uniqueKey === 'HU_THIEN_DINH') {
+            return 'đỉnh ảnh đã phủ quanh tâm ấn, có thể chống đỡ sát thương bằng không gian hộ thuẫn.';
         }
         return 'pháp bảo đã hiện bên tâm ấn.';
     },
@@ -4922,6 +5010,16 @@ const Input = {
             }
             if (unlocked) {
                 return `Đã luyện hóa, có thể triển khai để tăng ${formatNumber(speedBonus)}% tốc độ di chuyển.`;
+            }
+        } else if (uniqueKey === 'HU_THIEN_DINH') {
+            const shieldState = this.ensureHuThienDinhShieldState();
+            const shieldNow = Math.max(0, Math.floor(shieldState.currentHp || 0));
+            const shieldMax = Math.max(0, Math.floor(shieldState.maxHp || this.getHuThienDinhShieldMaxHp()));
+            if (active) {
+                return `Đỉnh ảnh đang hộ thể, lá chắn còn ${formatNumber(shieldNow)}/${formatNumber(shieldMax)}.`;
+            }
+            if (unlocked) {
+                return `Đã luyện hóa, có thể triển khai lá chắn Hư Thiên Đỉnh với ${formatNumber(shieldMax)} độ bền.`;
             }
         }
 
@@ -4948,6 +5046,11 @@ const Input = {
         if (uniqueKey === 'HUYET_SAC_PHI_PHONG') {
             return nextActive
                 ? `${artifactConfig.fullName} đã triển khai sau lưng thân pháp.`
+                : `${artifactConfig.fullName} đã thu vào thần hải.`;
+        }
+        if (uniqueKey === 'HU_THIEN_DINH') {
+            return nextActive
+                ? `${artifactConfig.fullName} đã dựng đỉnh ảnh hộ thể.`
                 : `${artifactConfig.fullName} đã thu vào thần hải.`;
         }
 
@@ -5270,6 +5373,9 @@ const Input = {
         }
         if (uniqueKey === 'CAN_LAM_BANG_DIEM') {
             this.renderCanLamCastButton();
+        }
+        if (uniqueKey === 'HU_THIEN_DINH') {
+            this.refreshHuThienDinhShield({ refill: normalized });
         }
 
         if (!silent) {
@@ -9097,7 +9203,76 @@ const Input = {
         }
     },
 
+    drawHuThienDinhShield(ctx, scaleFactor) {
+        if (!this.isArtifactDeployed('HU_THIEN_DINH')) return;
+        const state = this.refreshHuThienDinhShield();
+        if (state.currentHp <= 0 || state.maxHp <= 0) return;
+
+        const artifactConfig = this.getArtifactConfig('HU_THIEN_DINH') || {};
+        const primaryColor = artifactConfig.color || '#8fb6c9';
+        const secondaryColor = artifactConfig.secondaryColor || '#dbe6ed';
+        const auraColor = artifactConfig.auraColor || '#5f7f92';
+        const hpRatio = clampNumber(state.currentHp / Math.max(1, state.maxHp), 0, 1);
+        const crackRatio = clampNumber(state.breakRatio, 0, 1);
+        const pulse = 0.84 + (Math.sin(performance.now() * 0.006) * 0.16);
+        const breakFlashAlpha = performance.now() < (state.breakFlashUntil || 0) ? 0.36 : 0;
+        const size = (32 + (8 * (1 - hpRatio))) * scaleFactor;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.globalCompositeOperation = 'lighter';
+
+        const gradient = ctx.createRadialGradient(0, 0, size * 0.1, 0, 0, size * 1.15);
+        gradient.addColorStop(0, withAlpha(secondaryColor, 0.24 + ((1 - crackRatio) * 0.2)));
+        gradient.addColorStop(0.55, withAlpha(primaryColor, 0.2 + ((1 - crackRatio) * 0.14)));
+        gradient.addColorStop(1, withAlpha(auraColor, 0.04));
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * 0.92, size * 1.05, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        const dingPath = new Path2D();
+        dingPath.moveTo(0, -size * 1.02);
+        dingPath.bezierCurveTo(size * 0.88, -size * 0.82, size * 0.98, size * 0.3, size * 0.58, size * 1.02);
+        dingPath.lineTo(-size * 0.58, size * 1.02);
+        dingPath.bezierCurveTo(-size * 0.98, size * 0.3, -size * 0.88, -size * 0.82, 0, -size * 1.02);
+        dingPath.closePath();
+
+        ctx.shadowBlur = size * (0.32 + (pulse * 0.12));
+        ctx.shadowColor = withAlpha(primaryColor, 0.66 * hpRatio + 0.2);
+        ctx.fillStyle = withAlpha(secondaryColor, 0.06 + (hpRatio * 0.14));
+        ctx.fill(dingPath);
+        ctx.strokeStyle = withAlpha(primaryColor, 0.48 + (hpRatio * 0.22) + breakFlashAlpha);
+        ctx.lineWidth = Math.max(1.1, 2.4 * scaleFactor);
+        ctx.stroke(dingPath);
+
+        if (crackRatio > 0.08) {
+            const crackCount = Math.max(1, Math.floor(2 + (crackRatio * 7)));
+            ctx.strokeStyle = withAlpha('#f7fbff', 0.18 + (crackRatio * 0.42));
+            ctx.lineWidth = Math.max(0.8, 1.2 * scaleFactor);
+            for (let i = 0; i < crackCount; i++) {
+                const startAngle = -Math.PI * 0.7 + (i * (Math.PI * 1.4 / Math.max(1, crackCount - 1)));
+                const startRadius = size * random(0.1, 0.32);
+                const endRadius = size * random(0.52, 0.96);
+                const bend = random(-0.28, 0.28);
+                const sx = Math.cos(startAngle) * startRadius;
+                const sy = Math.sin(startAngle) * startRadius;
+                const ex = Math.cos(startAngle + bend) * endRadius;
+                const ey = Math.sin(startAngle + bend) * endRadius;
+                const cx = (sx + ex) * 0.5 + random(-2.8, 2.8) * scaleFactor;
+                const cy = (sy + ey) * 0.5 + random(-2.8, 2.8) * scaleFactor;
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.quadraticCurveTo(cx, cy, ex, ey);
+                ctx.stroke();
+            }
+        }
+
+        ctx.restore();
+    },
+
     drawCursor(ctx, scaleFactor) {
+        this.drawHuThienDinhShield(ctx, scaleFactor);
         this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
         if (this.isArtifactDeployed('CAN_LAM_BANG_DIEM')) {
             this.drawFlame(ctx, scaleFactor);

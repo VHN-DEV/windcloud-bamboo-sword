@@ -18,6 +18,7 @@ const GameProgress = {
             KHU_TRUNG_THUAT: false,
             PHONG_LOI_SI: false,
             HUYET_SAC_PHI_PHONG: false,
+            HU_THIEN_DINH: false,
             KY_TRUNG_BANG: false,
             LINH_THU_DAI: false,
             THAT_SAC_TRU_VAT_NANG: false,
@@ -32,14 +33,17 @@ const GameProgress = {
             CAN_LAM_BANG_DIEM: false,
             KHU_TRUNG_THUAT: false,
             PHONG_LOI_SI: false,
-            HUYET_SAC_PHI_PHONG: false
+            HUYET_SAC_PHI_PHONG: false,
+            HU_THIEN_DINH: false
         };
     },
 
     getDefaultActiveArtifacts() {
         return {
+            CAN_LAM_BANG_DIEM: false,
             PHONG_LOI_SI: false,
-            HUYET_SAC_PHI_PHONG: false
+            HUYET_SAC_PHI_PHONG: false,
+            HU_THIEN_DINH: false
         };
     },
 
@@ -383,6 +387,10 @@ const GameProgress = {
             Input.cultivationArts = this.getDefaultCultivationArts();
             Input.activeArtifacts = this.getDefaultActiveArtifacts();
             Input.phongLoiBlink = this.getDefaultPhongLoiBlinkState();
+            if (typeof Input.ensureHuThienDinhShieldState === 'function') {
+                Input.ensureHuThienDinhShieldState();
+                Input.refreshHuThienDinhShield({ refill: true });
+            }
             Input.insectEggs = {};
             Input.tamedInsects = {};
             Input.insectColonies = {};
@@ -558,6 +566,9 @@ const GameProgress = {
                     Input.activeArtifacts[uniqueKey] = false;
                 }
             });
+            if (typeof Input.refreshHuThienDinhShield === 'function') {
+                Input.refreshHuThienDinhShield({ refill: true });
+            }
 
             Input.phongLoiBlink.enabled = Boolean(parsed.phongLoiBlinkEnabled) && Input.isArtifactDeployed('PHONG_LOI_SI');
             Input.ensureValidBeastBagTab();

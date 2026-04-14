@@ -46,7 +46,8 @@ const IMAGE_PATHS = {
         CAN_LAM_BANG_DIEM: "./assets/images/artifacts/can-lam-bang-diem.svg",
         CHUONG_THIEN_BINH: "./assets/images/artifacts/chuong-thien-binh.svg",
         PHONG_LOI_SI: "./assets/images/artifacts/phong-loi-si.svg",
-        HUYET_SAC_PHI_PHONG: "./assets/images/artifacts/huyet-sac-phi-phong.svg"
+        HUYET_SAC_PHI_PHONG: "./assets/images/artifacts/huyet-sac-phi-phong.svg",
+        HU_THIEN_DINH: "./assets/images/artifacts/hu-thien-dinh.svg"
     },
     ABERRATIONS: {
         KIEN_THIEN_TINH: "./assets/images/aberrations/kien-thien-tinh.svg",
@@ -984,6 +985,24 @@ const CONFIG = {
             trailOffsetMoving: 9, // Khoảng cách giữa nhân vật và vệt máu khi di chuyển
             movingAnchorFollow: 0.78, // Tỉ lệ bám theo tâm ấn khi di chuyển (giá trị càng cao thì vệt máu càng bám sát tâm ấn)
             description: "Huyết sắc phi phong như dải máu hóa gió. Sau khi luyện hóa sẽ bám theo tâm ấn, gia tăng thân pháp và kéo ra huyết quang đỏ rực phía sau mỗi lần di chuyển."
+        },
+        HU_THIEN_DINH: {
+            fullName: "Hư Thiên Đỉnh",
+            quality: "SUPREME",
+            color: "#8fb6c9",
+            secondaryColor: "#dbe6ed",
+            auraColor: "#5f7f92",
+            buyPriceLowStone: 3600000,
+            buttonLabel: "Mua",
+            inventoryActionLabel: "Luyện hóa",
+            deployLabel: "Triển khai",
+            stowLabel: "Thu hồi",
+            imagePath: IMAGE_PATHS.ARTIFACTS.HU_THIEN_DINH,
+            shieldSkill: {
+                baseShieldHp: 220,
+                shieldRatioToMaxHp: 1.85
+            },
+            description: "Tiểu đỉnh cổ xanh xám, hoa văn không gian huyền ảo. Sau khi luyện hóa có thể triển khai thành đỉnh ảnh hộ thân: thu nạp và trấn áp mục tiêu, mở nội không gian như tiểu thế giới, đồng thời dựng lá chắn cực mạnh ngăn sát thương cho đến khi nứt vỡ."
         },
         CAN_LAM_BANG_DIEM: {
             fullName: "Càn Lam Băng Diễm",
