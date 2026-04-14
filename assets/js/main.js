@@ -1242,7 +1242,11 @@ const Input = {
             damage: Math.max(1, Number(options.damage) || 1),
             ailmentChance: Math.max(0, Number(options.ailmentChance) || 0.2),
             source: options.source || 'cận chiến yêu thú',
-            hasDamaged: false
+            hasDamaged: false,
+            latchUntil: 0,
+            latchDurationMs: Math.max(600, Number(options.latchDurationMs) || 1800),
+            latchOffsetX: random(-4, 4),
+            latchOffsetY: random(-4, 4)
         });
     },
 
@@ -1263,8 +1267,13 @@ const Input = {
             const nx = dx / dist;
             const ny = dy / dist;
 
-            strike.x = strike.fromX + (dx * progress) - (ny * jumpArc);
-            strike.y = strike.fromY + (dy * progress) + (nx * jumpArc);
+            if (strike.type === 'BITE' && strike.latchUntil > now) {
+                strike.x = centerX + strike.latchOffsetX;
+                strike.y = centerY + strike.latchOffsetY;
+            } else {
+                strike.x = strike.fromX + (dx * progress) - (ny * jumpArc);
+                strike.y = strike.fromY + (dy * progress) + (nx * jumpArc);
+            }
 
             if (strike.enemyRef?.hp > 0) {
                 strike.enemyRef.x = strike.x;
@@ -1276,10 +1285,14 @@ const Input = {
                 if (touchDistance <= coreRadius) {
                     this.inflictEnemyAttackDamage(strike.damage, strike.ailmentChance, strike.source);
                     strike.hasDamaged = true;
+                    if (strike.type === 'BITE') {
+                        strike.latchUntil = now + strike.latchDurationMs;
+                    }
                 }
             }
 
-            if (progress < 1) {
+            const keepBiteLatch = strike.type === 'BITE' && strike.latchUntil > now;
+            if (progress < 1 || keepBiteLatch) {
                 strikes[writeIndex++] = strike;
             }
         }
@@ -1401,7 +1414,8 @@ const Input = {
                             durationMs: enemy.isElite ? 130 : 170,
                             damage: baseDamage * 1.35,
                             ailmentChance: 0.34,
-                            source: 'cắn xé'
+                            source: 'cắn xé',
+                            latchDurationMs: enemy.isElite ? 2200 : 1700
                         });
                     }
                     break;
@@ -4741,7 +4755,12 @@ const Input = {
 
         strikes.forEach(strike => {
             const progress = clampNumber((now - strike.startedAt) / Math.max(1, strike.durationMs), 0, 1);
-            const alpha = Math.max(0, 1 - (progress * 0.82));
+            const latchProgress = strike.latchUntil > now
+                ? clampNumber((strike.latchUntil - now) / Math.max(1, strike.latchDurationMs || 1), 0, 1)
+                : 0;
+            const alpha = strike.latchUntil > now
+                ? Math.max(0.35, 0.45 + (latchProgress * 0.55))
+                : Math.max(0, 1 - (progress * 0.82));
             const dx = strike.toX - strike.fromX;
             const dy = strike.toY - strike.fromY;
             const angle = Math.atan2(dy, dx || 0.0001);
@@ -4771,7 +4790,9 @@ const Input = {
             }
 
             if (strike.type === 'BITE') {
-                const jawSpread = (0.46 - (progress * 0.26)) * Math.PI;
+                const jawSpread = strike.latchUntil > now
+                    ? (0.18 + (Math.sin(now * 0.018) * 0.04)) * Math.PI
+                    : (0.46 - (progress * 0.26)) * Math.PI;
                 const jawRadius = Math.max(8, 16 * scaleFactor);
                 const jawAlpha = 0.18 + (0.55 * alpha);
 
