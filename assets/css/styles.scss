@@ -756,7 +756,7 @@ body.is-touch-device {
         width: 52px;
         height: 52px;
         right: 50px;
-        bottom: 95px;    
+        bottom: 95px;
         overflow: hidden;
         isolation: isolate;
         background: radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.14), rgba(8, 14, 22, 0.96) 72%) !important;
@@ -1569,7 +1569,7 @@ body.is-touch-device {
 
         &:hover {
             filter: brightness(1.1);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
         }
     }
 }
@@ -3497,6 +3497,7 @@ select.shop-control-input {
 .insect-art--kim-tam,
 .insect-art--bang-tam,
 .insect-art--thon-linh-trung {
+
     .insect-art__wing,
     .insect-art__leg,
     .insect-art__tail {
@@ -3648,6 +3649,7 @@ select.shop-control-input {
 }
 
 @keyframes pill-card-float {
+
     0%,
     100% {
         transform: translateY(0) scale(1);
@@ -4592,6 +4594,7 @@ select.shop-control-input {
 }
 
 @keyframes thanh-truc-halo-pulse {
+
     0%,
     100% {
         opacity: 0.54;
@@ -4605,6 +4608,7 @@ select.shop-control-input {
 }
 
 @keyframes thanh-truc-sword-float {
+
     0%,
     100% {
         transform: var(--sword-transform) translateY(0);
@@ -4616,6 +4620,7 @@ select.shop-control-input {
 }
 
 @keyframes thanh-truc-lightning-flicker {
+
     0%,
     100% {
         opacity: 0.32;
@@ -4873,8 +4878,7 @@ select.shop-control-input {
     stroke-linecap: round;
     stroke-linejoin: round;
     filter:
-        drop-shadow(0 0 4px color-mix(in srgb, var(--artifact-lightning-light, #FFF2C2) 88%, transparent))
-        drop-shadow(0 0 8px color-mix(in srgb, var(--artifact-lightning-mid, #E6C87A) 72%, transparent));
+        drop-shadow(0 0 4px color-mix(in srgb, var(--artifact-lightning-light, #FFF2C2) 88%, transparent)) drop-shadow(0 0 8px color-mix(in srgb, var(--artifact-lightning-mid, #E6C87A) 72%, transparent));
 }
 
 .material-art {
@@ -4902,6 +4906,7 @@ select.shop-control-input {
     }
 
     &--yeu-giac {
+
         .material-art__piece--1,
         .material-art__piece--2,
         .material-art__piece--3 {
@@ -5120,6 +5125,7 @@ select.shop-control-input {
 
     &--yeu-nanh,
     &--tu-nga {
+
         .material-art__piece--1,
         .material-art__piece--2 {
             top: 10px;
@@ -5155,6 +5161,7 @@ select.shop-control-input {
     }
 
     &--tu-nga {
+
         .material-art__piece--1,
         .material-art__piece--2 {
             width: 16px;
@@ -5163,6 +5170,7 @@ select.shop-control-input {
     }
 
     &--linh-vu {
+
         .material-art__piece--1,
         .material-art__piece--2,
         .material-art__piece--3 {
@@ -5200,6 +5208,7 @@ select.shop-control-input {
     }
 
     &--linh-mao {
+
         .material-art__piece--1,
         .material-art__piece--2,
         .material-art__piece--3 {
@@ -5238,6 +5247,7 @@ select.shop-control-input {
     &--giap-xac,
     &--linh-lan,
     &--long-lan {
+
         .material-art__piece--1,
         .material-art__piece--2,
         .material-art__piece--3 {
@@ -5311,6 +5321,7 @@ select.shop-control-input {
     }
 
     &--xuc-tu {
+
         .material-art__piece--1,
         .material-art__piece--2,
         .material-art__piece--3 {
@@ -5347,6 +5358,7 @@ select.shop-control-input {
     }
 
     &--yeu-cot {
+
         .material-art__piece--1,
         .material-art__piece--2 {
             left: 18px;
@@ -5384,6 +5396,7 @@ select.shop-control-input {
     }
 
     &--phong-cham {
+
         .material-art__piece--1,
         .material-art__piece--2,
         .material-art__piece--3 {
@@ -5449,8 +5462,8 @@ select.shop-control-input {
     text-align: center;
 }
 
-.shop-card > .slot-meta:not(.slot-meta-price),
-.inventory-slot > .slot-meta:not(.slot-meta-price) {
+.shop-card>.slot-meta:not(.slot-meta-price),
+.inventory-slot>.slot-meta:not(.slot-meta-price) {
     display: none;
 }
 
@@ -5501,7 +5514,7 @@ select.shop-control-input {
     white-space: nowrap;
 }
 
-.stone-cost-chip + .stone-cost-chip::before {
+.stone-cost-chip+.stone-cost-chip::before {
     content: '·';
     color: rgba(255, 255, 255, 0.38);
     margin: 0 auto;
@@ -5572,6 +5585,7 @@ select.shop-control-input {
 }
 
 @media (max-width: 980px) {
+
     .shop-grid,
     .inventory-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -5579,6 +5593,7 @@ select.shop-control-input {
 }
 
 @media (max-width: 860px) {
+
     .shop-grid,
     .inventory-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6119,6 +6134,7 @@ select.shop-control-input {
 }
 
 @keyframes chuong-thien-binh-halo {
+
     0%,
     100% {
         opacity: 0.44;
@@ -6132,23 +6148,23 @@ select.shop-control-input {
 }
 
 @keyframes chuong-thien-binh-image {
+
     0%,
     100% {
         filter:
-            drop-shadow(0 0 16px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 24%, transparent))
-            brightness(0.98);
+            drop-shadow(0 0 16px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 24%, transparent)) brightness(0.98);
         transform: translateY(1px) scale(0.975);
     }
 
     50% {
         filter:
-            drop-shadow(0 0 22px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 38%, transparent))
-            brightness(1.06);
+            drop-shadow(0 0 22px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 38%, transparent)) brightness(1.06);
         transform: translateY(-2px) scale(1.02);
     }
 }
 
 @keyframes chuong-thien-binh-particle {
+
     0%,
     100% {
         opacity: 0.24;
@@ -6162,6 +6178,7 @@ select.shop-control-input {
 }
 
 @keyframes kim-loi-truc-pulse {
+
     0%,
     100% {
         opacity: 0.46;
@@ -6175,6 +6192,7 @@ select.shop-control-input {
 }
 
 @keyframes kim-loi-truc-spark {
+
     0%,
     100% {
         opacity: 0.24;
@@ -6188,6 +6206,7 @@ select.shop-control-input {
 }
 
 @keyframes kim-loi-truc-ground-breathe {
+
     0%,
     100% {
         transform: translateX(-50%) scaleX(0.98);
@@ -6199,6 +6218,7 @@ select.shop-control-input {
 }
 
 @keyframes kim-loi-truc-bud-rise {
+
     0%,
     100% {
         transform: var(--kim-loi-core-transform, translateX(-50%));
@@ -6210,6 +6230,7 @@ select.shop-control-input {
 }
 
 @keyframes kim-loi-truc-sway {
+
     0%,
     100% {
         transform: var(--kim-loi-stalk-transform) scaleY(var(--kim-loi-stalk-scale, 1));
