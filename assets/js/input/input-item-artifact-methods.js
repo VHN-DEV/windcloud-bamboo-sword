@@ -4315,6 +4315,7 @@ Object.assign(Input, {
 
     drawCursor(ctx, scaleFactor) {
         this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
+        this.drawHuThienDinhShield(ctx, scaleFactor);
         if (this.isArtifactDeployed('CAN_LAM_BANG_DIEM')) {
             this.drawFlame(ctx, scaleFactor);
         } else {
@@ -4343,12 +4344,12 @@ Object.assign(Input, {
 
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = 'source-over';
 
         const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, radius * 1.95);
-        halo.addColorStop(0, withAlpha('#ffffff', 0.08 + (ratio * 0.12)));
-        halo.addColorStop(0.34, withAlpha(secondaryColor, 0.16 + (ratio * 0.12)));
-        halo.addColorStop(0.76, withAlpha(primaryColor, 0.2));
+        halo.addColorStop(0, withAlpha('#ffffff', 0.02 + (ratio * 0.03)));
+        halo.addColorStop(0.34, withAlpha(secondaryColor, 0.04 + (ratio * 0.05)));
+        halo.addColorStop(0.76, withAlpha(primaryColor, 0.07));
         halo.addColorStop(1, withAlpha(auraColor, 0));
         ctx.fillStyle = halo;
         ctx.beginPath();
@@ -4359,11 +4360,11 @@ Object.assign(Input, {
         ctx.scale(scaleFactor, scaleFactor);
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        ctx.strokeStyle = withAlpha(secondaryColor, 0.78);
-        ctx.fillStyle = withAlpha(primaryColor, 0.14 + (ratio * 0.08));
-        ctx.shadowBlur = 16 * scaleFactor;
-        ctx.shadowColor = withAlpha(auraColor, 0.72);
-        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.36);
+        ctx.fillStyle = withAlpha(primaryColor, 0.03 + (ratio * 0.02));
+        ctx.shadowBlur = 6 * scaleFactor;
+        ctx.shadowColor = withAlpha(auraColor, 0.22);
+        ctx.lineWidth = 1.3;
 
         ctx.beginPath();
         ctx.moveTo(-14, -20);
@@ -4386,8 +4387,8 @@ Object.assign(Input, {
         ctx.lineTo(6.5, -8.5);
         ctx.moveTo(-10.5, -8.5);
         ctx.lineTo(10.5, -8.5);
-        ctx.strokeStyle = withAlpha('#ffffff', 0.55);
-        ctx.lineWidth = 1.25;
+        ctx.strokeStyle = withAlpha('#ffffff', 0.26);
+        ctx.lineWidth = 0.9;
         ctx.stroke();
 
         const crackCount = Math.min(7, 2 + Math.floor(crackLevel * 8));
@@ -4404,8 +4405,8 @@ Object.assign(Input, {
             ctx.moveTo(sx, sy);
             ctx.lineTo((sx + ex) * 0.56, (sy + ey) * 0.56);
             ctx.lineTo(ex, ey);
-            ctx.strokeStyle = withAlpha('#f6fdff', 0.08 + (crackLevel * 0.48));
-            ctx.lineWidth = 0.48 + (crackLevel * 0.58);
+            ctx.strokeStyle = withAlpha('#f6fdff', 0.05 + (crackLevel * 0.24));
+            ctx.lineWidth = 0.36 + (crackLevel * 0.28);
             ctx.stroke();
         }
 
