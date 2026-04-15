@@ -473,6 +473,9 @@ const GameProgress = {
                     outputCount: Math.max(0, Math.floor(Number(parsed.alchemyBatch.outputCount) || 0)),
                     outputCategory: String(parsed.alchemyBatch.outputCategory || 'EXP'),
                     outputQuality: String(parsed.alchemyBatch.outputQuality || 'LOW'),
+                    outputRealmKey: parsed.alchemyBatch.outputRealmKey ? String(parsed.alchemyBatch.outputRealmKey) : null,
+                    outputRealmName: parsed.alchemyBatch.outputRealmName ? String(parsed.alchemyBatch.outputRealmName) : null,
+                    outputSpecialKey: parsed.alchemyBatch.outputSpecialKey ? String(parsed.alchemyBatch.outputSpecialKey) : null,
                     resolved: Boolean(parsed.alchemyBatch.resolved)
                 }
                 : null;

@@ -1088,6 +1088,7 @@ Object.assign(Input, {
         if (spec.uniqueKey) parts.push(spec.uniqueKey);
         if (spec.speciesKey) parts.push(spec.speciesKey);
         if (spec.materialKey) parts.push(spec.materialKey);
+        if (spec.source) parts.push(spec.source);
         return parts.join('|');
     },
 
@@ -1097,6 +1098,99 @@ Object.assign(Input, {
             || CONFIG.ARTIFACTS?.[uniqueKey]
             || CONFIG.INSECT?.UNIQUE_ITEMS?.[uniqueKey]
             || null;
+    },
+
+    getAlchemyRecipeDefinitions() {
+        const recipes = {};
+        const formulaLabels = CONFIG.ALCHEMY?.FORMULA_QUALITY_LABELS || {};
+        const materialsByQuality = {
+            LOW: ['LINH_TY', 'YEU_HUYET', 'TINH_THIT'],
+            MEDIUM: ['NGAN_NAM_HOANG_TINH', 'TUYET_NGOC_THAO', 'YEU_DAN'],
+            HIGH: ['NGUYET_HOA_LO', 'DIA_TAM_HOA_TINH', 'THIEN_LINH_QUA'],
+            SUPREME: ['HUYEN_HOA_LIEN', 'VAN_MOC_CHI', 'LONG_LAN']
+        };
+        const formulaQualityByPillQuality = {
+            LOW: 'LOW',
+            MEDIUM: 'MEDIUM',
+            HIGH: 'HIGH',
+            SUPREME: 'SUPREME'
+        };
+        const potionCategories = ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE'];
+
+        potionCategories.forEach(category => {
+            QUALITY_ORDER.forEach(quality => {
+                const formulaQuality = formulaQualityByPillQuality[quality] || 'LOW';
+                const formulaLabel = formulaLabels[formulaQuality] || 'Đan phương';
+                const qualityConfig = this.getItemQualityConfig({ category, quality });
+                const recipeKey = `AUTO:${category}:${quality}`;
+                const primaryMaterials = materialsByQuality[quality] || materialsByQuality.LOW;
+                recipes[recipeKey] = {
+                    key: recipeKey,
+                    name: `${formulaLabel} ${qualityConfig.fullName}`,
+                    formulaQuality,
+                    realmTier: 'Đan phương thường',
+                    buyPriceLowStone: Math.max(40, Math.floor((qualityConfig.buyPriceLowStone || 0) * 0.35)),
+                    brewTimeMs: 12000 + (QUALITY_ORDER.indexOf(quality) * 9000),
+                    output: { category, quality, count: 1 },
+                    ingredients: [
+                        { materialKey: primaryMaterials[0], count: 1 },
+                        { materialKey: primaryMaterials[1], count: 1 },
+                        { materialKey: primaryMaterials[2], count: quality === 'SUPREME' ? 2 : 1 }
+                    ]
+                };
+            });
+        });
+
+        const nextRealm = this.getNextMajorRealmInfo();
+        if (nextRealm) {
+            QUALITY_ORDER.forEach(quality => {
+                const formulaQuality = formulaQualityByPillQuality[quality] || 'LOW';
+                const formulaLabel = formulaLabels[formulaQuality] || 'Đan phương';
+                const qualityConfig = this.getItemQualityConfig({ category: 'BREAKTHROUGH', quality });
+                const recipeKey = `AUTO:BREAKTHROUGH:${quality}:${nextRealm.key}`;
+                recipes[recipeKey] = {
+                    key: recipeKey,
+                    name: `${formulaLabel} ${qualityConfig.label} ${nextRealm.name} đan`,
+                    formulaQuality,
+                    realmTier: 'Đột phá đan',
+                    buyPriceLowStone: Math.max(120, Math.floor((qualityConfig.buyPriceLowStone || 0) * 0.38)),
+                    brewTimeMs: 22000 + (QUALITY_ORDER.indexOf(quality) * 10000),
+                    output: { category: 'BREAKTHROUGH', quality, realmKey: nextRealm.key, realmName: nextRealm.name, count: 1 },
+                    ingredients: [
+                        { materialKey: 'NGAN_NAM_HOANG_TINH', count: 1 + QUALITY_ORDER.indexOf(quality) },
+                        { materialKey: 'TUYET_NGOC_THAO', count: 1 + (quality === 'SUPREME' ? 1 : 0) },
+                        { materialKey: 'THIEN_LINH_QUA', count: 1 }
+                    ]
+                };
+            });
+        }
+
+        Object.entries(CONFIG.PILL.SPECIAL_ITEMS || {}).forEach(([specialKey, specialConfig]) => {
+            const quality = specialConfig.quality || 'SUPREME';
+            const formulaQuality = formulaQualityByPillQuality[quality] || 'SUPREME';
+            const formulaLabel = formulaLabels[formulaQuality] || 'Đan phương';
+            const recipeKey = `AUTO:SPECIAL:${specialKey}`;
+            recipes[recipeKey] = {
+                key: recipeKey,
+                name: `${formulaLabel} ${specialConfig.fullName || specialKey}`,
+                formulaQuality,
+                realmTier: 'Cấm kỵ đan',
+                buyPriceLowStone: Math.max(1800, Math.floor((specialConfig.buyPriceLowStone || 0) * 0.5)),
+                brewTimeMs: 68000,
+                output: { category: 'SPECIAL', quality, specialKey, count: 1 },
+                ingredients: [
+                    { materialKey: 'HUYEN_HOA_LIEN', count: 2 },
+                    { materialKey: 'THIEN_LINH_QUA', count: 2 },
+                    { materialKey: 'KIM_LOI_TRUC_ROOT', count: 1 }
+                ]
+            };
+        });
+
+        return recipes;
+    },
+
+    getAlchemyRecipeByKey(recipeKey) {
+        return this.getAlchemyRecipeDefinitions()?.[recipeKey] || null;
     },
 
     getItemQualityConfig(item) {
@@ -1122,7 +1216,7 @@ Object.assign(Input, {
             INSECT_ARTIFACT: CONFIG.INSECT.UNIQUE_ITEMS,
             SPIRIT_BAG: { HIGH: CONFIG.INSECT.BEAST_BAG },
             RAINBOW_SPIRIT_BAG: { SUPREME: CONFIG.INSECT.SEVEN_COLOR_BEAST_BAG },
-            ALCHEMY_RECIPE: CONFIG.ALCHEMY?.RECIPES || {},
+            ALCHEMY_RECIPE: this.getAlchemyRecipeDefinitions() || {},
             ALCHEMY_FURNACE: CONFIG.ALCHEMY?.FURNACES || {}
         };
 
@@ -1140,7 +1234,7 @@ Object.assign(Input, {
         }
 
         if (item.category === 'ALCHEMY_RECIPE') {
-            return CONFIG.ALCHEMY?.RECIPES?.[item.recipeKey] || CONFIG.PILL.EXP_QUALITIES.LOW;
+            return this.getAlchemyRecipeByKey(item.recipeKey) || CONFIG.PILL.EXP_QUALITIES.LOW;
         }
 
         if (item.category === 'ALCHEMY_FURNACE') {
@@ -1763,7 +1857,7 @@ Object.assign(Input, {
             });
         });
 
-        Object.entries(CONFIG.ALCHEMY?.RECIPES || {}).forEach(([recipeKey, recipeConfig]) => {
+        Object.entries(this.getAlchemyRecipeDefinitions() || {}).forEach(([recipeKey, recipeConfig]) => {
             items.push({
                 id: `ALCHEMY_RECIPE:${recipeKey}`,
                 kind: 'ALCHEMY_RECIPE',
@@ -2072,13 +2166,18 @@ Object.assign(Input, {
 
     getInventorySellPrice(item) {
         if (!item) return 0;
+        if (item.category === 'SWORD_ARTIFACT' && item.source === 'REFINED') {
+            return Math.max(1, Math.floor(Number(item.sellPriceLowStone) || 0));
+        }
         if (['ARTIFACT', 'SWORD_ARTIFACT', 'INSECT_ARTIFACT', 'INSECT_SKILL', 'SWORD_ART', 'FLAME_ART'].includes(item.category)) return 0;
 
         const qualityConfig = this.getItemQualityConfig(item);
         const buyPrice = Math.max(0, qualityConfig.buyPriceLowStone || 0);
         const ratio = Math.max(0, parseFloat(CONFIG.ITEMS.SELLBACK_RATIO) || 0);
+        const craftedBonusMultiplier = item.source === 'ALCHEMY' ? 1.6 : 1;
+        const computedPrice = Math.floor(buyPrice * ratio * craftedBonusMultiplier);
 
-        return Math.max(1, Math.floor(buyPrice * ratio));
+        return Math.max(1, computedPrice);
     },
 
     sellInventoryItem(itemKey) {

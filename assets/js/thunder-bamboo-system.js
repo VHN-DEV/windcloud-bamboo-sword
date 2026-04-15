@@ -493,7 +493,9 @@
         const alchemyConfig = this.getAlchemyConfig();
         const recipeMap = alchemyConfig.MATERIAL_RECIPE_MAP || {};
         const recipeKeys = Array.isArray(recipeMap[materialKey]) ? recipeMap[materialKey] : [];
-        const recipeDefs = alchemyConfig.RECIPES || {};
+        const recipeDefs = typeof this.getAlchemyRecipeDefinitions === 'function'
+            ? this.getAlchemyRecipeDefinitions()
+            : (alchemyConfig.RECIPES || {});
 
         return recipeKeys
             .map(recipeKey => ({
@@ -539,11 +541,21 @@
         if (!batch || batch.resolved) return false;
         if (this.getAlchemyBatchRemainingMs() > 0) return false;
 
-        const recipe = this.getAlchemyConfig().RECIPES?.[batch.recipeKey];
+        const recipe = typeof this.getAlchemyRecipeByKey === 'function'
+            ? this.getAlchemyRecipeByKey(batch.recipeKey)
+            : this.getAlchemyConfig().RECIPES?.[batch.recipeKey];
         const outputName = this.getItemDisplayName({ category: batch.outputCategory, quality: batch.outputQuality });
         const count = Math.max(0, Math.floor(Number(batch.outputCount) || 0));
         for (let i = 0; i < count; i++) {
-            this.addInventoryItem({ kind: 'PILL', category: batch.outputCategory, quality: batch.outputQuality }, 1);
+            this.addInventoryItem({
+                kind: 'PILL',
+                category: batch.outputCategory,
+                quality: batch.outputQuality,
+                realmKey: batch.outputRealmKey || null,
+                realmName: batch.outputRealmName || null,
+                specialKey: batch.outputSpecialKey || null,
+                source: 'ALCHEMY'
+            }, 1);
         }
 
         const furnaceName = this.getAlchemyFurnaceConfig(batch.furnaceKey)?.name || 'Hư Thiên Đỉnh';
@@ -586,7 +598,9 @@
 
     Input.craftAlchemyRecipe = function (recipeKey) {
         const alchemyConfig = this.getAlchemyConfig();
-        const recipe = alchemyConfig.RECIPES?.[recipeKey];
+        const recipe = typeof this.getAlchemyRecipeByKey === 'function'
+            ? this.getAlchemyRecipeByKey(recipeKey)
+            : alchemyConfig.RECIPES?.[recipeKey];
         if (!recipe || !recipe.output || !Array.isArray(recipe.ingredients)) return false;
 
         const huThienColor = this.getArtifactConfig('HU_THIEN_DINH')?.color || alchemyConfig.NOTIFY_COLOR || '#93c8d8';
@@ -646,6 +660,9 @@
             outputCount,
             outputCategory: output.category || 'EXP',
             outputQuality: output.quality || 'LOW',
+            outputRealmKey: output.realmKey || null,
+            outputRealmName: output.realmName || null,
+            outputSpecialKey: output.specialKey || null,
             resolved: false
         };
         showNotify(

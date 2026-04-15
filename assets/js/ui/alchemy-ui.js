@@ -57,14 +57,19 @@ AlchemyUI = {
     },
 
     getRecipeModels() {
-        const recipeDefs = CONFIG.ALCHEMY?.RECIPES || {};
+        const recipeDefs = typeof Input.getAlchemyRecipeDefinitions === 'function'
+            ? Input.getAlchemyRecipeDefinitions()
+            : (CONFIG.ALCHEMY?.RECIPES || {});
         return Object.entries(recipeDefs)
             .filter(([recipeKey]) => typeof Input.canUseAlchemyRecipe === 'function' ? Input.canUseAlchemyRecipe(recipeKey) : true)
             .map(([recipeKey, recipe]) => {
                 const outputSpec = {
                     kind: 'PILL',
                     category: recipe?.output?.category || 'EXP',
-                    quality: recipe?.output?.quality || 'LOW'
+                    quality: recipe?.output?.quality || 'LOW',
+                    realmKey: recipe?.output?.realmKey || null,
+                    realmName: recipe?.output?.realmName || null,
+                    specialKey: recipe?.output?.specialKey || null
                 };
                 const outputName = Input.getItemDisplayName(outputSpec);
                 const requirements = Array.isArray(recipe.ingredients)
