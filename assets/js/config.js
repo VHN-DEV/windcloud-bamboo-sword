@@ -820,6 +820,7 @@ const CONFIG = {
             // Mỗi mốc sourceRankId sẽ mở popup độ kiếp và nếu thành công sẽ nhảy sang targetRankId.
             // Có thể thêm bao nhiêu mốc tùy ý.
             STEPS: [
+                { sourceRankId: 1, targetRankId: 2 },
                 { sourceRankId: 41, targetRankId: 42 } // Đại thừa đại viên mãn -> Chân tiên sơ kỳ
             ],
 
@@ -853,7 +854,7 @@ const CONFIG = {
         RANKS: [
             // --- NHÂN GIỚI ---
             // Luyện Khí Kỳ (Xanh lá)
-            { id: 1, name: "Luyện khí sơ kỳ (Tầng 1)", exp: 5, expGive: 1, chance: 1, swordDurability: 3, damage: 1, hp: 1000, maxMana: 10, color: "#4CAF50", lightColor: "#A5D6A7" },
+            { id: 1, name: "Luyện khí sơ kỳ (Tầng 1)", exp: 0, expGive: 1, chance: 1, swordDurability: 3, damage: 1, hp: 1000, maxMana: 10, color: "#4CAF50", lightColor: "#A5D6A7" },
             { id: 2, name: "Luyện khí sơ kỳ (Tầng 2)", exp: 6, expGive: 1, chance: 0.95, swordDurability: 4, damage: 2, hp: 1100, maxMana: 15, color: "#4CAF50", lightColor: "#A5D6A7" },
             { id: 3, name: "Luyện khí sơ kỳ (Tầng 3)", exp: 7, expGive: 1, chance: 0.95, swordDurability: 5, damage: 3, hp: 1200, maxMana: 20, color: "#4CAF50", lightColor: "#A5D6A7" },
             { id: 4, name: "Luyện khí sơ kỳ (Tầng 4)", exp: 9, expGive: 2, chance: 0.95, swordDurability: 6, damage: 4, hp: 1300, maxMana: 25, color: "#4CAF50", lightColor: "#A5D6A7" },
