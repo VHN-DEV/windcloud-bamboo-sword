@@ -816,8 +816,16 @@ const CONFIG = {
         BREAKTHROUGH_PENALTY_FACTOR: 0.4, // Hệ số mất tu vi khi đột phá thất bại (40%)
         OVERFLOW_LIMIT: 1.2,              // Giới hạn tràn exp (120% lượng exp cần thiết)
         TRIBULATION: {
-            SOURCE_RANK_ID: 41, // Đại thừa đại viên mãn
-            TARGET_RANK_ID: 42, // Chân tiên sơ kỳ
+            // Cấu hình linh động các mốc độ kiếp:
+            // Mỗi mốc sourceRankId sẽ mở popup độ kiếp và nếu thành công sẽ nhảy sang targetRankId.
+            // Có thể thêm bao nhiêu mốc tùy ý.
+            STEPS: [
+                { sourceRankId: 41, targetRankId: 42 } // Đại thừa đại viên mãn -> Chân tiên sơ kỳ
+            ],
+
+            // Legacy fallback (giữ tương thích ngược nếu chưa dùng STEPS)
+            SOURCE_RANK_ID: 41,
+            TARGET_RANK_ID: 42,
             STRIKE_COUNT: 9,
             BASE_HP: 1000,
             STRIKE_INTERVAL_MS: 700,

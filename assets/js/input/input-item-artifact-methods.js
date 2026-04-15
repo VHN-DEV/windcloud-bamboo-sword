@@ -2368,14 +2368,42 @@ Object.assign(Input, {
         return true;
     },
 
+    getTribulationSteps() {
+        const tribulationCfg = CONFIG.CULTIVATION?.TRIBULATION || {};
+        const configuredSteps = Array.isArray(tribulationCfg.STEPS) ? tribulationCfg.STEPS : [];
+
+        const normalizedSteps = configuredSteps
+            .map(step => {
+                const sourceRankId = Number(step?.sourceRankId ?? step?.SOURCE_RANK_ID);
+                const targetRankId = Number(step?.targetRankId ?? step?.TARGET_RANK_ID);
+                if (!Number.isFinite(sourceRankId) || !Number.isFinite(targetRankId)) return null;
+                return { sourceRankId, targetRankId };
+            })
+            .filter(Boolean);
+
+        if (normalizedSteps.length > 0) return normalizedSteps;
+
+        // Fallback tương thích ngược với cấu hình cũ chỉ có 1 mốc độ kiếp.
+        const sourceRankId = Number(tribulationCfg.SOURCE_RANK_ID) || 41;
+        const targetRankId = Number(tribulationCfg.TARGET_RANK_ID) || 42;
+        return [{ sourceRankId, targetRankId }];
+    },
+
+    getTribulationStepForRank(rankId) {
+        const targetRankId = Number(rankId);
+        if (!Number.isFinite(targetRankId)) return null;
+        return this.getTribulationSteps().find(step => step.sourceRankId === targetRankId) || null;
+    },
+
     isAtTribulationThreshold() {
         const currentRank = this.getCurrentRank();
-        const sourceRankId = Number(CONFIG.CULTIVATION?.TRIBULATION?.SOURCE_RANK_ID) || 41;
-        return Number(currentRank?.id) === sourceRankId;
+        return Boolean(this.getTribulationStepForRank(currentRank?.id));
     },
 
     getTribulationTargetRankIndex() {
-        const targetRankId = Number(CONFIG.CULTIVATION?.TRIBULATION?.TARGET_RANK_ID) || 42;
+        const currentRank = this.getCurrentRank();
+        const currentStep = this.getTribulationStepForRank(currentRank?.id);
+        const targetRankId = Number(currentStep?.targetRankId) || Number(CONFIG.CULTIVATION?.TRIBULATION?.TARGET_RANK_ID) || 42;
         return getRankIndexById(targetRankId);
     },
 
