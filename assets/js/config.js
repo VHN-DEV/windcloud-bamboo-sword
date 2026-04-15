@@ -830,8 +830,10 @@ const CONFIG = {
             BASE_HP: 1000,
             STRIKE_INTERVAL_MS: 1200,
             PREPARE_DELAY_MS: 800,
-            DAMAGE_RATIO_MIN: 0.08,
-            DAMAGE_RATIO_MAX: 0.18
+            // Dải sát thương tinh chỉnh để độ kiếp không gần-như-chắc-thất-bại.
+            // Với 9 đạo lôi kiếp, mốc này cho tỉ lệ sống sót trung bình ~55%.
+            DAMAGE_RATIO_MIN: 0.07,
+            DAMAGE_RATIO_MAX: 0.15
         },
         MAJOR_REALMS: [
             { key: "LUYEN_KHI", name: "Luyện khí", startId: 1, endId: 13, nextKey: "TRUC_CO", nextName: "Trúc cơ" },
