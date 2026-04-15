@@ -198,19 +198,19 @@ const CONFIG = {
                 {
                     years: 1,
                     label: "Bạch Lôi Trúc",
-                    displayName: "Bạch Lôi Trúc - Sét trắng thường",
+                    displayName: "Bạch Lôi Trúc",
                     visualStage: "white-lightning"
                 },
                 {
                     years: 5000,
                     label: "Lam Lôi Trúc",
-                    displayName: "Lam Lôi Trúc - Sét lam",
+                    displayName: "Lam Lôi Trúc",
                     visualStage: "azure-lightning"
                 },
                 {
                     years: 10000,
                     label: "Kim Lôi Trúc",
-                    displayName: "Kim Lôi Trúc - Sét vàng kim",
+                    displayName: "Kim Lôi Trúc",
                     visualStage: "golden-lightning"
                 }
             ]
