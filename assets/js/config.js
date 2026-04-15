@@ -901,12 +901,6 @@ const CONFIG = {
             { id: 40, name: "Đại thừa hậu kỳ", exp: 480000, expGive: 96000, chance: 0.03, swordDurability: 42, damage: 40, hp: 4900, maxMana: 205, color: "#D32F2F", lightColor: "#FFEBEE" },
             { id: 41, name: "Đại thừa đại viên mãn", exp: 600000, expGive: 120000, chance: 0.02, swordDurability: 43, damage: 41, hp: 5000, maxMana: 210, bonus: 80000, color: "#B71C1C", lightColor: "#FFFFFF" },
 
-            // Độ Kiếp (Thiên lôi)
-            { id: 42, name: "Độ kiếp chuẩn bị", exp: 750000, expGive: 150000, chance: 0.018, swordDurability: 44, damage: 42, hp: 5100, maxMana: 220, color: "#9AD8FF", lightColor: "#E3F4FF" },
-            { id: 43, name: "Độ kiếp tiểu thiên kiếp", exp: 950000, expGive: 190000, chance: 0.016, swordDurability: 45, damage: 43, hp: 5250, maxMana: 230, color: "#6FC7FF", lightColor: "#C9EDFF" },
-            { id: 44, name: "Độ kiếp trung thiên kiếp", exp: 1250000, expGive: 250000, chance: 0.014, swordDurability: 46, damage: 44, hp: 5400, maxMana: 240, color: "#45A8FF", lightColor: "#C2DDFF" },
-            { id: 45, name: "Độ kiếp đại thiên kiếp", exp: 1700000, expGive: 340000, chance: 0.012, swordDurability: 47, damage: 45, hp: 5600, maxMana: 250, bonus: 280000, color: "#2B7CFF", lightColor: "#FFFFFF" },
-
             // --- TIÊN GIỚI ---
             // Chân Tiên (Vàng kim)
             { id: 46, name: "Chân tiên sơ kỳ", exp: 2300000, expGive: 460000, chance: 0.011, swordDurability: 48, damage: 46, hp: 5800, maxMana: 260, color: "#FFE082", lightColor: "#FFF8D1" },
