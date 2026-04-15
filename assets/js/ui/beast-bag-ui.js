@@ -11,6 +11,13 @@ function buildInsectEggCardMarkup(speciesKey, count) {
             return `${materialConfig?.fullName || requirement.materialKey} ${formatNumber(requirement.owned)}/${formatNumber(requirement.count)}`;
         }).join(' • ')
         : 'Không cần nguyên liệu';
+    const hatchStatus = hatchPreview.reason === 'book'
+        ? 'Cần Kỳ Trùng Bảng để ấp nở'
+        : hatchPreview.reason === 'materials'
+            ? 'Thiếu nguyên liệu để ấp'
+            : hatchPreview.reason === 'full'
+                ? 'Linh Thú Đại đã đầy'
+                : 'Sẵn sàng ấp nở';
 
     return `
         <article class="inventory-slot beast-slot beast-slot--egg" style="--slot-accent:${species.eggColor || species.color};${buildInsectVisualVars(species, { egg: true })}">
@@ -42,9 +49,13 @@ function buildInsectEggCardMarkup(speciesKey, count) {
                     <span>Nguyên liệu</span>
                     <strong>${escapeHtml(requirementText)}</strong>
                 </div>
+                <div class="beast-slot__detail beast-slot__detail--wide">
+                    <span>Trạng thái ấp nở</span>
+                    <strong>${escapeHtml(hatchStatus)}</strong>
+                </div>
             </div>
             <div class="beast-slot__actions">
-                <button class="btn-slot-action" data-beast-action="hatch" data-species-key="${escapeHtml(speciesKey)}">Ấp nở</button>
+                <button class="btn-slot-action" data-beast-action="hatch" data-species-key="${escapeHtml(speciesKey)}" ${hatchPreview.canHatch ? '' : 'disabled'}>Ấp nở</button>
             </div>
         </article>
     `;

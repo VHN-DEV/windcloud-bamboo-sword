@@ -817,6 +817,11 @@ Object.assign(Input, {
             return { success: false, reason: 'materials', count: 0 };
         }
 
+        if (hatchPreview.reason === 'book') {
+            showNotify('Cần Kỳ Trùng Bảng để định huyết mạch và ấp nở trùng noãn.', '#ffd871');
+            return { success: false, reason: 'book', count: 0 };
+        }
+
         if (hatchCount <= 0) {
             return { success: false, reason: 'full', count: 0 };
         }

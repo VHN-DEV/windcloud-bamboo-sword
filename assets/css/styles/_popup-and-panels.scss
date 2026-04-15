@@ -2267,6 +2267,35 @@ select.shop-control-input {
     font-size: 11px;
 }
 
+.insect-book-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+
+    .btn-slot-action {
+        width: 100%;
+    }
+}
+
+.insect-book-card__line {
+    display: grid;
+    gap: 4px;
+    color: rgba(240, 255, 249, 0.72);
+    font-size: 11px;
+
+    span {
+        opacity: 0.78;
+    }
+
+    strong {
+        color: rgba(248, 255, 252, 0.94);
+        font-size: 11px;
+        line-height: 1.45;
+        font-weight: 600;
+    }
+}
+
 @keyframes pill-card-float {
 
     0%,

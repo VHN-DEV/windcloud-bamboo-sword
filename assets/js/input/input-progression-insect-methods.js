@@ -824,6 +824,7 @@ Object.assign(Input, {
         const species = this.getInsectSpecies(speciesKey);
         const requestedCount = Math.max(1, Math.floor(count || 1));
         const availableEggs = Math.max(0, Math.floor(this.insectEggs?.[speciesKey] || 0));
+        const hasInsectBook = this.hasKyTrungBang();
         const freeSlots = this.hasInsectHabitat(speciesKey)
             ? this.getInsectHabitatFreeSlots(speciesKey)
             : 0;
@@ -841,17 +842,19 @@ Object.assign(Input, {
                 return Math.min(minCount, Math.floor(requirement.owned / perEgg));
             }, Number.POSITIVE_INFINITY)
             : Number.POSITIVE_INFINITY;
-        const hatchCount = species
+        const hatchCount = species && hasInsectBook
             ? Math.min(requestedCount, availableEggs, freeSlots, maxByMaterials)
             : 0;
         let reason = 'ready';
 
         if (!species || availableEggs <= 0) reason = 'no-egg';
+        else if (!hasInsectBook) reason = 'book';
         else if (freeSlots <= 0) reason = 'full';
         else if (maxByMaterials <= 0) reason = 'materials';
 
         return {
             species,
+            hasInsectBook,
             availableEggs,
             freeSlots,
             hatchCount,

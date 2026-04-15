@@ -325,6 +325,18 @@ InsectBookUI = {
         this.overlay.addEventListener('pointerdown', (e) => {
             if (e.target === this.overlay) this.close();
         });
+
+        this.grid.addEventListener('pointerdown', (e) => {
+            const button = e.target.closest('[data-insect-book-action="hatch"]');
+            if (!button) return;
+            e.stopPropagation();
+
+            const speciesKey = button.getAttribute('data-species-key');
+            if (!speciesKey) return;
+
+            Input.hatchInsectEgg(speciesKey, 1);
+            this.render();
+        });
     },
 
     render() {
@@ -353,6 +365,26 @@ InsectBookUI = {
             const tier = Input.getInsectTierInfo(species.tier);
             const eggCount = Input.insectEggs[speciesKey] || 0;
             const beastCount = Input.tamedInsects[speciesKey] || 0;
+            const hatchPreview = Input.getHatchPreview(speciesKey, 1);
+            const careStatus = Input.getSpeciesCareStatus(speciesKey);
+            const hatchRequirementText = hatchPreview.requirements.length
+                ? hatchPreview.requirements.map(requirement => {
+                    const material = Input.getMaterialConfig(requirement.materialKey);
+                    return `${material?.fullName || requirement.materialKey} ${formatNumber(requirement.owned)}/${formatNumber(requirement.count)}`;
+                }).join(' • ')
+                : 'Không cần nguyên liệu';
+            const preferredFoodText = careStatus.preferredFoodKeys.length
+                ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
+                : 'Mọi thức ăn có linh dưỡng';
+            const hatchStatusText = hatchPreview.reason === 'book'
+                ? 'Cần Kỳ Trùng Bảng để ấp nở'
+                : hatchPreview.reason === 'no-egg'
+                    ? 'Không có trứng'
+                    : hatchPreview.reason === 'full'
+                        ? `Linh Thú Đại đã đầy (${formatNumber(hatchPreview.freeSlots)} ô trống)`
+                        : hatchPreview.reason === 'materials'
+                            ? 'Thiếu nguyên liệu để ấp'
+                            : `Sẵn sàng ấp nở (${formatNumber(hatchPreview.hatchCount)} trứng)`;
 
             return `
                 <article class="insect-book-card ${discovered ? 'is-discovered' : 'is-locked'}" style="${buildInsectBookStyleVars(species)}">
@@ -368,6 +400,28 @@ InsectBookUI = {
                             ${getInsectStyleLabel(species) ? `<span>${escapeHtml(getInsectStyleLabel(species))}</span>` : ''}
                             <span>Trứng ${formatNumber(eggCount)}</span>
                             <span>Đã nở ${formatNumber(beastCount)}</span>
+                        </div>
+                        <div class="insect-book-card__actions">
+                            <div class="insect-book-card__line">
+                                <span>Ấp nở</span>
+                                <strong>${escapeHtml(hatchStatusText)}</strong>
+                            </div>
+                            <div class="insect-book-card__line">
+                                <span>Nguyên liệu</span>
+                                <strong>${escapeHtml(hatchRequirementText)}</strong>
+                            </div>
+                            <div class="insect-book-card__line">
+                                <span>Thức ăn hợp đàn</span>
+                                <strong>${escapeHtml(preferredFoodText)}</strong>
+                            </div>
+                            <button
+                                class="btn-slot-action"
+                                data-insect-book-action="hatch"
+                                data-species-key="${escapeHtml(speciesKey)}"
+                                ${hatchPreview.canHatch ? '' : 'disabled'}
+                            >
+                                Ấp 1 trứng
+                            </button>
                         </div>
                     </div>
                 </article>

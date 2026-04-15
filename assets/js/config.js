@@ -1119,18 +1119,18 @@ const CONFIG = {
         ULTIMATE: {
             NAME: "Vạn Trùng Phệ Giới",
             NOTIFY_COLOR: "#ff7bc3",
-            DURATION_MS: 9000, // Thời gian hiệu lực của chiêu thức
-            HIT_INTERVAL_MS: 120, // Thời gian giữa các lần tấn công
+            DURATION_MS: 7600, // Thời gian hiệu lực của chiêu thức
+            HIT_INTERVAL_MS: 150, // Thời gian giữa các lần tấn công
             TARGET_RANGE: 320, // Khoảng cách tối đa để bầy trùng có thể tấn công mục tiêu
-            DAMAGE_MULTIPLIER: 1.72, // Hệ số sát thương của chiêu thức (sát thương thực tế = damage multiplier * sát thương cơ bản của bầy trùng)
-            STRIKES_PER_SPECIES: 2, // Số lần tấn công tối đa trên mỗi loài trùng trong một lần sử dụng chiêu thức (giúp tăng tính đa dạng của mục tiêu bị tấn công)
-            MAX_TARGETS: 7, // Số lượng mục tiêu tối đa có thể bị tấn công trong một lần sử dụng chiêu thức (giúp cân bằng sức mạnh của chiêu thức)
-            VISUAL_LIMIT: 54, // Giới hạn số lượng hình ảnh trực quan hiển thị (chiêu thức mạnh hơn nên có thể hiển thị nhiều hơn)
+            DAMAGE_MULTIPLIER: 1.32, // Hệ số sát thương của chiêu thức (sát thương thực tế = damage multiplier * sát thương cơ bản của bầy trùng)
+            STRIKES_PER_SPECIES: 1, // Số lần tấn công tối đa trên mỗi loài trùng trong một lần sử dụng chiêu thức (giúp tăng tính đa dạng của mục tiêu bị tấn công)
+            MAX_TARGETS: 5, // Số lượng mục tiêu tối đa có thể bị tấn công trong một lần sử dụng chiêu thức (giúp cân bằng sức mạnh của chiêu thức)
+            VISUAL_LIMIT: 48, // Giới hạn số lượng hình ảnh trực quan hiển thị (chiêu thức mạnh hơn nên có thể hiển thị nhiều hơn)
             VISUAL_RADIUS: 118, // Bán kính cố định của hình ảnh trực quan (chiêu thức mạnh hơn nên có bán kính lớn hơn)
             VISUAL_JITTER: 24,             // Độ rung ngẫu nhiên của quỹ đạo bầy trùng (chiêu thức mạnh hơn nên có thể có độ rung lớn hơn)
-            REPRODUCE_ON_KILL_CHANCE: 0.38, // Tỉ lệ sinh sản thêm một con trùng mới khi bầy trùng hiện tại giết được một mục tiêu (chiêu thức mạnh hơn nên có tỉ lệ sinh sản cao hơn)
-            DEATH_ON_HIT_CHANCE: 0.01, // Tỉ lệ chết khi bầy trùng tấn công trúng mục tiêu (do quá sức hoặc phản đòn) (chiêu thức mạnh hơn nên có tỉ lệ chết thấp hơn)
-            DEATH_ON_SHIELD_CHANCE: 0.04 // Tỉ lệ chết khi bầy trùng bị chắn bởi khiên hoặc lá chắn (do va chạm hoặc phản đòn) (chiêu thức mạnh hơn nên có tỉ lệ chết thấp hơn)
+            REPRODUCE_ON_KILL_CHANCE: 0.2, // Tỉ lệ sinh sản thêm một con trùng mới khi bầy trùng hiện tại giết được một mục tiêu (chiêu thức mạnh hơn nên có tỉ lệ sinh sản cao hơn)
+            DEATH_ON_HIT_CHANCE: 0.03, // Tỉ lệ chết khi bầy trùng tấn công trúng mục tiêu (do quá sức hoặc phản đòn) (chiêu thức mạnh hơn nên có tỉ lệ chết thấp hơn)
+            DEATH_ON_SHIELD_CHANCE: 0.08 // Tỉ lệ chết khi bầy trùng bị chắn bởi khiên hoặc lá chắn (do va chạm hoặc phản đòn) (chiêu thức mạnh hơn nên có tỉ lệ chết thấp hơn)
         },
         SPECIES: {
             KIEN_THIEN_TINH: {
