@@ -6008,7 +6008,8 @@ select.shop-control-input {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    overflow: hidden;
+    overflow: visible;
+    z-index: 6;
 }
 
 .tribulation-cloud-lightning {
@@ -6100,14 +6101,19 @@ select.shop-control-input {
     position: absolute;
     top: clamp(110px, 20vh, 212px);
     left: 50%;
-    width: clamp(4px, 0.55vw, 8px);
+    width: clamp(7px, 0.74vw, 13px);
     height: 0;
-    transform: translateX(-50%) scaleX(calc(1 + var(--tribulation-strike-power) * 0.16));
+    transform: translateX(-50%) scaleX(calc(1 + var(--tribulation-strike-power) * 0.18));
     transform-origin: center top;
     opacity: 0;
-    background: linear-gradient(180deg, rgba(247, 255, 255, 0.98), rgba(168, 226, 255, 0.94) 58%, rgba(110, 166, 255, 0));
-    box-shadow: 0 0 calc(10px + var(--tribulation-strike-power) * 2px) rgba(154, 232, 255, 0.86);
-    clip-path: polygon(50% 0, 100% 12%, 35% 24%, 92% 38%, 20% 52%, 85% 66%, 10% 80%, 70% 94%, 42% 100%, 0 88%, 58% 74%, 12% 58%, 76% 42%, 18% 26%, 82% 10%);
+    z-index: 9;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(214, 242, 255, 0.95) 44%, rgba(125, 188, 255, 0.78) 74%, rgba(96, 153, 244, 0) 100%);
+    box-shadow:
+        0 0 calc(16px + var(--tribulation-strike-power) * 3px) rgba(180, 242, 255, 0.95),
+        0 0 calc(32px + var(--tribulation-strike-power) * 6px) rgba(128, 196, 255, 0.6);
+    clip-path: polygon(50% 0, 98% 7%, 58% 14%, 94% 21%, 42% 30%, 88% 39%, 30% 48%, 82% 57%, 22% 66%, 76% 76%, 28% 85%, 66% 93%, 38% 100%, 8% 92%, 44% 82%, 14% 71%, 52% 60%, 18% 49%, 60% 36%, 24% 24%, 68% 12%);
+    filter: saturate(1.12);
 }
 
 .tribulation-bolt.is-striking {
@@ -6118,22 +6124,22 @@ select.shop-control-input {
 .tribulation-bolt::after {
     content: '';
     position: absolute;
-    width: 100%;
-    height: 34%;
+    width: 88%;
+    height: 38%;
     left: 0;
     background: inherit;
-    clip-path: polygon(42% 0, 100% 24%, 28% 52%, 86% 74%, 16% 100%, 0 84%, 62% 58%, 10% 34%, 76% 12%);
-    opacity: 0.92;
+    clip-path: polygon(50% 0, 100% 14%, 40% 30%, 92% 48%, 24% 66%, 82% 84%, 26% 100%, 0 90%, 54% 74%, 12% 56%, 62% 38%, 18% 20%, 72% 10%);
+    opacity: 0.9;
 }
 
 .tribulation-bolt::before {
-    top: 30%;
-    transform: translateX(-140%) rotate(-24deg);
+    top: 26%;
+    transform: translateX(-124%) rotate(-26deg) scaleY(0.9);
 }
 
 .tribulation-bolt::after {
-    top: 58%;
-    transform: translateX(128%) rotate(20deg) scaleY(0.9);
+    top: 54%;
+    transform: translateX(130%) rotate(22deg) scaleY(0.86);
 }
 
 .tribulation-bolt-fragment {
@@ -6207,6 +6213,7 @@ select.shop-control-input {
     display: flex;
     align-items: flex-end;
     justify-content: center;
+    z-index: 4;
 }
 
 .tribulation-ground-land {
@@ -6352,8 +6359,9 @@ select.shop-control-input {
 
 @keyframes tribulation-bolt-drop {
     0% { height: 0; opacity: 0; }
-    25% { opacity: 1; }
-    100% { height: clamp(320px, 58vh, 620px); opacity: calc(0.08 + var(--tribulation-strike-power) * 0.03); }
+    16% { opacity: 1; }
+    82% { opacity: 0.94; }
+    100% { height: clamp(360px, 64vh, 720px); opacity: calc(0.1 + var(--tribulation-strike-power) * 0.05); }
 }
 
 @keyframes tribulation-bolt-fragment-drop {
