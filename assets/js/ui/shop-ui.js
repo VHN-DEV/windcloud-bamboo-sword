@@ -198,56 +198,15 @@ ShopUI = {
             const isOwnedUnique = Boolean(item.isOneTime && item.uniqueKey && Input.hasUniquePurchase(item.uniqueKey));
             const hasDedicatedHabitat = item.category === 'SPIRIT_HABITAT' && Boolean(Input.insectHabitats?.[item.speciesKey]);
             const hasRainbowHabitat = item.category === 'SPIRIT_HABITAT' && Input.hasSevenColorSpiritBag();
-            const swordProgress = item.category === 'SWORD_ARTIFACT' ? Input.getSwordFormationProgress() : null;
-            const canStoreOrUpgrade = item.category === 'BAG'
-                ? Input.canUpgradeInventoryCapacity(item)
-                : item.category === 'RAINBOW_BAG'
-                    ? Input.canUpgradeInventoryCapacity(item)
-                    : item.category === 'SPIRIT_BAG'
-                        ? Input.canUpgradeBeastBagCapacity(item)
-                        : item.category === 'RAINBOW_SPIRIT_BAG'
-                            ? Input.canUpgradeBeastBagCapacity(item)
-                            : item.category === 'SPIRIT_HABITAT'
-                                ? Input.canUpgradeBeastBagCapacity(item)
-                                : item.category === 'INSECT_EGG'
-                                    ? true
-                                    : item.category === 'SWORD_ARTIFACT'
-                                        ? Input.hasInventorySpaceForSpec(item)
-                                    : (!isOwnedUnique && Input.hasInventorySpaceForSpec(item));
+            const canStoreOrUpgrade = this.canStoreOrUpgrade(item, isOwnedUnique);
             const canAfford = !Input.isVoidCollapsed && canStoreOrUpgrade && Input.canAffordLowStoneCost(item.priceLowStone);
             const priceMarkup = Input.renderSpiritStoneCostMarkup(item.priceLowStone);
-            let actionLabel = item.category === 'BAG'
-                ? (canStoreOrUpgrade ? 'Mở rộng' : 'Không hợp lệ')
-                : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
-
-            if (item.category === 'SWORD_ARTIFACT') {
-                actionLabel = canStoreOrUpgrade
-                    ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua')
-                    : (canStoreOrUpgrade ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua') : 'Túi đầy');
-                actionLabel = canStoreOrUpgrade
-                    ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua')
-                    : 'Túi đầy';
-            } else if (item.category === 'SWORD_ART' || item.category === 'FLAME_ART') {
-                actionLabel = isOwnedUnique ? 'Đã mua' : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
-            } else if (item.category === 'ARTIFACT') {
-                actionLabel = isOwnedUnique
-                    ? 'Đã mua'
-                    : (canStoreOrUpgrade ? (CONFIG.ARTIFACTS?.[item.uniqueKey]?.buttonLabel || 'Mua') : 'Túi đầy');
-            } else if (item.category === 'RAINBOW_BAG') {
-                actionLabel = isOwnedUnique ? 'Đã khai mở' : (canStoreOrUpgrade ? 'Mua' : 'Không hợp lệ');
-            } else if (item.category === 'SPIRIT_BAG') {
-                actionLabel = canStoreOrUpgrade ? 'Mở rộng' : 'Không hợp lệ';
-            } else if (item.category === 'RAINBOW_SPIRIT_BAG') {
-                actionLabel = isOwnedUnique ? 'Đã khai mở' : (canStoreOrUpgrade ? 'Mua' : 'Không hợp lệ');
-            } else if (item.category === 'SPIRIT_HABITAT') {
-                actionLabel = hasRainbowHabitat ? 'Không cần' : (hasDedicatedHabitat ? 'Mở rộng' : 'Mua');
-            } else if (item.category === 'INSECT_EGG') {
-                actionLabel = 'Mua';
-            } else if (item.category === 'INSECT_SKILL') {
-                actionLabel = isOwnedUnique ? 'Đã mua' : (canStoreOrUpgrade ? (CONFIG.INSECT?.UNIQUE_ITEMS?.KHU_TRUNG_THUAT?.buttonLabel || 'Mua') : 'Túi đầy');
-            } else if (item.category === 'INSECT_ARTIFACT') {
-                actionLabel = isOwnedUnique ? 'Đã sở hữu' : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
-            }
+            const actionLabel = this.getActionLabel(item, {
+                canStoreOrUpgrade,
+                isOwnedUnique,
+                hasDedicatedHabitat,
+                hasRainbowHabitat
+            });
 
             return `
                 <article class="shop-card has-pill-art" style="--slot-accent:${qualityConfig.color}">
@@ -300,6 +259,86 @@ ShopUI = {
     close() {
         closePopup(this.overlay);
     }
+};
+
+ShopUI.canStoreOrUpgrade = function (item, isOwnedUnique) {
+    if (['BAG', 'RAINBOW_BAG'].includes(item.category)) {
+        return Input.canUpgradeInventoryCapacity(item);
+    }
+
+    if (['SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(item.category)) {
+        return Input.canUpgradeBeastBagCapacity(item);
+    }
+
+    if (item.category === 'INSECT_EGG') {
+        return true;
+    }
+
+    if (item.category === 'SWORD_ARTIFACT') {
+        return Input.hasInventorySpaceForSpec(item);
+    }
+
+    return !isOwnedUnique && Input.hasInventorySpaceForSpec(item);
+};
+
+ShopUI.getActionLabel = function (item, options = {}) {
+    const {
+        canStoreOrUpgrade = false,
+        isOwnedUnique = false,
+        hasDedicatedHabitat = false,
+        hasRainbowHabitat = false
+    } = options;
+
+    if (item.category === 'BAG') {
+        return canStoreOrUpgrade ? 'Mở rộng' : 'Không hợp lệ';
+    }
+
+    if (item.category === 'SWORD_ARTIFACT') {
+        return canStoreOrUpgrade ? (CONFIG.SWORD?.ARTIFACT_ITEM?.buttonLabel || 'Mua') : 'Túi đầy';
+    }
+
+    if (item.category === 'SWORD_ART' || item.category === 'FLAME_ART') {
+        return isOwnedUnique ? 'Đã mua' : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
+    }
+
+    if (item.category === 'ARTIFACT') {
+        if (isOwnedUnique) return 'Đã mua';
+        return canStoreOrUpgrade
+            ? (CONFIG.ARTIFACTS?.[item.uniqueKey]?.buttonLabel || 'Mua')
+            : 'Túi đầy';
+    }
+
+    if (item.category === 'RAINBOW_BAG') {
+        return isOwnedUnique ? 'Đã khai mở' : (canStoreOrUpgrade ? 'Mua' : 'Không hợp lệ');
+    }
+
+    if (item.category === 'SPIRIT_BAG') {
+        return canStoreOrUpgrade ? 'Mở rộng' : 'Không hợp lệ';
+    }
+
+    if (item.category === 'RAINBOW_SPIRIT_BAG') {
+        return isOwnedUnique ? 'Đã khai mở' : (canStoreOrUpgrade ? 'Mua' : 'Không hợp lệ');
+    }
+
+    if (item.category === 'SPIRIT_HABITAT') {
+        return hasRainbowHabitat ? 'Không cần' : (hasDedicatedHabitat ? 'Mở rộng' : 'Mua');
+    }
+
+    if (item.category === 'INSECT_EGG') {
+        return 'Mua';
+    }
+
+    if (item.category === 'INSECT_SKILL') {
+        return isOwnedUnique
+            ? 'Đã mua'
+            : (canStoreOrUpgrade ? (CONFIG.INSECT?.UNIQUE_ITEMS?.KHU_TRUNG_THUAT?.buttonLabel || 'Mua') : 'Túi đầy');
+    }
+
+    if (item.category === 'INSECT_ARTIFACT') {
+        return isOwnedUnique ? 'Đã sở hữu' : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
+    }
+
+    return canStoreOrUpgrade ? 'Mua' : 'Túi đầy';
 };
 
 ShopUI.ensureToolbar = function () {
