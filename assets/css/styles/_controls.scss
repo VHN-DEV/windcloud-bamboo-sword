@@ -50,6 +50,10 @@
             border-color: rgba(#79ffd4, 0.45);
             box-shadow: 0 4px 0 $shadow-color, 0 0 12px rgba(#79ffd4, 0.24);
 
+            &.is-hidden {
+                display: none !important;
+            }
+
             .sword-icon {
                 width: 30%;
                 height: 30%;
@@ -60,6 +64,10 @@
         .btn-alchemy-lab {
             border-color: rgba(#93c8d8, 0.58);
             box-shadow: 0 4px 0 $shadow-color, 0 0 14px rgba(#93c8d8, 0.34);
+
+            &.is-hidden {
+                display: none !important;
+            }
 
             .sword-icon {
                 width: 72%;
