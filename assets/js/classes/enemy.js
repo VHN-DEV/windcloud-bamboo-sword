@@ -52,6 +52,8 @@ class Enemy {
         this.canLamBurnUntil = 0;
         this.attackPattern = null;
         this.lastAttackAt = 0;
+        this.proactiveAggroUntil = 0;
+        this.nextProactiveAggroRollAt = 0;
 
         // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
         const playerRank = Input.rankIndex || 0;

@@ -152,6 +152,19 @@ Object.assign(Input, {
         );
     },
 
+    getSingleSwordUltimateChargeAnchor() {
+        const aliveSword = Array.isArray(swords)
+            ? swords.find(sword => sword && !sword.isDead)
+            : null;
+        const fallbackX = Number.isFinite(this.x) ? this.x : guardCenter.x;
+        const fallbackY = Number.isFinite(this.y) ? this.y : guardCenter.y;
+        return {
+            x: Number.isFinite(aliveSword?.x) ? aliveSword.x : fallbackX,
+            y: Number.isFinite(aliveSword?.y) ? aliveSword.y : fallbackY,
+            r: Math.max(16, Number(aliveSword?.r) || 22)
+        };
+    },
+
     updateSingleSwordUltimateChargeUI(chargeRatio = 0, isCharging = false, isReady = false) {
         const attackBtn = document.getElementById('btn-attack');
         if (!attackBtn) return;
@@ -177,10 +190,11 @@ Object.assign(Input, {
         if ((now - (state.lastParticleEmitAt || 0)) < emitIntervalMs) return;
         state.lastParticleEmitAt = now;
 
-        const centerX = Number.isFinite(this.x) ? this.x : guardCenter.x;
-        const centerY = Number.isFinite(this.y) ? this.y : guardCenter.y;
-        const pullRadius = 24 + (chargeRatio * 64);
-        const spawnCount = Math.round(2 + (chargeRatio * 4));
+        const anchor = this.getSingleSwordUltimateChargeAnchor();
+        const centerX = anchor.x;
+        const centerY = anchor.y;
+        const pullRadius = 34 + (chargeRatio * 82);
+        const spawnCount = Math.round(3 + (chargeRatio * 6));
 
         trimVisualParticles(360);
         for (let i = 0; i < spawnCount; i++) {
@@ -205,7 +219,61 @@ Object.assign(Input, {
                 color: i % 2 === 0 ? '#c8f6ff' : '#ffffff',
                 glow: '#7ee7ff'
             });
+
+            if (Math.random() < (0.22 + (chargeRatio * 0.48))) {
+                const trailLen = random(6, 16) * (1 + (chargeRatio * 0.9));
+                visualParticles.push({
+                    type: 'ray',
+                    x: spawnX,
+                    y: spawnY,
+                    angle: Math.atan2(toCenterY, toCenterX),
+                    radius: 0,
+                    length: trailLen,
+                    lineWidth: random(1.2, 2.1),
+                    life: 0.26 + (chargeRatio * 0.16),
+                    decay: random(0.065, 0.1),
+                    color: '#b8f8ff',
+                    glow: '#7ee7ff'
+                });
+            }
         }
+    },
+
+    drawSingleSwordUltimateChargeIndicator(ctx, scaleFactor) {
+        const state = this.singleSwordUltimateState;
+        if (!state?.active) return;
+        const anchor = this.getSingleSwordUltimateChargeAnchor();
+        const ratio = Math.max(0, Math.min(1, Number(state.chargeRatio) || 0));
+        const barWidth = Math.max(70, (anchor.r * 4.2) * scaleFactor);
+        const barHeight = Math.max(5, 7 * scaleFactor);
+        const barX = anchor.x - (barWidth / 2);
+        const barY = anchor.y - ((anchor.r + 26) * scaleFactor);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = 'rgba(8, 18, 26, 0.62)';
+        ctx.strokeStyle = 'rgba(175, 241, 255, 0.45)';
+        ctx.lineWidth = Math.max(1, 1.2 * scaleFactor);
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+        const innerWidth = Math.max(0, (barWidth - 2) * ratio);
+        if (innerWidth > 0.5) {
+            const grad = ctx.createLinearGradient(barX, barY, barX + barWidth, barY);
+            grad.addColorStop(0, '#7aefff');
+            grad.addColorStop(0.6, '#d8feff');
+            grad.addColorStop(1, '#ffffff');
+            ctx.fillStyle = grad;
+            ctx.fillRect(barX + 1, barY + 1, innerWidth, Math.max(1, barHeight - 2));
+        }
+
+        const auraR = (anchor.r + 10 + (ratio * 16)) * scaleFactor;
+        ctx.strokeStyle = `rgba(140, 240, 255, ${0.3 + (ratio * 0.42)})`;
+        ctx.lineWidth = Math.max(1, (1.1 + (ratio * 1.2)) * scaleFactor);
+        ctx.beginPath();
+        ctx.arc(anchor.x, anchor.y, auraR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
     },
 
     releaseSingleSwordUltimateShot() {
@@ -1364,6 +1432,7 @@ Object.assign(Input, {
         if (!Array.isArray(enemies) || this.isVoidCollapsed) return;
         const now = performance.now();
         const contactRadius = Math.max(20, (CONFIG.ENEMY?.CONTACT_RADIUS || 44) * (Camera.currentZoom || 1));
+        const proactiveCfg = CONFIG.ENEMY?.PROACTIVE_ATTACK || {};
 
         for (let i = 0; i < enemies.length; i++) {
             const enemy = enemies[i];
@@ -1371,8 +1440,43 @@ Object.assign(Input, {
             const baseDamage = Math.max(1, Number(enemy.damage) || Number(enemy.rankData?.damage) || 1);
             const dist = Math.hypot((enemy.x || 0) - centerX, (enemy.y || 0) - centerY);
             const retaliating = now < (enemy.retaliateUntil || 0);
-            const triggerRange = contactRadius * (retaliating ? 4.2 : 2.8);
+            const triggerRange = contactRadius * (retaliating ? 4.2 : 2.9);
             if (dist > triggerRange) continue;
+
+            let hostile = retaliating;
+            if (!hostile) {
+                const proactiveAggroUntil = Number(enemy.proactiveAggroUntil) || 0;
+                if (now < proactiveAggroUntil) {
+                    hostile = true;
+                } else {
+                    const rollIntervalMs = Math.max(250, Number(proactiveCfg.ROLL_INTERVAL_MS) || 900);
+                    const nextRollAt = Number(enemy.nextProactiveAggroRollAt) || 0;
+                    if (now >= nextRollAt) {
+                        const enemyRankIndex = CONFIG.CULTIVATION.RANKS.indexOf(enemy.rankData);
+                        const playerRankIndex = this.rankIndex || 0;
+                        const rankDiff = enemyRankIndex - playerRankIndex;
+                        const baseChance = Number(proactiveCfg.BASE_CHANCE) || 0.16;
+                        const lowerOrEqualBonus = Math.max(0, Number(proactiveCfg.LOWER_OR_EQUAL_BONUS_PER_LEVEL) || 0.04);
+                        const higherPenalty = Math.max(0, Number(proactiveCfg.HIGHER_RANK_PENALTY_PER_LEVEL) || 0.06);
+                        const eliteBonus = enemy.isElite ? Math.max(0, Number(proactiveCfg.ELITE_BONUS) || 0.05) : 0;
+                        const adjustedChance = rankDiff > 0
+                            ? baseChance - (rankDiff * higherPenalty) + eliteBonus
+                            : baseChance + (Math.abs(rankDiff) * lowerOrEqualBonus) + eliteBonus;
+                        const proactiveChance = Math.max(
+                            Number(proactiveCfg.MIN_CHANCE) || 0.02,
+                            Math.min(Number(proactiveCfg.MAX_CHANCE) || 0.42, adjustedChance)
+                        );
+
+                        enemy.nextProactiveAggroRollAt = now + rollIntervalMs + random(0, 200);
+                        if (Math.random() < proactiveChance) {
+                            enemy.proactiveAggroUntil = now + Math.max(1200, Number(proactiveCfg.AGGRO_WINDOW_MS) || 2800);
+                            hostile = true;
+                        }
+                    }
+                }
+            }
+
+            if (!hostile) continue;
 
             const attackPattern = this.getEnemyAttackPattern(enemy);
             const attackCooldown = enemy.isElite ? 820 : 1050;
