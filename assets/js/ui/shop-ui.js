@@ -277,6 +277,7 @@ ShopUI = {
 
         const allItems = Input.getShopItems();
         const filteredItems = this.filterItems(allItems);
+        const tabTotalCount = allItems.filter(item => getItemCollectionTabKey(item) === this.categoryFilter).length;
         const pageSize = this.getPageSize();
         const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
 
@@ -286,7 +287,7 @@ ShopUI = {
         const startIndex = (this.currentPage - 1) * pageSize;
         const pagedItems = filteredItems.slice(startIndex, startIndex + pageSize);
 
-        this.syncToolbar(allItems.length, filteredItems.length);
+        this.syncToolbar(tabTotalCount, filteredItems.length);
         this.renderItems(pagedItems);
         this.renderPagination(filteredItems.length, totalPages);
     },
