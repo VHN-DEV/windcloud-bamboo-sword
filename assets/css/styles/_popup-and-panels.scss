@@ -38,14 +38,14 @@
     border-radius: 15px;
     width: 90%;
     max-width: 400px;
-    max-height: 80vh;
+    max-height: 86vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 0 30px rgba($primary-color, 0.3);
 }
 
 .popup-header {
-    padding: 15px;
+    padding: 12px 14px;
     border-bottom: 1px solid rgba($primary-color, 0.3);
     display: flex;
     justify-content: space-between;
@@ -65,7 +65,7 @@
 }
 
 .popup-body {
-    padding: 20px;
+    padding: 14px;
     overflow-y: auto;
     color: white;
 
@@ -195,31 +195,31 @@
 
 // <!-- Create By: Vũ Hoài Nam -->
 .popup-content-wide {
-    max-width: 900px;
+    max-width: 1040px;
 }
 
 .popup-content-slim {
-    max-width: 560px;
+    max-width: 620px;
 }
 
 .popup-content-book {
-    max-width: 980px;
+    max-width: 1120px;
 }
 
 .popup-content-beast {
-    max-width: 1020px;
+    max-width: 1160px;
 }
 
 .popup-panel-body {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 14px;
 }
 
 .panel-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 
     h4 {
         margin: 0;
@@ -764,8 +764,8 @@
 }
 
 .shop-tip {
-    margin-bottom: 12px;
-    padding: 12px 14px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
     border-radius: 12px;
     background: rgba(255, 211, 107, 0.08);
     border: 1px solid rgba(255, 211, 107, 0.24);
@@ -777,19 +777,35 @@
 .shop-panel {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .shop-toolbar {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+}
+
+.shop-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding: 6px;
+
+    .panel-tab {
+        flex: 0 0 auto;
+        min-height: 34px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
 }
 
 .shop-toolbar-row {
     display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr);
+    gap: 10px;
 }
 
 .shop-filter-group {
@@ -814,8 +830,8 @@
 
 .shop-control-input {
     width: 100%;
-    min-height: 42px;
-    padding: 10px 12px;
+    min-height: 38px;
+    padding: 8px 11px;
     border-radius: 12px;
     border: 1px solid rgba($primary-color, 0.24);
     background: rgba(8, 15, 24, 0.88);
@@ -840,7 +856,7 @@ select.shop-control-input {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
 }
 
 .shop-summary {
@@ -855,7 +871,7 @@ select.shop-control-input {
 
 .btn-shop-reset,
 .btn-shop-page {
-    min-height: 40px;
+    min-height: 36px;
     border: 1px solid rgba($primary-color, 0.24);
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
@@ -877,7 +893,7 @@ select.shop-control-input {
 }
 
 .btn-shop-reset {
-    padding: 10px 14px;
+    padding: 8px 12px;
     white-space: nowrap;
 }
 
@@ -934,16 +950,16 @@ select.shop-control-input {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
 }
 
 .shop-card,
 .inventory-slot {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    min-height: 192px;
-    padding: 14px;
+    gap: 8px;
+    min-height: 176px;
+    padding: 12px;
     border-radius: 16px;
     border: 1px solid color-mix(in srgb, var(--slot-accent) 48%, rgba(255, 255, 255, 0.06));
     background:
@@ -954,8 +970,11 @@ select.shop-control-input {
     h4 {
         margin: 0;
         color: #f4fffb;
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     p {
@@ -1003,9 +1022,9 @@ select.shop-control-input {
 
 .item-description__preview {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    line-clamp: 3;
+    line-clamp: 2;
 }
 
 .item-description__toggle {
@@ -4268,35 +4287,42 @@ select.shop-control-input {
     }
 
     .popup-content-wide {
-        width: 96%;
-        max-height: 88vh;
+        width: calc(100% - 8px);
+        max-height: 92vh;
     }
 
     .popup-content-profile {
-        width: 96%;
-        max-height: 88vh;
+        width: calc(100% - 8px);
+        max-height: 92vh;
     }
 
     .popup-content-beast {
-        width: calc(100% - 16px);
-        max-height: 88vh;
+        width: calc(100% - 8px);
+        max-height: 92vh;
     }
 
     .popup-header {
         padding: 14px;
 
         h3 {
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.35;
         }
     }
 
     .popup-body {
-        padding: 14px;
+        padding: 12px;
+        font-size: 12px;
+    }
+
+    .panel-tab {
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 11px;
     }
 
     .popup-panel-body {
-        gap: 14px;
+        gap: 12px;
     }
 
     .wallet-grid {
@@ -4379,10 +4405,14 @@ select.shop-control-input {
     }
 
     .shop-toolbar-meta {
-        gap: 10px;
+        gap: 8px;
     }
 
-    .shop-grid,
+    .shop-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
     .inventory-grid,
     .profile-stats-grid,
     .profile-pill-summary {
@@ -4473,12 +4503,16 @@ select.shop-control-input {
 
     .shop-card,
     .inventory-slot {
-        padding: 12px;
+        padding: 10px;
+
+        h4 {
+            font-size: 13px;
+        }
     }
 
     .shop-card.has-pill-art,
     .inventory-slot.has-pill-art {
-        min-height: 236px;
+        min-height: 208px;
     }
 
     .pill-visual {
@@ -4526,8 +4560,20 @@ select.shop-control-input {
     }
 
     .btn-slot-action {
+        font-size: 10px;
+        min-height: 36px;
+        padding: 7px 5px;
+    }
+
+    .btn-shop-page,
+    .btn-shop-reset {
+        min-height: 32px;
+        padding: 6px 10px;
         font-size: 11px;
-        min-height: 42px;
+    }
+
+    .shop-page-status {
+        font-size: 11px;
     }
 
     .beast-panel-section {
