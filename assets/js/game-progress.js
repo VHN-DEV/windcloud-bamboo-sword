@@ -200,6 +200,24 @@ const GameProgress = {
         return result;
     },
 
+    sanitizeNestedNumberList(source) {
+        const safeSource = source && typeof source === 'object' && !Array.isArray(source) ? source : {};
+        const result = {};
+
+        Object.entries(safeSource).forEach(([bucketKey, bucketValue]) => {
+            if (!Array.isArray(bucketValue)) return;
+
+            const normalized = bucketValue
+                .map(value => Math.max(0, Math.floor(Number(value) || 0)))
+                .filter(value => value > 0)
+                .sort((a, b) => a - b);
+
+            if (normalized.length) result[bucketKey] = normalized;
+        });
+
+        return result;
+    },
+
     createSnapshot() {
         return {
             version: this.schemaVersion,
@@ -234,6 +252,7 @@ const GameProgress = {
             insectCombatRoster: Input.insectCombatRoster,
             insectHabitats: Input.insectHabitats,
             insectHabitatCapacities: Input.insectHabitatCapacities,
+            insectIncubators: Input.insectIncubators,
             beastFoodStorage: Input.beastFoodStorage,
             beastBagCapacity: Input.beastBagCapacity,
             beastBagCapacityMigrated: Input.beastBagCapacityMigrated,
@@ -344,6 +363,7 @@ const GameProgress = {
             Input.insectCombatRoster = {};
             Input.insectHabitats = {};
             Input.insectHabitatCapacities = {};
+            Input.insectIncubators = {};
             Input.beastFoodStorage = {};
             Input.beastBagCapacity = this.getDefaultBeastBagCapacity();
             Input.beastBagCapacityMigrated = false;
@@ -374,6 +394,7 @@ const GameProgress = {
             Input.syncDerivedStats();
             Input.mana = Input.maxMana;
             Input.ensureBeastFoodStorageShape();
+            Input.ensureInsectIncubatorsShape?.();
             Input.ensureInsectHabitatCapacities();
         } finally {
             this.isRestoring = false;
@@ -437,6 +458,7 @@ const GameProgress = {
             Input.insectCombatRoster = this.sanitizeBooleanMap(parsed.insectCombatRoster);
             Input.insectHabitats = this.sanitizeBooleanMap(parsed.insectHabitats);
             Input.insectHabitatCapacities = this.sanitizeNumberMap(parsed.insectHabitatCapacities);
+            Input.insectIncubators = this.sanitizeNestedNumberList(parsed.insectIncubators);
             Input.beastFoodStorage = this.sanitizeNestedNumberMap(parsed.beastFoodStorage);
             Input.beastBagCapacity = Math.max(this.getDefaultBeastBagCapacity(), Math.floor(Number(parsed.beastBagCapacity) || 0));
             Input.beastBagCapacityMigrated = Boolean(parsed.beastBagCapacityMigrated);
@@ -491,6 +513,7 @@ const GameProgress = {
                 );
             Input.rage = clampNumber(Input.rage, 0, Input.maxRage);
             Input.ensureBeastFoodStorageShape();
+            Input.ensureInsectIncubatorsShape?.();
             Input.ensureInsectHabitatCapacities();
             if (typeof Input.ensureSwordArtifactState === 'function') {
                 Input.ensureSwordArtifactState();

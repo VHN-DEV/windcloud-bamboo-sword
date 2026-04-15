@@ -361,6 +361,7 @@ InsectBookUI = {
         `;
 
         this.grid.innerHTML = Input.getInsectSpeciesEntries().map(([speciesKey, species]) => {
+            const hasInsectBook = Input.hasKyTrungBang();
             const discovered = Boolean(Input.discoveredInsects[speciesKey]);
             const tier = Input.getInsectTierInfo(species.tier);
             const eggCount = Input.insectEggs[speciesKey] || 0;
@@ -373,9 +374,11 @@ InsectBookUI = {
                     return `${material?.fullName || requirement.materialKey} ${formatNumber(requirement.owned)}/${formatNumber(requirement.count)}`;
                 }).join(' • ')
                 : 'Không cần nguyên liệu';
-            const preferredFoodText = careStatus.preferredFoodKeys.length
+            const preferredFoodText = hasInsectBook
+                ? (careStatus.preferredFoodKeys.length
                 ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
-                : 'Mọi thức ăn có linh dưỡng';
+                : 'Mọi thức ăn có linh dưỡng')
+                : 'Cần Kỳ Trùng Bảng để xem';
             const hatchStatusText = hatchPreview.reason === 'book'
                 ? 'Cần Kỳ Trùng Bảng để ấp nở'
                 : hatchPreview.reason === 'no-egg'
@@ -385,19 +388,25 @@ InsectBookUI = {
                         : hatchPreview.reason === 'materials'
                             ? 'Thiếu nguyên liệu để ấp'
                             : `Sẵn sàng ấp nở (${formatNumber(hatchPreview.hatchCount)} trứng)`;
+            const incubation = hatchPreview.incubation || { total: 0, readyCount: 0, incubatingCount: 0, nextReadyInMs: 0 };
+            const incubationText = incubation.total > 0
+                ? (incubation.readyCount > 0
+                    ? `${formatNumber(incubation.readyCount)} trứng đã chín, chờ ô trống`
+                    : `${formatNumber(incubation.incubatingCount)} trứng đang ấp • ${formatNumber(Math.max(1, Math.ceil((incubation.nextReadyInMs || 0) / 1000)))} giây`)
+                : 'Chưa có trứng trong lò ấp';
 
             return `
                 <article class="insect-book-card ${discovered ? 'is-discovered' : 'is-locked'}" style="${buildInsectBookStyleVars(species)}">
                     <div class="insect-book-card__image-wrap">
                         ${buildInsectArtMarkup(speciesKey, { useRealImage: discovered })}
-                        <span class="insect-book-card__tier">${escapeHtml(tier.label)}</span>
+                        <span class="insect-book-card__tier">${escapeHtml(hasInsectBook ? tier.label : 'Ẩn thông tin')}</span>
                     </div>
                     <div class="insect-book-card__body">
                         <h4>${escapeHtml(species.name)}</h4>
-                        ${getInsectStyleHint(species) ? `<div class="insect-book-card__style">${escapeHtml(getInsectStyleHint(species))}</div>` : ''}
-                        <p>${escapeHtml(species.description)}</p>
+                        ${hasInsectBook && getInsectStyleHint(species) ? `<div class="insect-book-card__style">${escapeHtml(getInsectStyleHint(species))}</div>` : ''}
+                        <p>${escapeHtml(hasInsectBook ? species.description : 'Cần Kỳ Trùng Bảng để xem toàn bộ thông tin kỳ trùng.')}</p>
                         <div class="insect-book-card__meta">
-                            ${getInsectStyleLabel(species) ? `<span>${escapeHtml(getInsectStyleLabel(species))}</span>` : ''}
+                            ${hasInsectBook && getInsectStyleLabel(species) ? `<span>${escapeHtml(getInsectStyleLabel(species))}</span>` : ''}
                             <span>Trứng ${formatNumber(eggCount)}</span>
                             <span>Đã nở ${formatNumber(beastCount)}</span>
                         </div>
@@ -413,6 +422,10 @@ InsectBookUI = {
                             <div class="insect-book-card__line">
                                 <span>Thức ăn hợp đàn</span>
                                 <strong>${escapeHtml(preferredFoodText)}</strong>
+                            </div>
+                            <div class="insect-book-card__line">
+                                <span>Lò ấp</span>
+                                <strong>${escapeHtml(incubationText)}</strong>
                             </div>
                             <button
                                 class="btn-slot-action"

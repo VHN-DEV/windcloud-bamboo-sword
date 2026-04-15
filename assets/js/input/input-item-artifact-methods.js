@@ -834,10 +834,15 @@ Object.assign(Input, {
         this.insectEggs[speciesKey] = hatchPreview.availableEggs - hatchCount;
         if (this.insectEggs[speciesKey] <= 0) delete this.insectEggs[speciesKey];
 
-        this.changeTamedInsects(speciesKey, hatchCount, { source: 'hatch' });
-        showNotify(`Ấp nở ${formatNumber(hatchCount)} ${species.name}`, CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color);
+        this.startInsectIncubation(speciesKey, hatchCount);
+        const hatchDurationMs = this.getInsectHatchDurationMs(speciesKey);
+        const hatchSeconds = Math.max(1, Math.ceil(hatchDurationMs / 1000));
+        showNotify(
+            `Đặt ấp ${formatNumber(hatchCount)} trứng ${species.name} (${formatNumber(hatchSeconds)} giây)`,
+            CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species.color
+        );
         this.refreshResourceUI();
-        return { success: true, reason: 'hatched', count: hatchCount };
+        return { success: true, reason: 'incubating', count: hatchCount };
     },
 
     loseRandomTamedInsect(baseChance = 0, speciesPool = null) {

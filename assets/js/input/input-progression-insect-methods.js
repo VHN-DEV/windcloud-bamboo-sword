@@ -632,6 +632,140 @@ Object.assign(Input, {
         return [...(INSECT_FOOD_PREFERENCES[speciesKey] || [])];
     },
 
+    ensureInsectIncubatorsShape() {
+        if (!this.insectIncubators || typeof this.insectIncubators !== 'object' || Array.isArray(this.insectIncubators)) {
+            this.insectIncubators = {};
+            return this.insectIncubators;
+        }
+
+        Object.entries(this.insectIncubators).forEach(([speciesKey, queue]) => {
+            if (!this.getInsectSpecies(speciesKey) || !Array.isArray(queue)) {
+                delete this.insectIncubators[speciesKey];
+                return;
+            }
+
+            const normalizedQueue = queue
+                .map(value => Math.max(0, Math.floor(Number(value) || 0)))
+                .filter(value => value > 0)
+                .sort((a, b) => a - b);
+
+            if (normalizedQueue.length) this.insectIncubators[speciesKey] = normalizedQueue;
+            else delete this.insectIncubators[speciesKey];
+        });
+
+        return this.insectIncubators;
+    },
+
+    getInsectHatchDurationMs(speciesKey) {
+        const hatchConfig = CONFIG.INSECT?.HATCH || {};
+        const species = this.getInsectSpecies(speciesKey);
+        const speciesDuration = Number(hatchConfig?.SPECIES_DURATION_MS?.[speciesKey]);
+        if (Number.isFinite(speciesDuration) && speciesDuration > 0) {
+            return Math.max(1000, Math.floor(speciesDuration));
+        }
+
+        const tierDuration = Number(hatchConfig?.TIER_DURATION_MS?.[species?.tier]);
+        if (Number.isFinite(tierDuration) && tierDuration > 0) {
+            return Math.max(1000, Math.floor(tierDuration));
+        }
+
+        return Math.max(1000, Math.floor(Number(hatchConfig.DEFAULT_DURATION_MS) || 15000));
+    },
+
+    getSpeciesIncubationQueue(speciesKey, { create = false } = {}) {
+        if (!speciesKey || !this.getInsectSpecies(speciesKey)) return [];
+        const incubators = this.ensureInsectIncubatorsShape();
+
+        if (!Array.isArray(incubators[speciesKey])) {
+            if (!create) return [];
+            incubators[speciesKey] = [];
+        }
+
+        return incubators[speciesKey];
+    },
+
+    getSpeciesIncubationStatus(speciesKey) {
+        const queue = this.getSpeciesIncubationQueue(speciesKey);
+        if (!queue.length) {
+            return {
+                total: 0,
+                readyCount: 0,
+                incubatingCount: 0,
+                nextReadyInMs: 0,
+                hatchDurationMs: this.getInsectHatchDurationMs(speciesKey)
+            };
+        }
+
+        const now = performance.now();
+        const readyCount = queue.filter(readyAt => readyAt <= now).length;
+        const nextReadyAt = queue.find(readyAt => readyAt > now) || 0;
+
+        return {
+            total: queue.length,
+            readyCount,
+            incubatingCount: Math.max(0, queue.length - readyCount),
+            nextReadyInMs: nextReadyAt > 0 ? Math.max(0, nextReadyAt - now) : 0,
+            hatchDurationMs: this.getInsectHatchDurationMs(speciesKey)
+        };
+    },
+
+    startInsectIncubation(speciesKey, count = 1) {
+        const safeCount = Math.max(0, Math.floor(count || 0));
+        if (safeCount <= 0 || !this.getInsectSpecies(speciesKey)) return 0;
+
+        const queue = this.getSpeciesIncubationQueue(speciesKey, { create: true });
+        const now = performance.now();
+        const hatchDurationMs = this.getInsectHatchDurationMs(speciesKey);
+        for (let index = 0; index < safeCount; index++) {
+            queue.push(now + hatchDurationMs + (index * 280));
+        }
+
+        queue.sort((a, b) => a - b);
+        return safeCount;
+    },
+
+    processInsectIncubation({ now = performance.now(), notify = false, refresh = false } = {}) {
+        const incubators = this.ensureInsectIncubatorsShape();
+        const hatchedEntries = [];
+
+        Object.entries(incubators).forEach(([speciesKey, queue]) => {
+            if (!Array.isArray(queue) || !queue.length) {
+                delete incubators[speciesKey];
+                return;
+            }
+
+            const readyCount = queue.filter(readyAt => readyAt <= now).length;
+            if (readyCount <= 0) return;
+
+            const freeSlots = this.getInsectHabitatFreeSlots(speciesKey);
+            const hatchCount = Number.isFinite(freeSlots)
+                ? Math.min(readyCount, Math.max(0, Math.floor(freeSlots || 0)))
+                : readyCount;
+            if (hatchCount <= 0) return;
+
+            queue.splice(0, hatchCount);
+            if (!queue.length) delete incubators[speciesKey];
+
+            this.changeTamedInsects(speciesKey, hatchCount, { source: 'hatch' });
+            hatchedEntries.push({ speciesKey, count: hatchCount });
+        });
+
+        if (!hatchedEntries.length) return hatchedEntries;
+
+        if (notify) {
+            hatchedEntries.forEach(entry => {
+                const species = this.getInsectSpecies(entry.speciesKey);
+                showNotify(
+                    `${formatNumber(entry.count)} trứng ${species?.name || 'kỳ trùng'} đã nở`,
+                    CONFIG.INSECT?.HATCH?.NOTIFY_COLOR || species?.color || '#79ffd4'
+                );
+            });
+        }
+
+        if (refresh) this.refreshResourceUI();
+        return hatchedEntries;
+    },
+
     getMaterialUsageSummary(materialKey) {
         const hatchUsageCount = this.getInsectSpeciesEntries().reduce((total, [speciesKey]) => {
             return total + (this.getSpeciesHatchRequirements(speciesKey).some(requirement => requirement.materialKey === materialKey) ? 1 : 0);
@@ -821,6 +955,7 @@ Object.assign(Input, {
     },
 
     getHatchPreview(speciesKey, count = 1) {
+        this.processInsectIncubation({ notify: false, refresh: false });
         const species = this.getInsectSpecies(speciesKey);
         const requestedCount = Math.max(1, Math.floor(count || 1));
         const availableEggs = Math.max(0, Math.floor(this.insectEggs?.[speciesKey] || 0));
@@ -862,7 +997,8 @@ Object.assign(Input, {
             reason,
             requirements,
             hasHabitat: this.hasInsectHabitat(speciesKey),
-            habitatName: this.getInsectHabitatConfig(speciesKey).fullName
+            habitatName: this.getInsectHabitatConfig(speciesKey).fullName,
+            incubation: this.getSpeciesIncubationStatus(speciesKey)
         };
     },
 
@@ -908,6 +1044,7 @@ Object.assign(Input, {
     },
 
     updateBeastCare() {
+        this.processInsectIncubation({ notify: true, refresh: true });
         if (!this.beastCare) {
             this.beastCare = { lastTickAt: performance.now(), lastAlertAt: 0 };
         }

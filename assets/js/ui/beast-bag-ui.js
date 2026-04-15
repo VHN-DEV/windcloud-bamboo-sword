@@ -2,10 +2,12 @@ function buildInsectEggCardMarkup(speciesKey, count) {
     const species = Input.getInsectSpecies(speciesKey);
     if (!species) return '';
     const tier = Input.getInsectTierInfo(species.tier);
-    const styleLabel = getInsectStyleLabel(species);
-    const styleHint = getInsectStyleHint(species);
-    const hatchPreview = Input.getHatchPreview(speciesKey, 1);
     const hasInsectBook = Input.hasKyTrungBang();
+    const styleLabel = hasInsectBook ? getInsectStyleLabel(species) : '';
+    const styleHint = hasInsectBook
+        ? getInsectStyleHint(species)
+        : 'Cần Kỳ Trùng Bảng để xem mô tả, phân loại và thông tin huyết mạch.';
+    const hatchPreview = Input.getHatchPreview(speciesKey, 1);
     const requirementText = hasInsectBook
         ? (hatchPreview.requirements.length
             ? hatchPreview.requirements.map(requirement => {
@@ -24,6 +26,12 @@ function buildInsectEggCardMarkup(speciesKey, count) {
             : hatchPreview.reason === 'full'
                 ? 'Linh Thú Đại đã đầy'
                 : 'Sẵn sàng ấp nở';
+    const incubation = hatchPreview.incubation || { total: 0, readyCount: 0, incubatingCount: 0, nextReadyInMs: 0 };
+    const incubationText = incubation.total > 0
+        ? (incubation.readyCount > 0
+            ? `${formatNumber(incubation.readyCount)} trứng đã chín, chờ ô trống`
+            : `${formatNumber(incubation.incubatingCount)} trứng đang ấp • ${formatNumber(Math.max(1, Math.ceil((incubation.nextReadyInMs || 0) / 1000)))} giây`)
+        : 'Chưa có trứng trong lò ấp';
 
     return `
         <article class="inventory-slot beast-slot beast-slot--egg" style="--slot-accent:${species.eggColor || species.color};${buildInsectVisualVars(species, { egg: true })}">
@@ -34,7 +42,7 @@ function buildInsectEggCardMarkup(speciesKey, count) {
                 <div class="beast-slot__info">
                     <div class="beast-slot__title-row">
                         <div class="beast-slot__title-block">
-                            <div class="slot-badge">${escapeHtml(tier.label)}</div>
+                            <div class="slot-badge">${escapeHtml(hasInsectBook ? tier.label : 'Ẩn thông tin')}</div>
                             <h4>Trứng ${escapeHtml(species.name)}</h4>
                         </div>
                         <div class="beast-slot__count">
@@ -59,6 +67,10 @@ function buildInsectEggCardMarkup(speciesKey, count) {
                     <span>Trạng thái ấp nở</span>
                     <strong>${escapeHtml(hatchStatus)}</strong>
                 </div>
+                <div class="beast-slot__detail beast-slot__detail--wide">
+                    <span>Lò ấp</span>
+                    <strong>${escapeHtml(incubationText)}</strong>
+                </div>
             </div>
             <div class="beast-slot__actions">
                 <button class="btn-slot-action" data-beast-action="hatch" data-species-key="${escapeHtml(speciesKey)}" ${hatchPreview.canHatch ? '' : 'disabled'}>Ấp nở</button>
@@ -72,19 +84,26 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
     if (!species) return '';
     const tier = Input.getInsectTierInfo(species.tier);
     const attackPct = Math.round((species.attackFactor || 1) * 100);
-    const styleLabel = getInsectStyleLabel(species);
-    const styleHint = getInsectStyleHint(species);
+    const hasInsectBook = Input.hasKyTrungBang();
+    const styleLabel = hasInsectBook ? getInsectStyleLabel(species) : '';
+    const styleHint = hasInsectBook
+        ? getInsectStyleHint(species)
+        : 'Cần Kỳ Trùng Bảng để xem mô tả, phân loại, thức ăn và tập tính kỳ trùng.';
     const careStatus = Input.getSpeciesCareStatus(speciesKey);
     const leaderLabel = careStatus.leaderInfo?.title || 'Thủ lĩnh';
-    const sexStatusText = `Đực ${formatNumber(careStatus.sexSummary.male)} | Cái ${formatNumber(careStatus.sexSummary.female)}`;
+    const sexStatusText = hasInsectBook
+        ? `Đực ${formatNumber(careStatus.sexSummary.male)} | Cái ${formatNumber(careStatus.sexSummary.female)}`
+        : 'Cần Kỳ Trùng Bảng để xem';
     const satietyText = careStatus.isRainbowHabitat
         ? 'Thất Sắc dưỡng đàn, không bị đói'
         : careStatus.hasFood
             ? `No bụng sẵn sàng ${formatNumber(careStatus.storedSatiety)}/${formatNumber(careStatus.foodDemand)}`
             : `Dự trữ no bụng ${formatNumber(careStatus.storedSatiety)}/${formatNumber(careStatus.foodDemand)}`;
-    const preferredFoodText = careStatus.preferredFoodKeys.length
-        ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
-        : 'Mọi loại thức ăn có linh dưỡng';
+    const preferredFoodText = hasInsectBook
+        ? (careStatus.preferredFoodKeys.length
+            ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
+            : 'Mọi loại thức ăn có linh dưỡng')
+        : 'Cần Kỳ Trùng Bảng để xem';
     const foodStatusText = careStatus.isRainbowHabitat
         ? 'Không cần ô thức ăn riêng'
         : careStatus.foodStorageNutrition > 0
@@ -117,7 +136,7 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
                 <div class="beast-slot__info">
                     <div class="beast-slot__title-row">
                         <div class="beast-slot__title-block">
-                            <div class="slot-badge">${escapeHtml(tier.label)}</div>
+                            <div class="slot-badge">${escapeHtml(hasInsectBook ? tier.label : 'Ẩn thông tin')}</div>
                             <h4>${escapeHtml(species.name)}</h4>
                         </div>
                         <div class="beast-slot__count">
@@ -135,7 +154,7 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
             <div class="beast-slot__metrics">
                 <div class="beast-slot__metric">
                     <span>Công sát</span>
-                    <strong>${attackPct}%</strong>
+                    <strong>${hasInsectBook ? `${attackPct}%` : 'Cần Kỳ Trùng Bảng'}</strong>
                 </div>
                 <div class="beast-slot__metric">
                     <span>Giới tính</span>
@@ -189,6 +208,7 @@ function getInsectBreedingStatusText(careStatus) {
 }
 
 function getInsectPreferredFoodText(careStatus) {
+    if (!Input.hasKyTrungBang()) return 'Cần Kỳ Trùng Bảng để xem';
     return careStatus.preferredFoodKeys.length
         ? careStatus.preferredFoodKeys.map(materialKey => Input.getMaterialConfig(materialKey)?.fullName || materialKey).join(', ')
         : 'Mọi loại thức ăn có linh dưỡng';
@@ -660,6 +680,7 @@ BeastBagUI = {
         this.eggGrid.innerHTML = filteredEggCards.length
             ? filteredEggCards.join('')
             : `<article class="inventory-slot is-empty"><span>${isFilteredBeastTab ? 'Chưa có trứng trong Linh Thú Đại này.' : 'Chưa có trứng kỳ trùng.'}</span></article>`;
+        this.eggGrid.classList.toggle('is-rainbow-layout', useSharedRainbowHabitat);
 
         const filteredBeastEntries = Input.getInsectSpeciesEntries()
             .filter(([speciesKey]) => (Input.tamedInsects[speciesKey] || 0) > 0)
@@ -680,6 +701,7 @@ BeastBagUI = {
         this.beastGrid.innerHTML = filteredBeastCards.length
             ? filteredBeastCards.join('')
             : `<article class="inventory-slot is-empty"><span>${isFilteredBeastTab ? 'Chưa có linh trùng trong Linh Thú Đại này.' : 'Chưa có linh trùng đã nở.'}</span></article>`;
+        this.beastGrid.classList.toggle('is-rainbow-layout', useSharedRainbowHabitat);
     },
 
     open() {

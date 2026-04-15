@@ -1083,7 +1083,19 @@ const CONFIG = {
         },
         HATCH: {
             MIN_MANA_COST: 0, // Mana tối thiểu để có thể ấp trứng
-            NOTIFY_COLOR: "#79ffd4"
+            NOTIFY_COLOR: "#79ffd4",
+            DEFAULT_DURATION_MS: 14000,
+            TIER_DURATION_MS: {
+                PHAM: 9000,
+                LINH: 12000,
+                HUYEN: 15000,
+                THIEN: 18000,
+                DE: 22000
+            },
+            SPECIES_DURATION_MS: {
+                HUYEN_DIEM_NGA: 20000,
+                THON_LINH_TRUNG: 24000
+            }
         },
         CARE: {
             FEED_INTERVAL_MS: 30000, // Thời gian giữa các lần cho ăn

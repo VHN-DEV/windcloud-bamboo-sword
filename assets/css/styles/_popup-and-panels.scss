@@ -1239,6 +1239,10 @@ select.shop-control-input {
     gap: 14px;
 }
 
+.inventory-grid.beast-collection-grid.is-rainbow-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .attack-skill-list {
     display: grid;
     gap: 12px;
