@@ -2375,7 +2375,7 @@ Object.assign(Input, {
     },
 
     getTribulationTargetRankIndex() {
-        const targetRankId = Number(CONFIG.CULTIVATION?.TRIBULATION?.TARGET_RANK_ID) || 46;
+        const targetRankId = Number(CONFIG.CULTIVATION?.TRIBULATION?.TARGET_RANK_ID) || 42;
         return getRankIndexById(targetRankId);
     },
 
