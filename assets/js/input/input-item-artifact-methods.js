@@ -2597,42 +2597,46 @@ Object.assign(Input, {
 
             const rand = (min, max) => Math.random() * (max - min) + min;
             const toRadians = (deg) => (deg * Math.PI) / 180;
-            const drawBolt = (options, isChild = false) => {
-                const point = [options.startX, options.startY];
-                let lastAngle = options.angle;
-                const children = [];
-                ctx.beginPath();
-                ctx.moveTo(point[0], point[1]);
+            let totalBranches = 0;
+            const maxTotalBranches = 18 + Math.floor(depthRatio * 12);
+            const maxSegmentsPerBolt = 120;
+            const drawBolt = ({ startX, startY, angle, length, depth, maxDepth }) => {
+                let x = startX;
+                let y = startY;
+                let lastAngle = angle;
+                let remaining = Math.max(0, length);
+                let segmentCount = 0;
 
-                const segmentLength = rand(speedPx * 0.8, speedPx * 1.2);
-                const angleChange = rand(1, Math.max(2, spreadDeg));
-                lastAngle += (Math.random() > 0.5 ? 1 : -1) * angleChange;
-                const radians = toRadians(lastAngle);
-                point[0] += Math.cos(radians) * segmentLength;
-                point[1] += Math.sin(radians) * segmentLength;
-                ctx.lineTo(point[0], point[1]);
-                ctx.stroke();
+                while (remaining > 0 && segmentCount < maxSegmentsPerBolt) {
+                    const segmentLength = Math.min(remaining, rand(speedPx * 0.7, speedPx * 1.2));
+                    const angleChange = rand(1, Math.max(2, spreadDeg));
+                    lastAngle += (Math.random() > 0.5 ? 1 : -1) * angleChange;
+                    const radians = toRadians(lastAngle);
+                    const nextX = x + (Math.cos(radians) * segmentLength);
+                    const nextY = y + (Math.sin(radians) * segmentLength);
 
-                const traveled = Math.hypot(point[0] - options.startX, point[1] - options.startY);
-                if (Math.random() < branchChance && options.depth < options.maxDepth) {
-                    children.push({
-                        startX: point[0],
-                        startY: point[1],
-                        length: traveled * rand(0.42, 0.78),
-                        angle: lastAngle + rand(-65, 65),
-                        depth: options.depth + 1,
-                        maxDepth: options.maxDepth
-                    });
-                }
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(nextX, nextY);
+                    ctx.stroke();
 
-                children.forEach(child => drawBolt(child, true));
-                if (!isChild && traveled < options.length) {
-                    drawBolt({
-                        ...options,
-                        startX: point[0],
-                        startY: point[1],
-                        angle: lastAngle
-                    });
+                    x = nextX;
+                    y = nextY;
+                    remaining -= segmentLength;
+                    segmentCount += 1;
+
+                    const canBranch = depth < maxDepth && totalBranches < maxTotalBranches && remaining > speedPx * 0.5;
+                    if (canBranch && Math.random() < branchChance) {
+                        totalBranches += 1;
+                        drawBolt({
+                            startX: x,
+                            startY: y,
+                            angle: lastAngle + rand(-68, 68),
+                            length: remaining * rand(0.32, 0.72),
+                            depth: depth + 1,
+                            maxDepth
+                        });
+                    }
                 }
             };
 
