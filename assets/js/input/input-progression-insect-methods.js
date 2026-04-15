@@ -1137,6 +1137,13 @@ Object.assign(Input, {
         return Object.values(this.insectEggs || {}).reduce((total, count) => total + Math.max(0, Math.floor(count || 0)), 0);
     },
 
+    getTotalIncubatingEggCount() {
+        this.ensureInsectIncubatorsShape();
+        return Object.values(this.insectIncubators || {}).reduce((total, queue) => {
+            return total + (Array.isArray(queue) ? queue.length : 0);
+        }, 0);
+    },
+
     getTotalTamedInsectCount() {
         return Object.values(this.tamedInsects || {}).reduce((total, count) => total + Math.max(0, Math.floor(count || 0)), 0);
     },
@@ -1253,8 +1260,16 @@ Object.assign(Input, {
     },
 
     getBeastBagTabs() {
+        const incubatingTotal = this.getTotalIncubatingEggCount();
+        const incubatorTab = {
+            key: 'incubator',
+            label: 'Lồng ấp',
+            note: incubatingTotal > 0 ? `${formatNumber(incubatingTotal)} trứng đang ấp` : 'Chưa có trứng đang ấp'
+        };
+
         if (this.hasSevenColorSpiritBag()) {
             return [
+                incubatorTab,
                 {
                     key: 'all',
                     label: 'Tổng đàn',
@@ -1268,6 +1283,7 @@ Object.assign(Input, {
 
         if (!dedicatedSpeciesKeys.length) {
             return [
+                incubatorTab,
                 {
                     key: 'all',
                     label: 'Tổng đàn',
@@ -1276,7 +1292,7 @@ Object.assign(Input, {
             ];
         }
 
-        const tabs = [];
+        const tabs = [incubatorTab];
 
         dedicatedSpeciesKeys
             .sort((a, b) => {
@@ -1310,6 +1326,10 @@ Object.assign(Input, {
             return this.getInsectSpeciesEntries().map(([speciesKey]) => speciesKey);
         }
 
+        if (safeTabKey === 'incubator') {
+            return this.getInsectSpeciesEntries().map(([speciesKey]) => speciesKey);
+        }
+
         if (safeTabKey === 'rainbow') {
             return this.getInsectSpeciesEntries()
                 .map(([speciesKey]) => speciesKey)
@@ -1325,6 +1345,7 @@ Object.assign(Input, {
     },
 
     shouldShowBeastFeedPanel(tabKey = this.selectedBeastBagTab || 'all') {
+        if (tabKey === 'incubator') return false;
         if (this.hasSevenColorSpiritBag()) return true;
         return tabKey === 'rainbow' || String(tabKey || '').startsWith('species:');
     },

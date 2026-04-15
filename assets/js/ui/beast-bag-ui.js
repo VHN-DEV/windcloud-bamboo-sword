@@ -187,6 +187,55 @@ function buildTamedInsectCardMarkup(speciesKey, count) {
     `;
 }
 
+function buildInsectIncubatorCardMarkup(speciesKey) {
+    const species = Input.getInsectSpecies(speciesKey);
+    if (!species) return '';
+
+    const hasInsectBook = Input.hasKyTrungBang();
+    const tier = Input.getInsectTierInfo(species.tier);
+    const incubation = Input.getSpeciesIncubationStatus(speciesKey);
+    if (!incubation.total) return '';
+
+    const durationSeconds = Math.max(1, Math.ceil((incubation.hatchDurationMs || 0) / 1000));
+    const nextReadySeconds = Math.max(1, Math.ceil((incubation.nextReadyInMs || 0) / 1000));
+    const statusText = incubation.readyCount > 0
+        ? `${formatNumber(incubation.readyCount)} trứng đã chín, chờ ô trống`
+        : `${formatNumber(incubation.incubatingCount)} trứng đang ấp, dự kiến ${formatNumber(nextReadySeconds)} giây nữa`;
+
+    return `
+        <article class="inventory-slot beast-slot beast-slot--egg" style="--slot-accent:${species.eggColor || species.color};${buildInsectVisualVars(species, { egg: true })}">
+            <div class="beast-slot__head">
+                <div class="beast-card-visual beast-card-visual--egg" style="${buildInsectVisualVars(species, { egg: true })}">
+                    ${buildInsectArtMarkup(speciesKey, { egg: true })}
+                </div>
+                <div class="beast-slot__info">
+                    <div class="beast-slot__title-row">
+                        <div class="beast-slot__title-block">
+                            <div class="slot-badge">${escapeHtml(hasInsectBook ? tier.label : 'Ẩn thông tin')}</div>
+                            <h4>Lồng ấp ${escapeHtml(species.name)}</h4>
+                        </div>
+                        <div class="beast-slot__count">
+                            <span>Đang ấp</span>
+                            <strong>${formatNumber(incubation.total)}</strong>
+                        </div>
+                    </div>
+                    <p class="beast-slot__summary">${escapeHtml(hasInsectBook ? (getInsectStyleHint(species) || 'Ổ trứng đang ổn định nhiệt độ linh dưỡng.') : 'Cần Kỳ Trùng Bảng để xem chi tiết loài kỳ trùng.')}</p>
+                </div>
+            </div>
+            <div class="beast-slot__details">
+                <div class="beast-slot__detail">
+                    <span>Chu kỳ ấp</span>
+                    <strong>${formatNumber(durationSeconds)} giây / trứng</strong>
+                </div>
+                <div class="beast-slot__detail beast-slot__detail--wide">
+                    <span>Trạng thái lồng</span>
+                    <strong>${escapeHtml(statusText)}</strong>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
 function buildBeastTabsMarkup(currentTab = 'all') {
     return Input.getBeastBagTabs().map(tab => `
         <button
@@ -601,6 +650,10 @@ BeastBagUI = {
     },
 
     getScopeLabel(currentBeastTab = 'all') {
+        if (currentBeastTab === 'incubator') {
+            return 'Lồng ấp kỳ trùng';
+        }
+
         if (Input.hasSevenColorSpiritBag()) {
             return 'Không gian chung Thất Sắc';
         }
@@ -645,6 +698,7 @@ BeastBagUI = {
         const currentBeastTab = Input.ensureValidBeastBagTab();
         const tabSpeciesKeys = new Set(Input.getBeastTabSpeciesKeys(currentBeastTab));
         const showFoodPanel = Input.shouldShowBeastFeedPanel(currentBeastTab);
+        const isIncubatorTab = currentBeastTab === 'incubator';
         const isFilteredBeastTab = currentBeastTab !== 'all';
         const useSharedRainbowHabitat = Input.hasSevenColorSpiritBag();
         const scopeLabel = this.getScopeLabel(currentBeastTab);
@@ -662,25 +716,38 @@ BeastBagUI = {
         }
 
         if (this.eggSection) this.eggSection.style.display = '';
-        if (this.beastSection) this.beastSection.style.display = '';
+        if (this.beastSection) this.beastSection.style.display = isIncubatorTab ? 'none' : '';
+        const eggHeading = this.eggSection?.querySelector('h4');
+        if (eggHeading) eggHeading.textContent = isIncubatorTab ? 'Lồng ấp kỳ trùng' : 'Trùng noãn';
 
-        const filteredEggEntries = Input.getInsectSpeciesEntries()
-            .filter(([speciesKey]) => (Input.insectEggs[speciesKey] || 0) > 0)
-            .filter(([speciesKey]) => !isFilteredBeastTab || tabSpeciesKeys.has(speciesKey));
-        const filteredEggCards = filteredEggEntries
-            .map(([speciesKey]) => buildInsectEggCardMarkup(speciesKey, Input.insectEggs[speciesKey]));
-        const totalEggCount = filteredEggEntries.reduce((total, [speciesKey]) => {
-            return total + Math.max(0, Math.floor(Input.insectEggs?.[speciesKey] || 0));
-        }, 0);
+        const filteredEggEntries = isIncubatorTab
+            ? Input.getInsectSpeciesEntries()
+                .filter(([speciesKey]) => (Input.getSpeciesIncubationStatus(speciesKey).total || 0) > 0)
+            : Input.getInsectSpeciesEntries()
+                .filter(([speciesKey]) => (Input.insectEggs[speciesKey] || 0) > 0)
+                .filter(([speciesKey]) => !isFilteredBeastTab || tabSpeciesKeys.has(speciesKey));
+        const filteredEggCards = isIncubatorTab
+            ? filteredEggEntries.map(([speciesKey]) => buildInsectIncubatorCardMarkup(speciesKey))
+            : filteredEggEntries.map(([speciesKey]) => buildInsectEggCardMarkup(speciesKey, Input.insectEggs[speciesKey]));
+        const totalEggCount = isIncubatorTab
+            ? filteredEggEntries.reduce((total, [speciesKey]) => total + (Input.getSpeciesIncubationStatus(speciesKey).total || 0), 0)
+            : filteredEggEntries.reduce((total, [speciesKey]) => total + Math.max(0, Math.floor(Input.insectEggs?.[speciesKey] || 0)), 0);
         this.renderSectionMeta(this.eggSection, [
             `${formatNumber(filteredEggEntries.length)} loài`,
-            `${formatNumber(totalEggCount)} trứng`,
+            `${formatNumber(totalEggCount)} ${isIncubatorTab ? 'trứng đang ấp' : 'trứng'}`,
             scopeLabel
         ]);
         this.eggGrid.innerHTML = filteredEggCards.length
             ? filteredEggCards.join('')
-            : `<article class="inventory-slot is-empty"><span>${isFilteredBeastTab ? 'Chưa có trứng trong Linh Thú Đại này.' : 'Chưa có trứng kỳ trùng.'}</span></article>`;
+            : `<article class="inventory-slot is-empty"><span>${isIncubatorTab ? 'Chưa có trứng nào trong lồng ấp.' : (isFilteredBeastTab ? 'Chưa có trứng trong Linh Thú Đại này.' : 'Chưa có trứng kỳ trùng.')}</span></article>`;
         this.eggGrid.classList.toggle('is-rainbow-layout', useSharedRainbowHabitat);
+
+        if (isIncubatorTab) {
+            this.renderSectionMeta(this.beastSection, []);
+            this.beastGrid.innerHTML = '';
+            this.beastGrid.classList.toggle('is-rainbow-layout', useSharedRainbowHabitat);
+            return;
+        }
 
         const filteredBeastEntries = Input.getInsectSpeciesEntries()
             .filter(([speciesKey]) => (Input.tamedInsects[speciesKey] || 0) > 0)
