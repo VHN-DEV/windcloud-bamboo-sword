@@ -828,8 +828,8 @@ const CONFIG = {
             TARGET_RANK_ID: 42,
             STRIKE_COUNT: 9,
             BASE_HP: 1000,
-            STRIKE_INTERVAL_MS: 700,
-            PREPARE_DELAY_MS: 450,
+            STRIKE_INTERVAL_MS: 1200,
+            PREPARE_DELAY_MS: 800,
             DAMAGE_RATIO_MIN: 0.08,
             DAMAGE_RATIO_MAX: 0.18
         },

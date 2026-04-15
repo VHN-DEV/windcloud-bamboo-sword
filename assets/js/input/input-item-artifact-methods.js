@@ -2504,6 +2504,22 @@ Object.assign(Input, {
 
         const cloudEl = document.getElementById('tribulation-cloud');
         const boltEl = document.getElementById('tribulation-bolt');
+        const cloudWrapEl = cloudEl?.parentElement || null;
+
+        const spawnBoltFragment = (strikeIndex) => {
+            if (!cloudWrapEl) return;
+            const fragment = document.createElement('div');
+            fragment.className = 'tribulation-bolt-fragment';
+            const direction = strikeIndex % 2 === 0 ? 1 : -1;
+            const horizontalOffset = direction * (8 + (strikeIndex % 3) * 5);
+            const rotateDeg = direction * (4 + (strikeIndex % 4) * 3);
+            fragment.style.transform = `translateX(calc(-50% + ${horizontalOffset}px)) rotate(${rotateDeg}deg)`;
+            cloudWrapEl.appendChild(fragment);
+            requestAnimationFrame(() => {
+                fragment.classList.add('is-striking');
+            });
+            setTimeout(() => fragment.remove(), 980);
+        };
 
         const performStrike = () => {
             if (!this.tribulation.active) return;
@@ -2515,6 +2531,7 @@ Object.assign(Input, {
             void boltEl?.offsetWidth;
             cloudEl?.classList.add('is-striking');
             boltEl?.classList.add('is-striking');
+            spawnBoltFragment(this.tribulation.currentStrike);
 
             const damageRatio = damageMin + (Math.random() * (damageMax - damageMin));
             const damage = Math.max(1, Math.round(this.tribulation.maxHp * damageRatio));
