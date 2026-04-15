@@ -2564,6 +2564,16 @@ Object.assign(Input, {
 
         const currentRank = this.getCurrentRank();
         if (!currentRank) return;
+
+        if (!isForced && !this.isReadyToBreak) {
+            showNotify('Tu vi chưa viên mãn, chưa thể đột phá', '#ffb36b');
+            return;
+        }
+
+        if (isForced && this.exp < (currentRank.exp || 0)) {
+            showNotify('Thiên đạo chưa đủ áp lực để cưỡng ép đột phá', '#ff9ea8');
+            return;
+        }
         if (this.rankIndex >= this.getMaxRankIndex() || currentRank.infiniteStats) {
             this.isReadyToBreak = false;
             showNotify(`Đã chạm ${currentRank.name}, thiên đạo không còn cửa ải cao hơn`, getRankAccentColor(currentRank));

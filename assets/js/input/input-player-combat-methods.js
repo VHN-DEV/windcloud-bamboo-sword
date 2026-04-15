@@ -508,6 +508,11 @@ Object.assign(Input, {
     },
 
     applyChungCucDaoNguyenDan(item, qualityConfig) {
+        if (this.tribulation?.active) {
+            showNotify('Lôi kiếp đang giáng, không thể dùng cấm đan đổi mệnh', '#9ecfff');
+            return false;
+        }
+
         this.clearSpecialPillState();
         const maxRank = this.ascendToUltimateRank();
         if (!maxRank) return false;
@@ -563,6 +568,11 @@ Object.assign(Input, {
     },
 
     applyTanDaoDietNguyenDan(item, qualityConfig) {
+        if (this.tribulation?.active) {
+            showNotify('Lôi kiếp đang giáng, không thể dùng cấm đan đổi mệnh', '#9ecfff');
+            return false;
+        }
+
         this.clearSpecialPillState();
         this.temporaryAscensionOrigin = {
             rankIndex: this.rankIndex,
@@ -2047,6 +2057,16 @@ Object.assign(Input, {
     executeBreakthrough(isForced = false) {
         const currentRank = CONFIG.CULTIVATION.RANKS[this.rankIndex];
         if (!currentRank) return;
+
+        if (!isForced && !this.isReadyToBreak) {
+            showNotify('Tu vi chưa viên mãn, chưa thể đột phá', '#ffb36b');
+            return;
+        }
+
+        if (isForced && this.exp < (currentRank.exp || 0)) {
+            showNotify('Thiên đạo chưa đủ áp lực để cưỡng ép đột phá', '#ff9ea8');
+            return;
+        }
 
         // 1. Tính tổng tỉ lệ
         const pillBoost = this.calculateTotalPillBoost();
