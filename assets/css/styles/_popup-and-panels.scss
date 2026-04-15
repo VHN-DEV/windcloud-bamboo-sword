@@ -5978,7 +5978,7 @@ select.shop-control-input {
 }
 
 .tribulation-content {
-    width: min(92vw, 360px);
+    width: min(94vw, 460px);
     border-color: #7dc8ff;
     box-shadow: 0 0 34px rgba(80, 158, 255, 0.45);
 }
@@ -5994,21 +5994,23 @@ select.shop-control-input {
 .tribulation-cloud-wrap {
     position: relative;
     width: 100%;
-    height: 98px;
+    height: 132px;
 }
 
 .tribulation-cloud {
     position: relative;
-    width: 152px;
-    height: 54px;
+    width: 260px;
+    height: 68px;
     margin: 0 auto;
     border-radius: 999px;
     background:
-        radial-gradient(120px 58px at 50% 44%, rgba(74, 84, 108, 0.82), rgba(18, 22, 35, 0.96) 72%),
-        linear-gradient(180deg, rgba(56, 67, 90, 0.32), rgba(17, 22, 34, 0.08));
+        radial-gradient(88px 54px at 15% 52%, rgba(63, 74, 98, 0.9), rgba(17, 22, 35, 0.98) 78%),
+        radial-gradient(102px 60px at 35% 38%, rgba(72, 82, 106, 0.88), rgba(16, 21, 34, 0.97) 78%),
+        radial-gradient(112px 62px at 58% 44%, rgba(67, 79, 104, 0.86), rgba(17, 22, 35, 0.96) 78%),
+        radial-gradient(92px 56px at 82% 50%, rgba(61, 71, 95, 0.84), rgba(18, 23, 36, 0.97) 78%);
     box-shadow:
         0 10px 22px rgba(7, 12, 22, 0.66),
-        0 0 22px rgba(45, 55, 82, 0.58);
+        0 0 26px rgba(45, 55, 82, 0.58);
 }
 
 .tribulation-cloud::before,
@@ -6022,17 +6024,17 @@ select.shop-control-input {
 }
 
 .tribulation-cloud::before {
-    width: 72px;
-    height: 52px;
-    left: -16px;
-    top: -18px;
+    width: 118px;
+    height: 74px;
+    left: -38px;
+    top: -26px;
 }
 
 .tribulation-cloud::after {
-    width: 82px;
-    height: 58px;
-    right: -18px;
-    top: -22px;
+    width: 132px;
+    height: 80px;
+    right: -42px;
+    top: -30px;
 }
 
 .tribulation-cloud.is-striking {
@@ -6041,7 +6043,7 @@ select.shop-control-input {
 
 .tribulation-bolt {
     position: absolute;
-    top: 50px;
+    top: 68px;
     left: 50%;
     width: 18px;
     height: 0;
@@ -6059,9 +6061,30 @@ select.shop-control-input {
     animation: tribulation-bolt-drop 0.42s ease-out;
 }
 
+.tribulation-bolt-fragment {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    width: 14px;
+    height: 0;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(188, 238, 255, 0.92) 44%, rgba(96, 156, 255, 0.82) 74%, rgba(96, 156, 255, 0));
+    box-shadow:
+        0 0 9px rgba(154, 232, 255, 0.84),
+        0 0 20px rgba(118, 172, 255, 0.46);
+    clip-path: polygon(48% 0, 84% 0, 56% 22%, 84% 22%, 48% 52%, 72% 52%, 26% 100%, 38% 66%, 14% 66%, 42% 34%, 24% 34%);
+}
+
+.tribulation-bolt-fragment.is-striking {
+    animation: tribulation-bolt-fragment-drop 0.55s ease-out;
+}
+
 .tribulation-seated {
-    width: 60px;
-    height: 92px;
+    width: 48px;
+    height: 74px;
     border-radius: 40px 40px 28px 28px;
     background: linear-gradient(180deg, rgba(156, 255, 226, 0.9), rgba(34, 136, 104, 0.96));
     position: relative;
@@ -6071,22 +6094,22 @@ select.shop-control-input {
 .tribulation-seated::before {
     content: '';
     position: absolute;
-    width: 34px;
-    height: 34px;
+    width: 27px;
+    height: 27px;
     border-radius: 50%;
     background: radial-gradient(circle at 38% 34%, #e9fff8, #6ae5bf 72%);
-    top: -19px;
-    left: 13px;
+    top: -14px;
+    left: 10px;
 }
 
 .tribulation-seated::after {
     content: '';
     position: absolute;
-    width: 80px;
-    height: 16px;
+    width: 72px;
+    height: 14px;
     border-radius: 50%;
-    bottom: -14px;
-    left: -10px;
+    bottom: -12px;
+    left: -12px;
     background: radial-gradient(circle, rgba(113, 214, 176, 0.4), rgba(18, 34, 44, 0));
 }
 
@@ -6127,5 +6150,11 @@ select.shop-control-input {
 @keyframes tribulation-bolt-drop {
     0% { height: 0; opacity: 0; }
     25% { opacity: 1; }
-    100% { height: 185px; opacity: 0; }
+    100% { height: 198px; opacity: 0; }
+}
+
+@keyframes tribulation-bolt-fragment-drop {
+    0% { height: 0; opacity: 0; }
+    18% { opacity: 0.92; }
+    100% { height: 196px; opacity: 0; }
 }
