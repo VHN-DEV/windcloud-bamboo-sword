@@ -100,20 +100,45 @@ class Sword {
         return Input.getSwordArtifactPowerMultiplier(state);
     }
 
-    getUltimateCoreSword() {
+    getUltimateCoreSword(now = null) {
         if (typeof swords !== 'undefined' && Array.isArray(swords) && swords.length > 0) {
             const pinnedCore = swords[Input?.ultimateCoreIndex];
             if (pinnedCore && !pinnedCore.isDead) {
                 return pinnedCore;
             }
-            return swords.find(s => !s.isDead && !s.isStunned) || swords.find(s => !s.isDead) || swords[0];
+
+            const frameNow = getSwordFrameNow(now);
+            const cached = Sword.ultimateCoreFrameCache;
+            if (cached && cached.frameNow === frameNow && cached.sword && !cached.sword.isDead) {
+                return cached.sword;
+            }
+
+            let fallbackAlive = null;
+            let selectedCore = swords[0];
+            for (let i = 0; i < swords.length; i++) {
+                const candidate = swords[i];
+                if (!fallbackAlive && !candidate.isDead) {
+                    fallbackAlive = candidate;
+                }
+                if (!candidate.isDead && !candidate.isStunned) {
+                    selectedCore = candidate;
+                    break;
+                }
+            }
+
+            if (!selectedCore || selectedCore.isDead) {
+                selectedCore = fallbackAlive || swords[0];
+            }
+
+            Sword.ultimateCoreFrameCache = { frameNow, sword: selectedCore };
+            return selectedCore;
         }
 
         return this;
     }
 
-    isUltimateCore() {
-        return this === this.getUltimateCoreSword();
+    isUltimateCore(now = null) {
+        return this === this.getUltimateCoreSword(now);
     }
 
     getDamageMultiplier() {
@@ -137,7 +162,7 @@ class Sword {
     }
 
     getCurrentGuardTarget(guardCenter, r, Input, scaleFactor, now = null) {
-        if (Input.isUltMode && this.isUltimateCore()) {
+        if (Input.isUltMode && this.isUltimateCore(now)) {
             return this.getMergedGuardTarget(guardCenter, scaleFactor);
         }
 
@@ -324,8 +349,8 @@ class Sword {
         const eased = Input.getUltimateTransitionEase();
         const mergedTarget = this.getMergedGuardTarget(guardCenter, scaleFactor);
         const normalTarget = this.getNormalGuardTarget(guardCenter, r, Input, scaleFactor, now);
-        const isCore = this.isUltimateCore();
-        const coreSword = this.getUltimateCoreSword();
+        const isCore = this.isUltimateCore(now);
+        const coreSword = this.getUltimateCoreSword(now);
         const transitionOrigin = (phase === 'splitting' && coreSword)
             ? {
                 tx: coreSword.x,
@@ -390,10 +415,11 @@ class Sword {
     updateReturnMode(guardCenter, r, Input, scaleFactor, now = null) {
         const speedMult = this.getSafeSpeedMultiplier(Input);
         const target = this.getCurrentGuardTarget(guardCenter, r, Input, scaleFactor, now);
-        const followStiffness = (Input.isUltMode && this.isUltimateCore()) ? 0.22 : 0.18;
-        const returnBoost = (Input.isUltMode && this.isUltimateCore()) ? 16 : 10;
+        const isCore = this.isUltimateCore(now);
+        const followStiffness = (Input.isUltMode && isCore) ? 0.22 : 0.18;
+        const returnBoost = (Input.isUltMode && isCore) ? 16 : 10;
 
-        if (Input.isUltMode && this.isUltimateCore()) {
+        if (Input.isUltMode && isCore) {
             this.targetVisualScale = 4.8;
         } else if (!this.isEnlarged) {
             this.targetVisualScale = Number.isFinite(target.visualScale) ? target.visualScale : 1;
@@ -434,7 +460,7 @@ class Sword {
         this.trail.push({ x: this.x, y: this.y });
         if (this.trail.length > CONFIG.SWORD.TRAIL_LENGTH) this.trail.shift();
 
-        const snapDistance = (Input.isUltMode && this.isUltimateCore()) ? 18 : 10;
+        const snapDistance = (Input.isUltMode && isCore) ? 18 : 10;
         if (distance <= snapDistance * scaleFactor && Math.hypot(this.vx, this.vy) <= 2.2 * scaleFactor * speedMult) {
             this.x = target.tx;
             this.y = target.ty;
@@ -473,8 +499,8 @@ class Sword {
             return;
         }
 
-        if (Input.isUltMode && !this.isUltimateCore()) {
-            const coreSword = this.getUltimateCoreSword();
+        if (Input.isUltMode && !this.isUltimateCore(now)) {
+            const coreSword = this.getUltimateCoreSword(now);
             const anchorX = coreSword ? coreSword.x : guardCenter.x;
             const anchorY = coreSword ? coreSword.y : guardCenter.y - 20 * scaleFactor;
             this.isStunned = false;
@@ -639,7 +665,7 @@ class Sword {
 
     updateAttackMode(enemies, Input, scaleFactor, now = null) {
         const speedMult = this.getSafeSpeedMultiplier(Input);
-        const isUltimateCore = Input.isUltMode && this.isUltimateCore();
+        const isUltimateCore = Input.isUltMode && this.isUltimateCore(now);
         const ultimateHitInterval = Math.max(16, Number(CONFIG.ULTIMATE?.CORE_HIT_INTERVAL_MS) || 42);
         const frameNow = getSwordFrameNow(now);
         this.attackFrame++;
@@ -933,7 +959,7 @@ class Sword {
             return;
         }
 
-        if (Input.isUltMode && !this.isUltimateCore()) {
+        if (Input.isUltMode && !this.isUltimateCore(now)) {
             return;
         }
 
@@ -1140,3 +1166,8 @@ class Sword {
         ctx.restore();
     }
 }
+
+Sword.ultimateCoreFrameCache = {
+    frameNow: -1,
+    sword: null
+};
