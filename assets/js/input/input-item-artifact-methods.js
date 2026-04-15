@@ -2518,7 +2518,7 @@ Object.assign(Input, {
             requestAnimationFrame(() => {
                 fragment.classList.add('is-striking');
             });
-            setTimeout(() => fragment.remove(), 620);
+            setTimeout(() => fragment.remove(), 980);
         };
 
         const performStrike = () => {
