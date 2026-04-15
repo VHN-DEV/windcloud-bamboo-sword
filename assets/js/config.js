@@ -298,6 +298,16 @@ const CONFIG = {
         SHIELD_HP_RATIO: 0.1,                       // 0.1 tương đương 10% máu quái
         RECOVERY_DELAY_MS: 3000,                    // Thời gian chờ sau khi bị tấn công trước khi bắt đầu hồi phục khiên
         RECOVERY_SPEED_PER_SEC: 0.05,               // Tốc độ hồi phục khiên mỗi giây (0.05 = 5% HP khiên mỗi giây)
+        PROACTIVE_ATTACK: {
+            BASE_CHANCE: 0.16,                      // Tỉ lệ cơ bản để quái chủ động tấn công khi ở gần người chơi
+            MIN_CHANCE: 0.02,                       // Giới hạn tối thiểu để vẫn còn khả năng chủ động
+            MAX_CHANCE: 0.42,                       // Giới hạn tối đa để tránh dồn dập quá mức
+            LOWER_OR_EQUAL_BONUS_PER_LEVEL: 0.04,   // Quái thấp hơn hoặc ngang cấp sẽ hiếu chiến hơn mỗi cấp chênh
+            HIGHER_RANK_PENALTY_PER_LEVEL: 0.06,    // Quái cao cấp hơn người chơi sẽ giảm tỉ lệ chủ động
+            ELITE_BONUS: 0.05,                      // Tinh anh vẫn có khuynh hướng chủ động hơn nhẹ
+            ROLL_INTERVAL_MS: 900,                  // Khoảng thời gian giữa mỗi lần "quyết định" có chủ động hay không
+            AGGRO_WINDOW_MS: 2800                   // Sau khi đã chủ động thì duy trì đà tấn công trong khoảng này
+        },
         DEBRIS: {                                   // Mảnh vỡ khi quái chết
             COUNT: 10,                              // Số lượng mảnh bắn ra
             SPEED: { MIN: 4, MAX: 12 },             // Tốc độ bắn mảnh vỡ

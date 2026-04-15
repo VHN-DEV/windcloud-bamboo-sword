@@ -555,6 +555,7 @@ function animate() {
     Input.drawCanLamProjectiles(ctx, scaleFactor);
     Input.drawEnemyMeleeStrikes(ctx, scaleFactor);
     Input.drawSingleSwordUltimateProjectiles(ctx, scaleFactor);
+    Input.drawSingleSwordUltimateChargeIndicator(ctx, scaleFactor);
     renderCursor();
 
     // Vẽ và cập nhật hạt hiệu ứng
