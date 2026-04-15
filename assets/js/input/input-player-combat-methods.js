@@ -1530,7 +1530,16 @@ Object.assign(Input, {
                 case 'BEAM': {
                     const beamRange = contactRadius * 4.8;
                     if (dist <= beamRange) {
-                        this.inflictEnemyAttackDamage(baseDamage * 1.12, 0.22, 'tia năng lượng');
+                        this.castEnemyProjectile(enemy, centerX, centerY, {
+                            type: 'orb',
+                            speed: 320,
+                            radius: 10,
+                            life: 1.9,
+                            damage: baseDamage * 1.12,
+                            color: '#b8f3ff',
+                            trailEveryMs: 32,
+                            trailSizeMult: 1.28
+                        });
                     }
                     break;
                 }
@@ -1554,7 +1563,12 @@ Object.assign(Input, {
                 }
                 default:
                     if (dist <= contactRadius * 1.2) {
-                        this.inflictEnemyAttackDamage(baseDamage, 0.2, 'công kích trực diện');
+                        this.queueEnemyMeleeStrike(enemy, 'CLAW', centerX, centerY, {
+                            durationMs: enemy.isElite ? 140 : 180,
+                            damage: baseDamage,
+                            ailmentChance: 0.2,
+                            source: 'công kích trực diện'
+                        });
                     }
                     break;
             }
