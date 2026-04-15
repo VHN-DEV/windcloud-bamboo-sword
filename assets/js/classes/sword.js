@@ -155,6 +155,11 @@ class Sword {
         return Math.max(0.35, rawSpeedMult);
     }
 
+    getFrameCompensation(Input) {
+        const deltaMs = Math.max(8, Number(Input?.lastFrameDeltaMs) || 16.7);
+        return clampNumber(deltaMs / 16.7, 0.85, 2.2);
+    }
+
     usesCloseRangeSlash(Input) {
         return !Input.isUltMode
             && Input.attackMode !== 'SWORD'
@@ -563,6 +568,7 @@ class Sword {
 
     updateGuardMode(guardCenter, r, Input, scaleFactor, now = null) {
         const speedMult = this.getSafeSpeedMultiplier(Input);
+        const frameComp = this.getFrameCompensation(Input);
         this.isReturning = false;
         // Thu nhỏ lại nếu trước đó đang phóng to
         if (this.isEnlarged) {
@@ -604,23 +610,23 @@ class Sword {
 
         // DI CHUYỂN VẬT LÝ (Dùng nội suy để mượt hơn khi nhập thể)
         // Tăng followStiffness khi Ulti để kiếm "nhập" vào nhau nhanh hơn
-        const followStiffness = (Input.isUltMode ? 0.3 : 0.35) * speedMult;
+        const followStiffness = (Input.isUltMode ? 0.3 : 0.35) * speedMult * frameComp;
 
         const dx = tx - this.x;
         const dy = ty - this.y;
         const distance = Math.hypot(dx, dy);
 
         if (Input.speed > 1.5 || (distance > 100 && !Input.isUltMode)) {
-            this.vx += (dx / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor * speedMult);
-            this.vy += (dy / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor * speedMult);
-            this.vx *= 0.9; 
-            this.vy *= 0.9;
-            this.x += this.vx; this.y += this.vy;
+            this.vx += (dx / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor * speedMult) * frameComp;
+            this.vy += (dy / (distance || 1)) * Math.min(distance * 0.05, 6 * scaleFactor * speedMult) * frameComp;
+            this.vx *= Math.pow(0.9, frameComp);
+            this.vy *= Math.pow(0.9, frameComp);
+            this.x += this.vx * frameComp; this.y += this.vy * frameComp;
             this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
         } else {
             this.x += dx * followStiffness;
             this.y += dy * followStiffness;
-            this.vx *= 0.5; this.vy *= 0.5;
+            this.vx *= Math.pow(0.5, frameComp); this.vy *= Math.pow(0.5, frameComp);
 
             let diff = finalAngle - this.drawAngle;
             while (diff < -Math.PI) diff += Math.PI * 2;
@@ -639,6 +645,7 @@ class Sword {
 
     updateAttackMode(enemies, Input, scaleFactor, now = null) {
         const speedMult = this.getSafeSpeedMultiplier(Input);
+        const frameComp = this.getFrameCompensation(Input);
         const isUltimateCore = Input.isUltMode && this.isUltimateCore();
         const ultimateHitInterval = Math.max(16, Number(CONFIG.ULTIMATE?.CORE_HIT_INTERVAL_MS) || 42);
         const frameNow = getSwordFrameNow(now);
@@ -717,10 +724,10 @@ class Sword {
             const toDesiredX = desiredX - this.x;
             const toDesiredY = desiredY - this.y;
 
-            this.vx = this.vx * 0.42 + toDesiredX * 0.22 * speedMult;
-            this.vy = this.vy * 0.42 + toDesiredY * 0.22 * speedMult;
-            this.x += this.vx;
-            this.y += this.vy;
+            this.vx = this.vx * Math.pow(0.42, frameComp) + toDesiredX * 0.22 * speedMult * frameComp;
+            this.vy = this.vy * Math.pow(0.42, frameComp) + toDesiredY * 0.22 * speedMult * frameComp;
+            this.x += this.vx * frameComp;
+            this.y += this.vy * frameComp;
             const desiredDrawAngle = Math.atan2(this.vy || toDesiredY, this.vx || toDesiredX) + Math.PI / 2;
             let drawDiff = desiredDrawAngle - this.drawAngle;
             while (drawDiff < -Math.PI) drawDiff += Math.PI * 2;
@@ -793,11 +800,11 @@ class Sword {
         const d = Math.hypot(dx, dy) || 1;
 
         // Tốc độ bay (nhanh hơn khi đang Ult)
-        const flySpeed = (Input.isUltMode ? 22 : 10) * scaleFactor * speedMult;
+        const flySpeed = (Input.isUltMode ? 22 : 10) * scaleFactor * speedMult * frameComp;
         this.vx += (dx / d) * flySpeed;
         this.vy += (dy / d) * flySpeed;
-        this.vx *= 0.92; this.vy *= 0.92;
-        this.x += this.vx; this.y += this.vy;
+        this.vx *= Math.pow(0.92, frameComp); this.vy *= Math.pow(0.92, frameComp);
+        this.x += this.vx * frameComp; this.y += this.vy * frameComp;
         
         this.drawAngle = Math.atan2(this.vy, this.vx) + Math.PI / 2;
 
