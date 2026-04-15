@@ -162,7 +162,7 @@ AlchemyUI = {
                     <h4>${escapeHtml(recipe.name)}</h4>
                     <p>${escapeHtml(recipe.tier)} • Thành đan: ${escapeHtml(recipe.outputName)}</p>
                     <p>Thời gian luyện cơ bản: ${escapeHtml(formatAlchemyCountdown(recipe.brewTimeMs))}</p>
-                    <ul class="slot-meta" style="padding-left:16px; margin:4px 0 8px;">${reqMarkup}</ul>
+                    <ul class="alchemy-requirements">${reqMarkup}</ul>
                     <div class="slot-actions">
                         <button
                             class="btn-slot-action"
