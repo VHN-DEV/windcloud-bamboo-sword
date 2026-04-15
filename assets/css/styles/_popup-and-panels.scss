@@ -4302,13 +4302,20 @@ select.shop-control-input {
         padding: 14px;
 
         h3 {
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.35;
         }
     }
 
     .popup-body {
         padding: 12px;
+        font-size: 12px;
+    }
+
+    .panel-tab {
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 11px;
     }
 
     .popup-panel-body {
@@ -4494,6 +4501,10 @@ select.shop-control-input {
     .shop-card,
     .inventory-slot {
         padding: 10px;
+
+        h4 {
+            font-size: 13px;
+        }
     }
 
     .shop-card.has-pill-art,
@@ -4546,8 +4557,20 @@ select.shop-control-input {
     }
 
     .btn-slot-action {
+        font-size: 10px;
+        min-height: 36px;
+        padding: 7px 5px;
+    }
+
+    .btn-shop-page,
+    .btn-shop-reset {
+        min-height: 32px;
+        padding: 6px 10px;
         font-size: 11px;
-        min-height: 42px;
+    }
+
+    .shop-page-status {
+        font-size: 11px;
     }
 
     .beast-panel-section {
