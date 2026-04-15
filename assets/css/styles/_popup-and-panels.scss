@@ -5978,7 +5978,7 @@ select.shop-control-input {
 }
 
 .tribulation-content {
-    max-width: 440px;
+    width: min(94vw, 460px);
     border-color: #7dc8ff;
     box-shadow: 0 0 34px rgba(80, 158, 255, 0.45);
 }
@@ -5987,22 +5987,54 @@ select.shop-control-input {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+    padding-top: 10px;
 }
 
 .tribulation-cloud-wrap {
     position: relative;
     width: 100%;
-    height: 120px;
+    height: 132px;
 }
 
 .tribulation-cloud {
-    width: 180px;
-    height: 74px;
+    position: relative;
+    width: 260px;
+    height: 68px;
     margin: 0 auto;
     border-radius: 999px;
-    background: radial-gradient(circle at 35% 38%, rgba(132, 145, 176, 0.65), rgba(23, 29, 45, 0.95) 72%);
-    box-shadow: 0 0 30px rgba(36, 44, 70, 0.8);
+    background:
+        radial-gradient(88px 54px at 15% 52%, rgba(63, 74, 98, 0.9), rgba(17, 22, 35, 0.98) 78%),
+        radial-gradient(102px 60px at 35% 38%, rgba(72, 82, 106, 0.88), rgba(16, 21, 34, 0.97) 78%),
+        radial-gradient(112px 62px at 58% 44%, rgba(67, 79, 104, 0.86), rgba(17, 22, 35, 0.96) 78%),
+        radial-gradient(92px 56px at 82% 50%, rgba(61, 71, 95, 0.84), rgba(18, 23, 36, 0.97) 78%);
+    box-shadow:
+        0 10px 22px rgba(7, 12, 22, 0.66),
+        0 0 26px rgba(45, 55, 82, 0.58);
+}
+
+.tribulation-cloud::before,
+.tribulation-cloud::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 38% 36%, rgba(95, 106, 132, 0.8), rgba(20, 24, 38, 0.97) 70%);
+    box-shadow: inset 0 -9px 12px rgba(0, 0, 0, 0.32);
+}
+
+.tribulation-cloud::before {
+    width: 118px;
+    height: 74px;
+    left: -38px;
+    top: -26px;
+}
+
+.tribulation-cloud::after {
+    width: 132px;
+    height: 80px;
+    right: -42px;
+    top: -30px;
 }
 
 .tribulation-cloud.is-striking {
@@ -6011,48 +6043,72 @@ select.shop-control-input {
 
 .tribulation-bolt {
     position: absolute;
-    top: 64px;
+    top: 68px;
     left: 50%;
-    width: 8px;
+    width: 18px;
     height: 0;
     transform: translateX(-50%);
     opacity: 0;
-    background: linear-gradient(180deg, rgba(235, 251, 255, 0.98), rgba(109, 202, 255, 0.96), rgba(70, 126, 255, 0));
-    box-shadow: 0 0 14px rgba(130, 220, 255, 0.85);
-    clip-path: polygon(48% 0, 70% 16%, 40% 32%, 64% 48%, 38% 66%, 54% 82%, 26% 100%, 0 78%, 24% 56%, 0 40%, 26% 22%, 10% 0);
+    background:
+        linear-gradient(180deg, rgba(252, 255, 255, 0.98), rgba(178, 235, 255, 0.94) 42%, rgba(96, 156, 255, 0.88) 75%, rgba(96, 156, 255, 0));
+    box-shadow:
+        0 0 10px rgba(154, 232, 255, 0.9),
+        0 0 24px rgba(118, 172, 255, 0.6);
+    clip-path: polygon(46% 0, 78% 0, 54% 18%, 82% 18%, 42% 48%, 67% 48%, 26% 100%, 40% 64%, 17% 64%, 46% 32%, 28% 32%);
 }
 
 .tribulation-bolt.is-striking {
     animation: tribulation-bolt-drop 0.42s ease-out;
 }
 
+.tribulation-bolt-fragment {
+    position: absolute;
+    top: 64px;
+    left: 50%;
+    width: 14px;
+    height: 0;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(188, 238, 255, 0.92) 44%, rgba(96, 156, 255, 0.82) 74%, rgba(96, 156, 255, 0));
+    box-shadow:
+        0 0 9px rgba(154, 232, 255, 0.84),
+        0 0 20px rgba(118, 172, 255, 0.46);
+    clip-path: polygon(48% 0, 84% 0, 56% 22%, 84% 22%, 48% 52%, 72% 52%, 26% 100%, 38% 66%, 14% 66%, 42% 34%, 24% 34%);
+}
+
+.tribulation-bolt-fragment.is-striking {
+    animation: tribulation-bolt-fragment-drop 0.55s ease-out;
+}
+
 .tribulation-seated {
-    width: 72px;
-    height: 110px;
+    width: 48px;
+    height: 74px;
     border-radius: 40px 40px 28px 28px;
     background: linear-gradient(180deg, rgba(156, 255, 226, 0.9), rgba(34, 136, 104, 0.96));
     position: relative;
-    box-shadow: 0 0 20px rgba(88, 225, 172, 0.45);
+    box-shadow: 0 0 16px rgba(88, 225, 172, 0.45);
 }
 
 .tribulation-seated::before {
     content: '';
     position: absolute;
-    width: 42px;
-    height: 42px;
+    width: 27px;
+    height: 27px;
     border-radius: 50%;
     background: radial-gradient(circle at 38% 34%, #e9fff8, #6ae5bf 72%);
-    top: -24px;
-    left: 15px;
+    top: -14px;
+    left: 10px;
 }
 
 .tribulation-seated::after {
     content: '';
     position: absolute;
-    width: 96px;
-    height: 22px;
+    width: 72px;
+    height: 14px;
     border-radius: 50%;
-    bottom: -18px;
+    bottom: -12px;
     left: -12px;
     background: radial-gradient(circle, rgba(113, 214, 176, 0.4), rgba(18, 34, 44, 0));
 }
@@ -6064,14 +6120,14 @@ select.shop-control-input {
 .tribulation-strike-text,
 .tribulation-hp-text {
     text-align: center;
-    font-size: 13px;
+    font-size: 12px;
     color: #d8ecff;
 }
 
 .tribulation-hp-bg {
-    margin: 8px 0 6px;
+    margin: 6px 0 4px;
     width: 100%;
-    height: 14px;
+    height: 12px;
     border-radius: 999px;
     background: rgba(17, 25, 40, 0.9);
     border: 1px solid rgba(130, 178, 255, 0.4);
@@ -6094,5 +6150,11 @@ select.shop-control-input {
 @keyframes tribulation-bolt-drop {
     0% { height: 0; opacity: 0; }
     25% { opacity: 1; }
-    100% { height: 220px; opacity: 0; }
+    100% { height: 198px; opacity: 0; }
+}
+
+@keyframes tribulation-bolt-fragment-drop {
+    0% { height: 0; opacity: 0; }
+    18% { opacity: 0.92; }
+    100% { height: 196px; opacity: 0; }
 }
