@@ -31,7 +31,7 @@ const UI_TEXT = Object.freeze({
     VOID_COLLAPSED: 'THÂN THỂ ĐÃ TAN VÀO HƯ VÔ - HÃY TÁI NHẬP GIỚI VỰC ĐỂ TRỌNG TỤ CHÂN THÂN',
     POPUP_TITLES: Object.freeze({
         SETTINGS: 'THIÊN ĐẠO QUY TẮC',
-        SHOP: 'LINH THỊ CỬA HÀNG',
+        SHOP: 'THIÊN BẢO CÁC',
         INVENTORY: 'TÚI KHÔNG GIAN TRỮ VẬT',
         SKILLS: 'BẢNG BÍ PHÁP',
         INSECT_BOOK: 'KỲ TRÙNG BẢNG',
@@ -45,7 +45,7 @@ const UI_TEXT = Object.freeze({
     ARIA: Object.freeze({
         PROFILE: 'Mở hồ sơ kiếm tu',
         SETTINGS: 'Thiên đạo quy tắc',
-        SHOP: 'Linh thị',
+        SHOP: 'Thiên Bảo Các',
         INVENTORY: 'Túi trữ vật',
         BEAST_BAG: 'Linh thú đại',
         BREAKTHROUGH: 'Độ kiếp đột phá',

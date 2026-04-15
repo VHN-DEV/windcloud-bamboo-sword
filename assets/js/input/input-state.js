@@ -40,6 +40,10 @@ const INPUT_INITIAL_STATE = {
     attackMode: 'BASE',
     selectedInventoryTab: 'items',
     selectedBeastBagTab: 'all',
+    alchemyUnlockedRecipes: getDefaultAlchemyUnlockedRecipes(),
+    alchemyFurnaces: getDefaultAlchemyFurnaces(),
+    alchemySelectedFurnace: null,
+    alchemyBatch: null,
     uniquePurchases: getDefaultUniquePurchases(),
     cultivationArts: getDefaultCultivationArts(),
     activeArtifacts: {

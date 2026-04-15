@@ -434,6 +434,61 @@
         return CONFIG.ALCHEMY || {};
     };
 
+    Input.ensureAlchemyState = function () {
+        if (!this.alchemyUnlockedRecipes || typeof this.alchemyUnlockedRecipes !== 'object') {
+            this.alchemyUnlockedRecipes = {};
+        }
+        if (!this.alchemyFurnaces || typeof this.alchemyFurnaces !== 'object') {
+            this.alchemyFurnaces = {};
+        }
+        if (typeof this.alchemySelectedFurnace !== 'string' || !this.alchemySelectedFurnace) {
+            const firstOwned = Object.keys(this.alchemyFurnaces).find(key => this.alchemyFurnaces[key]);
+            this.alchemySelectedFurnace = firstOwned || null;
+        }
+    };
+
+    Input.getOwnedAlchemyFurnaceKeys = function () {
+        this.ensureAlchemyState();
+        return Object.entries(this.alchemyFurnaces || {})
+            .filter(([, owned]) => Boolean(owned))
+            .map(([furnaceKey]) => furnaceKey);
+    };
+
+    Input.getOwnedAlchemyRecipeKeys = function () {
+        this.ensureAlchemyState();
+        return Object.entries(this.alchemyUnlockedRecipes || {})
+            .filter(([, owned]) => Boolean(owned))
+            .map(([recipeKey]) => recipeKey);
+    };
+
+    Input.getAlchemyFurnaceConfig = function (furnaceKey) {
+        return this.getAlchemyConfig().FURNACES?.[furnaceKey] || null;
+    };
+
+    Input.getSelectedAlchemyFurnaceKey = function () {
+        this.ensureAlchemyState();
+        const ownedKeys = this.getOwnedAlchemyFurnaceKeys();
+        if (this.alchemySelectedFurnace && ownedKeys.includes(this.alchemySelectedFurnace)) {
+            return this.alchemySelectedFurnace;
+        }
+        const fallback = ownedKeys[0] || null;
+        this.alchemySelectedFurnace = fallback;
+        return fallback;
+    };
+
+    Input.selectAlchemyFurnace = function (furnaceKey) {
+        this.ensureAlchemyState();
+        if (!furnaceKey || !this.alchemyFurnaces[furnaceKey]) return false;
+        this.alchemySelectedFurnace = furnaceKey;
+        return true;
+    };
+
+    Input.getCurrentAlchemyFurnaceConfig = function () {
+        const selectedKey = this.getSelectedAlchemyFurnaceKey();
+        if (selectedKey) return this.getAlchemyFurnaceConfig(selectedKey);
+        return null;
+    };
+
     Input.getAlchemyRecipesForMaterial = function (materialKey) {
         const alchemyConfig = this.getAlchemyConfig();
         const recipeMap = alchemyConfig.MATERIAL_RECIPE_MAP || {};
@@ -458,13 +513,63 @@
     Input.canUseHuThienDinhForAlchemy = function () {
         const alchemyConfig = this.getAlchemyConfig();
         if (!alchemyConfig.ENABLED) return false;
-        if (!alchemyConfig.REQUIRES_HU_THIEN_DINH) return true;
-        return this.hasArtifactUnlocked('HU_THIEN_DINH') && this.isArtifactDeployed('HU_THIEN_DINH');
+        const hasFurnace = this.getOwnedAlchemyFurnaceKeys().length > 0;
+        const hasHuThien = this.hasArtifactUnlocked('HU_THIEN_DINH') && this.isArtifactDeployed('HU_THIEN_DINH');
+        if (!alchemyConfig.REQUIRES_HU_THIEN_DINH) return hasFurnace || hasHuThien;
+        return hasHuThien || hasFurnace;
+    };
+
+    Input.canUseAlchemyRecipe = function (recipeKey) {
+        this.ensureAlchemyState();
+        return Boolean(this.alchemyUnlockedRecipes?.[recipeKey]);
+    };
+
+    Input.getAlchemyBatchRemainingMs = function () {
+        const completeAt = Number(this.alchemyBatch?.completeAt) || 0;
+        if (!completeAt) return 0;
+        return Math.max(0, completeAt - Date.now());
+    };
+
+    Input.isAlchemyBatchActive = function () {
+        return Boolean(this.alchemyBatch && !this.alchemyBatch.resolved && this.getAlchemyBatchRemainingMs() > 0);
+    };
+
+    Input.resolveAlchemyBatch = function () {
+        const batch = this.alchemyBatch;
+        if (!batch || batch.resolved) return false;
+        if (this.getAlchemyBatchRemainingMs() > 0) return false;
+
+        const recipe = this.getAlchemyConfig().RECIPES?.[batch.recipeKey];
+        const outputName = this.getItemDisplayName({ category: batch.outputCategory, quality: batch.outputQuality });
+        const count = Math.max(0, Math.floor(Number(batch.outputCount) || 0));
+        for (let i = 0; i < count; i++) {
+            this.addInventoryItem({ kind: 'PILL', category: batch.outputCategory, quality: batch.outputQuality }, 1);
+        }
+
+        const furnaceName = this.getAlchemyFurnaceConfig(batch.furnaceKey)?.name || 'Hư Thiên Đỉnh';
+        if (count > 0) {
+            showNotify(
+                `${furnaceName} đã luyện xong ${formatNumber(count)} ${outputName}${recipe?.name ? ` từ ${recipe.name}` : ''}.`,
+                this.getAlchemyConfig().NOTIFY_COLOR || '#93c8d8'
+            );
+        } else {
+            showNotify(`${furnaceName} luyện đan thất bại, mẻ đan hóa tro.`, '#ff8a80');
+        }
+        this.alchemyBatch = null;
+        this.refreshResourceUI();
+        return true;
+    };
+
+    Input.tickAlchemyBatch = function () {
+        if (!this.alchemyBatch) return;
+        this.resolveAlchemyBatch();
     };
 
     Input.canCraftAlchemyRecipe = function (recipe) {
         if (!recipe || !Array.isArray(recipe.ingredients)) return false;
         if (!this.canUseHuThienDinhForAlchemy()) return false;
+        if (!this.canUseAlchemyRecipe(recipe.key)) return false;
+        if (this.isAlchemyBatchActive()) return false;
 
         return recipe.ingredients.every(ingredient => {
             const need = Math.max(1, Math.floor(Number(ingredient.count) || 0));
@@ -489,6 +594,14 @@
             showNotify('Cần luyện hóa và triển khai Hư Thiên Đỉnh mới có thể khai đỉnh luyện đan.', huThienColor);
             return false;
         }
+        if (!this.canUseAlchemyRecipe(recipeKey)) {
+            showNotify('Chưa sở hữu đan phương này. Hãy mua ở Thiên Bảo Các.', '#ffd36b');
+            return false;
+        }
+        if (this.isAlchemyBatchActive()) {
+            showNotify('Đan lô đang bận luyện mẻ trước, hãy chờ hoàn thành.', '#ffd36b');
+            return false;
+        }
 
         const missing = recipe.ingredients.find(ingredient => {
             const need = Math.max(1, Math.floor(Number(ingredient.count) || 0));
@@ -509,20 +622,34 @@
         });
 
         const output = recipe.output || {};
-        const outputCount = Math.max(1, Math.floor(Number(output.count) || 1));
-        const outputSpec = {
-            kind: 'PILL',
-            category: output.category || 'EXP',
-            quality: output.quality || 'LOW'
+        const baseCount = Math.max(1, Math.floor(Number(output.count) || 1));
+        const hasHuThien = this.hasArtifactUnlocked('HU_THIEN_DINH') && this.isArtifactDeployed('HU_THIEN_DINH');
+        const selectedFurnaceKey = hasHuThien ? 'HU_THIEN_DINH' : this.getSelectedAlchemyFurnaceKey();
+        const selectedFurnace = hasHuThien
+            ? { name: 'Hư Thiên Đỉnh', brewTimeMultiplier: 0.58, successRate: 0.98, outputMultiplier: 2.1 }
+            : (this.getAlchemyFurnaceConfig(selectedFurnaceKey) || { name: 'Đan lư', brewTimeMultiplier: 1, successRate: 0.75, outputMultiplier: 1 });
+
+        const recipeTimeMs = Math.max(1000, Math.floor(Number(recipe.brewTimeMs) || Number(alchemyConfig.DEFAULT_BREW_MS) || 30000));
+        const brewTimeMs = Math.max(1000, Math.floor(recipeTimeMs * (selectedFurnace.brewTimeMultiplier || 1)));
+        const successRoll = Math.random();
+        const successRate = Math.max(0, Math.min(1, Number(selectedFurnace.successRate) || 0));
+        const success = successRoll <= successRate;
+        const outputCount = success
+            ? Math.max(1, Math.floor(baseCount * (Number(selectedFurnace.outputMultiplier) || 1)))
+            : 0;
+
+        this.alchemyBatch = {
+            recipeKey,
+            furnaceKey: selectedFurnaceKey || 'HU_THIEN_DINH',
+            startedAt: Date.now(),
+            completeAt: Date.now() + brewTimeMs,
+            outputCount,
+            outputCategory: output.category || 'EXP',
+            outputQuality: output.quality || 'LOW',
+            resolved: false
         };
-
-        for (let i = 0; i < outputCount; i++) {
-            this.addInventoryItem(outputSpec, 1);
-        }
-
-        const outputName = this.getItemDisplayName(outputSpec);
         showNotify(
-            `Hư Thiên Đỉnh luyện thành ${outputName} (${recipe.realmTier || 'Đan'}) theo ${recipe.name}.`,
+            `${selectedFurnace.name} bắt đầu luyện ${recipe.name}. Thời gian: ${getCountdownLabel(brewTimeMs)}.`,
             huThienColor
         );
         this.refreshResourceUI();

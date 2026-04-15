@@ -32,6 +32,12 @@ const GameProgress = {
     getDefaultBeastCare() {
         return getDefaultBeastCareState();
     },
+    getDefaultAlchemyUnlockedRecipes() {
+        return getDefaultAlchemyUnlockedRecipes();
+    },
+    getDefaultAlchemyFurnaces() {
+        return getDefaultAlchemyFurnaces();
+    },
 
     getDefaultInventoryCapacity() {
         return getDefaultInventoryCapacity();
@@ -256,6 +262,10 @@ const GameProgress = {
             beastFoodStorage: Input.beastFoodStorage,
             beastBagCapacity: Input.beastBagCapacity,
             beastBagCapacityMigrated: Input.beastBagCapacityMigrated,
+            alchemyUnlockedRecipes: Input.alchemyUnlockedRecipes,
+            alchemyFurnaces: Input.alchemyFurnaces,
+            alchemySelectedFurnace: Input.alchemySelectedFurnace,
+            alchemyBatch: Input.alchemyBatch,
             bonusStats: Input.bonusStats,
             breakthroughBonus: Input.breakthroughBonus,
             isReadyToBreak: Input.isReadyToBreak,
@@ -351,6 +361,10 @@ const GameProgress = {
             Input.attackMode = 'BASE';
             Input.selectedInventoryTab = 'items';
             Input.selectedBeastBagTab = 'all';
+            Input.alchemyUnlockedRecipes = this.getDefaultAlchemyUnlockedRecipes();
+            Input.alchemyFurnaces = this.getDefaultAlchemyFurnaces();
+            Input.alchemySelectedFurnace = null;
+            Input.alchemyBatch = null;
             Input.uniquePurchases = this.getDefaultUniquePurchases();
             Input.cultivationArts = this.getDefaultCultivationArts();
             Input.activeArtifacts = this.getDefaultActiveArtifacts();
@@ -445,6 +459,23 @@ const GameProgress = {
             Input.selectedBeastBagTab = typeof parsed.selectedBeastBagTab === 'string' && parsed.selectedBeastBagTab.trim()
                 ? parsed.selectedBeastBagTab
                 : 'all';
+            Input.alchemyUnlockedRecipes = this.sanitizeBooleanMap(parsed.alchemyUnlockedRecipes, this.getDefaultAlchemyUnlockedRecipes());
+            Input.alchemyFurnaces = this.sanitizeBooleanMap(parsed.alchemyFurnaces, this.getDefaultAlchemyFurnaces());
+            Input.alchemySelectedFurnace = typeof parsed.alchemySelectedFurnace === 'string' && parsed.alchemySelectedFurnace.trim()
+                ? parsed.alchemySelectedFurnace
+                : null;
+            Input.alchemyBatch = parsed.alchemyBatch && typeof parsed.alchemyBatch === 'object'
+                ? {
+                    recipeKey: String(parsed.alchemyBatch.recipeKey || ''),
+                    furnaceKey: String(parsed.alchemyBatch.furnaceKey || ''),
+                    startedAt: Math.max(0, Math.floor(Number(parsed.alchemyBatch.startedAt) || 0)),
+                    completeAt: Math.max(0, Math.floor(Number(parsed.alchemyBatch.completeAt) || 0)),
+                    outputCount: Math.max(0, Math.floor(Number(parsed.alchemyBatch.outputCount) || 0)),
+                    outputCategory: String(parsed.alchemyBatch.outputCategory || 'EXP'),
+                    outputQuality: String(parsed.alchemyBatch.outputQuality || 'LOW'),
+                    resolved: Boolean(parsed.alchemyBatch.resolved)
+                }
+                : null;
             Input.uniquePurchases = this.sanitizeBooleanMap(parsed.uniquePurchases, this.getDefaultUniquePurchases());
             Input.cultivationArts = this.sanitizeBooleanMap(parsed.cultivationArts, this.getDefaultCultivationArts());
             Input.restorePendingSecretArts();

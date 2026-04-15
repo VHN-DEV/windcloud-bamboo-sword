@@ -650,6 +650,36 @@ const CONFIG = {
                 dropWeight: 0,
                 nutrition: 0,
                 description: "Mẫu căn của Kim Lôi Trúc, mang lôi tức và mộc nguyên tinh thuần. Phải ôn dưỡng từ 1 vạn năm tuổi trở lên mới có thể khai luyện thành Thanh Trúc Phong Vân Kiếm."
+            },
+            NGUYET_HOA_LO: {
+                fullName: "Nguyệt hoa lộ",
+                quality: "MEDIUM",
+                color: "#d8eeff",
+                radius: 4.9,
+                buyPriceLowStone: 148,
+                dropWeight: 0.9,
+                nutrition: 1,
+                description: "Linh lộ đọng trên cánh hoa dưới trăng, giúp trung hòa dược tính và ổn định dược lực."
+            },
+            DIA_TAM_HOA_TINH: {
+                fullName: "Địa tâm hỏa tinh",
+                quality: "HIGH",
+                color: "#ffb47b",
+                radius: 5.1,
+                buyPriceLowStone: 268,
+                dropWeight: 0.64,
+                nutrition: 0,
+                description: "Tinh thể hỏa mạch ngưng kết dưới lòng đất, dùng để gia cố hỏa lực cho đan lô."
+            },
+            VAN_MOC_CHI: {
+                fullName: "Vạn mộc chi",
+                quality: "SUPREME",
+                color: "#95ffc2",
+                radius: 5.4,
+                buyPriceLowStone: 420,
+                dropWeight: 0.4,
+                nutrition: 2,
+                description: "Linh chi thượng cổ chứa tinh mộc thuần khiết, thường là linh tài phụ trợ cho cao phẩm đan phương."
             }
         },
         MATERIAL_DROP: {
@@ -663,10 +693,54 @@ const CONFIG = {
         ENABLED: true,
         REQUIRES_HU_THIEN_DINH: true,
         NOTIFY_COLOR: "#93c8d8",
+        DEFAULT_BREW_MS: 32000,
+        FORMULA_QUALITY_LABELS: {
+            LOW: "Hạ phẩm",
+            MEDIUM: "Trung phẩm",
+            HIGH: "Thượng phẩm",
+            SUPREME: "Cực phẩm"
+        },
+        FURNACES: {
+            HA_PHAM_DAN_LO: {
+                name: "Thanh Đồng Đan Lô",
+                quality: "LOW",
+                buyPriceLowStone: 2400,
+                brewTimeMultiplier: 1.2,
+                successRate: 0.76,
+                outputMultiplier: 1
+            },
+            TRUNG_PHAM_DAN_LO: {
+                name: "Tử Kim Đan Lô",
+                quality: "MEDIUM",
+                buyPriceLowStone: 5800,
+                brewTimeMultiplier: 1,
+                successRate: 0.84,
+                outputMultiplier: 1.2
+            },
+            THUONG_PHAM_DAN_LO: {
+                name: "Thái Huyền Đan Lô",
+                quality: "HIGH",
+                buyPriceLowStone: 12800,
+                brewTimeMultiplier: 0.82,
+                successRate: 0.9,
+                outputMultiplier: 1.45
+            },
+            CUC_PHAM_DAN_LO: {
+                name: "Cửu Khiếu Đan Lô",
+                quality: "SUPREME",
+                buyPriceLowStone: 24800,
+                brewTimeMultiplier: 0.66,
+                successRate: 0.95,
+                outputMultiplier: 1.8
+            }
+        },
         RECIPES: {
             TU_KHI_DAN_PHUONG: {
                 name: "Tụ Khí Đan Phương",
+                formulaQuality: "LOW",
                 realmTier: "Phàm đan",
+                buyPriceLowStone: 420,
+                brewTimeMs: 18000,
                 output: { category: "EXP", quality: "MEDIUM", count: 1 },
                 ingredients: [
                     { materialKey: "NGAN_NAM_HOANG_TINH", count: 2 },
@@ -676,31 +750,43 @@ const CONFIG = {
             },
             HOI_LINH_DAN_PHUONG: {
                 name: "Hồi Linh Đan Phương",
+                formulaQuality: "MEDIUM",
                 realmTier: "Linh đan",
+                buyPriceLowStone: 960,
+                brewTimeMs: 26000,
                 output: { category: "MANA", quality: "HIGH", count: 1 },
                 ingredients: [
                     { materialKey: "TUYET_NGOC_THAO", count: 2 },
+                    { materialKey: "NGUYET_HOA_LO", count: 1 },
                     { materialKey: "TINH_THIT", count: 1 },
                     { materialKey: "YEU_DAN", count: 1 }
                 ]
             },
             KHAI_HAI_DAN_PHUONG: {
                 name: "Khai Hải Đan Phương",
+                formulaQuality: "HIGH",
                 realmTier: "Huyền đan",
+                buyPriceLowStone: 1880,
+                brewTimeMs: 34000,
                 output: { category: "MAX_MANA", quality: "HIGH", count: 1 },
                 ingredients: [
                     { materialKey: "THIEN_LINH_QUA", count: 1 },
                     { materialKey: "TUYET_NGOC_THAO", count: 1 },
+                    { materialKey: "VAN_MOC_CHI", count: 1 },
                     { materialKey: "YEU_DAN", count: 2 }
                 ]
             },
             THAI_HUYEN_TRU_MA_PHUONG: {
                 name: "Thái Huyền Tru Ma Phương",
+                formulaQuality: "SUPREME",
                 realmTier: "Địa đan",
+                buyPriceLowStone: 3600,
+                brewTimeMs: 52000,
                 output: { category: "ATTACK", quality: "SUPREME", count: 1 },
                 ingredients: [
                     { materialKey: "HUYEN_HOA_LIEN", count: 1 },
                     { materialKey: "THIEN_LINH_QUA", count: 1 },
+                    { materialKey: "DIA_TAM_HOA_TINH", count: 1 },
                     { materialKey: "LONG_LAN", count: 2 }
                 ]
             }

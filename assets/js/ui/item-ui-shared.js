@@ -1,8 +1,11 @@
 const ITEM_COLLECTION_TABS = Object.freeze([
     { key: 'DAN_DUOC', label: 'Đan dược' },
+    { key: 'DAN_PHUONG', label: 'Đan phương' },
+    { key: 'DAN_LU', label: 'Đan lư' },
     { key: 'TRUNG_NOAN', label: 'Trùng noãn' },
     { key: 'THIEN_TAI_DIA_BAO', label: 'Thiên tài địa bảo' },
-    { key: 'TUI', label: 'Túi' },
+    { key: 'TUI_TRU_VAT', label: 'Túi trữ vật' },
+    { key: 'LINH_THU_DAI', label: 'Linh thú đại' },
     { key: 'BI_PHAP', label: 'Bí pháp' },
     { key: 'PHAP_BAO', label: 'Pháp bảo' },
     { key: 'KHAC', label: 'Khác' }
@@ -20,9 +23,12 @@ function getItemCollectionTabKey(item) {
     }
 
     if (category === 'SPECIAL') return 'DAN_DUOC';
+    if (category === 'ALCHEMY_RECIPE') return 'DAN_PHUONG';
+    if (category === 'ALCHEMY_FURNACE') return 'DAN_LU';
     if (category === 'INSECT_EGG') return 'TRUNG_NOAN';
     if (category === 'MATERIAL') return 'THIEN_TAI_DIA_BAO';
-    if (['BAG', 'RAINBOW_BAG', 'SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(category)) return 'TUI';
+    if (['BAG', 'RAINBOW_BAG'].includes(category)) return 'TUI_TRU_VAT';
+    if (['SPIRIT_BAG', 'RAINBOW_SPIRIT_BAG', 'SPIRIT_HABITAT'].includes(category)) return 'LINH_THU_DAI';
     if (category === 'FLAME_ART' && item?.uniqueKey === 'CAN_LAM_BANG_DIEM') return 'PHAP_BAO';
     if (['SWORD_ART', 'FLAME_ART', 'INSECT_SKILL'].includes(category)) return 'BI_PHAP';
     if (['SWORD_ARTIFACT', 'ARTIFACT', 'INSECT_ARTIFACT'].includes(category)) return 'PHAP_BAO';

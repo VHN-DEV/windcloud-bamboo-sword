@@ -243,6 +243,10 @@ ShopUI.canStoreOrUpgrade = function (item, isOwnedUnique) {
         return true;
     }
 
+    if (item.category === 'ALCHEMY_RECIPE' || item.category === 'ALCHEMY_FURNACE') {
+        return !isOwnedUnique;
+    }
+
     if (item.category === 'SWORD_ARTIFACT') {
         return Input.hasInventorySpaceForSpec(item);
     }
@@ -307,6 +311,14 @@ ShopUI.getActionLabel = function (item, options = {}) {
         return isOwnedUnique ? 'Đã sở hữu' : (canStoreOrUpgrade ? 'Mua' : 'Túi đầy');
     }
 
+    if (item.category === 'ALCHEMY_RECIPE') {
+        return isOwnedUnique ? 'Đã lĩnh ngộ' : 'Mua';
+    }
+
+    if (item.category === 'ALCHEMY_FURNACE') {
+        return isOwnedUnique ? 'Đã sở hữu' : 'Mua';
+    }
+
     return canStoreOrUpgrade ? 'Mua' : 'Túi đầy';
 };
 
@@ -335,8 +347,8 @@ ShopUI.syncToolbar = function (totalCount, filteredCount) {
 
     const nextRealm = Input.getNextMajorRealmInfo();
     const tip = nextRealm
-        ? `Đang bày bán đủ loại đan dược, bí pháp và vật tư cho lần đột phá tới ${escapeHtml(nextRealm.name)}.`
-        : 'Đã ở cảnh giới tối cao, cửa hàng vẫn còn đan cường hóa và vật phẩm đặc biệt.';
+        ? `Thiên Bảo Các đang bày bán đủ loại đan dược, đan phương, đan lư và bí pháp cho lần đột phá tới ${escapeHtml(nextRealm.name)}.`
+        : 'Đã ở cảnh giới tối cao, Thiên Bảo Các vẫn còn đan cường hóa và pháp bảo đặc biệt.';
 
     const tipEl = this.toolbar.querySelector('#shop-tip');
     const summaryEl = this.toolbar.querySelector('#shop-summary');

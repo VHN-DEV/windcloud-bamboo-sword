@@ -59,6 +59,7 @@ AlchemyUI = {
     getRecipeModels() {
         const recipeDefs = CONFIG.ALCHEMY?.RECIPES || {};
         return Object.entries(recipeDefs)
+            .filter(([recipeKey]) => typeof Input.canUseAlchemyRecipe === 'function' ? Input.canUseAlchemyRecipe(recipeKey) : true)
             .map(([recipeKey, recipe]) => {
                 const outputSpec = {
                     kind: 'PILL',
@@ -86,8 +87,10 @@ AlchemyUI = {
                 return {
                     key: recipeKey,
                     name: recipe?.name || recipeKey,
+                    formulaQuality: recipe?.formulaQuality || 'LOW',
                     tier: recipe?.realmTier || 'Đan',
                     outputName,
+                    brewTimeMs: Math.max(1000, Math.floor(Number(recipe?.brewTimeMs) || Number(CONFIG.ALCHEMY?.DEFAULT_BREW_MS) || 30000)),
                     canCraft: requirements.every(req => req.ok),
                     requirements
                 };
@@ -99,23 +102,32 @@ AlchemyUI = {
         if (!this.overlay || !this.status || !this.recipeGrid) return;
 
         const hasHuThienPurchased = Input.hasArtifactPurchased('HU_THIEN_DINH') || Input.hasArtifactUnlocked('HU_THIEN_DINH');
+        const ownedFurnaces = typeof Input.getOwnedAlchemyFurnaceKeys === 'function' ? Input.getOwnedAlchemyFurnaceKeys() : [];
         const canUseDing = typeof Input.canUseHuThienDinhForAlchemy === 'function' && Input.canUseHuThienDinhForAlchemy();
+        const activeBatch = Input.alchemyBatch || null;
+        const remainingMs = typeof Input.getAlchemyBatchRemainingMs === 'function' ? Input.getAlchemyBatchRemainingMs() : 0;
+        const selectedFurnace = typeof Input.getCurrentAlchemyFurnaceConfig === 'function' ? Input.getCurrentAlchemyFurnaceConfig() : null;
+        const usingHuThien = Input.hasArtifactUnlocked('HU_THIEN_DINH') && Input.isArtifactDeployed('HU_THIEN_DINH');
+        const activeFurnaceName = usingHuThien ? 'Hư Thiên Đỉnh (pháp bảo)' : (selectedFurnace?.name || 'Chưa chọn đan lư');
 
-        if (!hasHuThienPurchased) {
-            this.status.innerHTML = '<div class="profile-empty">Chưa kết duyên Hư Thiên Đỉnh. Hãy mua pháp bảo này ở Linh Thị để mở Đan Lô.</div>';
+        if (!hasHuThienPurchased && !ownedFurnaces.length) {
+            this.status.innerHTML = '<div class="profile-empty">Chưa có Hư Thiên Đỉnh hoặc Đan lư. Hãy đến Thiên Bảo Các để mua rồi quay lại luyện đan.</div>';
             this.recipeGrid.innerHTML = '';
             return;
         }
 
-        if (!canUseDing) {
-            this.status.innerHTML = '<div class="profile-empty">Đã có Hư Thiên Đỉnh nhưng chưa triển khai. Hãy vào Bảng Bí Pháp triển khai Hư Thiên Đỉnh để bắt đầu luyện đan.</div>';
+        if (activeBatch && remainingMs > 0) {
+            const outputName = Input.getItemDisplayName({ category: activeBatch.outputCategory, quality: activeBatch.outputQuality });
+            this.status.innerHTML = `<div class="profile-empty">Đang luyện ${escapeHtml(outputName)} • Lò: ${escapeHtml(activeFurnaceName)} • Còn ${escapeHtml(getCountdownLabel(remainingMs))}.</div>`;
+        } else if (!canUseDing) {
+            this.status.innerHTML = '<div class="profile-empty">Đã có đan lư nhưng chưa triển khai Hư Thiên Đỉnh. Vẫn có thể luyện đan bằng đan lư thường.</div>';
         } else {
-            this.status.innerHTML = '<div class="profile-empty">Hư Thiên Đỉnh đã khai đỉnh. Chọn đan phương bên dưới để luyện đan.</div>';
+            this.status.innerHTML = `<div class="profile-empty">${escapeHtml(activeFurnaceName)} đã sẵn sàng. Chọn đan phương bên dưới để luyện đan.</div>`;
         }
 
         const recipes = this.getRecipeModels();
         if (!recipes.length) {
-            this.recipeGrid.innerHTML = '<article class="inventory-slot is-empty"><span>Chưa có đan phương nào khả dụng.</span></article>';
+            this.recipeGrid.innerHTML = '<article class="inventory-slot is-empty"><span>Chưa sở hữu đan phương nào. Hãy mua ở tab Đan phương trong Thiên Bảo Các.</span></article>';
             return;
         }
 
@@ -123,18 +135,21 @@ AlchemyUI = {
             const reqMarkup = recipe.requirements.map(req => `
                 <li>${escapeHtml(req.name)}: <strong style="color:${req.ok ? '#8fffcf' : '#ff8a80'}">${formatNumber(req.owned)}/${formatNumber(req.need)}</strong></li>
             `).join('');
+            const formulaLabel = CONFIG.ALCHEMY?.FORMULA_QUALITY_LABELS?.[recipe.formulaQuality] || 'Đan phương';
+            const isBusy = activeBatch && remainingMs > 0;
 
             return `
                 <article class="inventory-slot has-pill-art" style="--slot-accent:${recipe.canCraft ? '#8fffcf' : '#7aa3b7'}">
-                    <div class="slot-badge">${escapeHtml(recipe.tier)}</div>
+                    <div class="slot-badge">${escapeHtml(formulaLabel)}</div>
                     <h4>${escapeHtml(recipe.name)}</h4>
-                    <p>Thành đan: ${escapeHtml(recipe.outputName)}</p>
+                    <p>${escapeHtml(recipe.tier)} • Thành đan: ${escapeHtml(recipe.outputName)}</p>
+                    <p>Thời gian luyện cơ bản: ${escapeHtml(getCountdownLabel(recipe.brewTimeMs))}</p>
                     <ul class="slot-meta" style="padding-left:16px; margin:4px 0 8px;">${reqMarkup}</ul>
                     <div class="slot-actions">
                         <button
                             class="btn-slot-action"
                             data-alchemy-recipe="${escapeHtml(recipe.key)}"
-                            ${recipe.canCraft && canUseDing ? '' : 'disabled'}
+                            ${recipe.canCraft && canUseDing && !isBusy ? '' : 'disabled'}
                         >Luyện đan</button>
                     </div>
                 </article>

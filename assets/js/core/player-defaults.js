@@ -79,3 +79,11 @@ function getDefaultInventoryCapacity() {
 function getDefaultBeastBagCapacity() {
     return Math.max(1, parseInt(CONFIG.INSECT?.STARTING_BEAST_BAG_CAPACITY, 10) || 6);
 }
+
+function getDefaultAlchemyUnlockedRecipes() {
+    return {};
+}
+
+function getDefaultAlchemyFurnaces() {
+    return {};
+}
