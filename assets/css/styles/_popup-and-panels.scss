@@ -972,6 +972,9 @@ select.shop-control-input {
         color: #f4fffb;
         font-size: 14px;
         line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     p {
@@ -1019,9 +1022,9 @@ select.shop-control-input {
 
 .item-description__preview {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    line-clamp: 3;
+    line-clamp: 2;
 }
 
 .item-description__toggle {
