@@ -848,10 +848,13 @@ Object.assign(Input, {
 
         let costTick = 0;
         const isBlinkTransiting = this.isPhongLoiBlinkTransiting();
+        const hasUsableSword = typeof this.getUsableEquippedSwordArtifacts === 'function'
+            ? this.getUsableEquippedSwordArtifacts().length > 0
+            : (typeof this.getAliveSwordStats === 'function' && this.getAliveSwordStats().alive > 0);
 
         // 1. Tính toán chi phí di chuyển
         // Nếu tốc độ > 1 (tránh nhiễu khi chuột rung nhẹ)
-        if (!isBlinkTransiting && this.speed > 1) {
+        if (hasUsableSword && !isBlinkTransiting && this.speed > 1) {
             costTick += CONFIG.MANA.COST_MOVE_PER_SEC * dt;
         }
 
