@@ -52,6 +52,22 @@ body.game-native-cursor-hidden .start-overlay button {
     cursor: pointer !important;
 }
 
+#space-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#c {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+}
+
 canvas {
     display: block;
     width: 100%;

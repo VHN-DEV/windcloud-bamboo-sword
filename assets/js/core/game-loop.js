@@ -243,6 +243,7 @@ const enemies = [];
 let pills = [];
 const swords = [];
 let starField;
+window.starField = null;
 const guardCenter = { x: width / 2, y: height / 2, vx: 0, vy: 0 };
 let gameInitialized = false;
 let gameStarted = false;
@@ -342,6 +343,7 @@ function init() {
     if (ProfileUI) ProfileUI.init();
     Input.renderAttackModeUI();
     starField = new StarField(CONFIG.BG.STAR_COUNT, width, height);
+    window.starField = starField;
     for (let i = 0; i < CONFIG.ENEMY.SPAWN_COUNT; i++) enemies.push(new Enemy());
     syncSwordFormation({ rebuildAll: true });
     updateSwordCounter(swords);
@@ -474,8 +476,7 @@ function animate() {
 
     frameCount++;
 
-    ctx.fillStyle = CONFIG.COLORS.BG_FADE;
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
     // 2. Truyền dt vào updatePhysics
     updatePhysics(dt);

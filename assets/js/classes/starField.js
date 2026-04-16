@@ -1,146 +1,270 @@
 class StarField {
+    static activeInstance = null;
+
     constructor(count, width, height) {
         this.width = width;
         this.height = height;
-        this.stars = [];
-        this.nebulae = [];
-        this.sparkStreams = [];
+        this.sparkLines = [];
+        this.seaClouds = [];
 
-        const totalStars = CONFIG.BG.STAR_COUNT || count;
-
-        for (let i = 0; i < totalStars; i++) {
-            const depth = random(0.2, 1);
-            this.stars.push({
-                x: random(-width, width * 2),
-                y: random(-height, height * 2),
-                depth,
-                r: random(CONFIG.BG.STAR_SIZE.MIN, CONFIG.BG.STAR_SIZE.MAX) * (0.5 + depth),
-                alpha: random(CONFIG.BG.STAR_ALPHA.MIN, CONFIG.BG.STAR_ALPHA.MAX),
-                phase: random(0, Math.PI * 2)
-            });
+        if (StarField.activeInstance && StarField.activeInstance !== this) {
+            StarField.activeInstance.destroy();
         }
 
-        const nebulaCount = 18;
-        for (let i = 0; i < nebulaCount; i++) {
-            this.nebulae.push({
-                x: random(-width * 0.5, width * 1.5),
-                y: random(-height * 0.5, height * 1.5),
-                depth: random(0.2, 0.9),
-                radius: random(120, 320),
-                phase: random(0, Math.PI * 2),
-                hue: random(170, 220)
-            });
+        if (!window.THREE) {
+            console.warn('Three.js chưa tải xong, bỏ qua nền 3D.');
+            return;
         }
 
-        for (let i = 0; i < 8; i++) {
-            this.sparkStreams.push({
-                active: false,
-                timer: 0,
-                x: 0,
-                y: 0,
-                angle: 0,
-                length: 0
-            });
+        if (window.Math.seedrandom) {
+            window.Math.seedrandom('ocean-saturn-constant');
         }
+
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(60, width / height, 1, 3000);
+        this.camera.position.set(0, 150, 350);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+        this.renderer.setSize(width, height);
+        this.renderer.domElement.id = 'space-bg';
+        document.body.prepend(this.renderer.domElement);
+
+        this.createParticles();
+        this.createSeaClouds();
+        this.planetNet = this.createNetwork(false);
+        this.ring1 = this.createNetwork(true, 0);
+        this.ring2 = this.createNetwork(true, 15);
+        this.ring1.rotation.x = Math.PI / 2.2;
+        this.ring2.rotation.x = -Math.PI / 4;
+        this.scene.add(this.planetNet, this.ring1, this.ring2);
+        this.createSparkLines();
+
+        StarField.activeInstance = this;
     }
 
-    drawNebulae(ctx, scaleFactor, timeSec) {
-        for (let i = 0; i < this.nebulae.length; i++) {
-            const cloud = this.nebulae[i];
-            const pulse = 0.75 + Math.sin(timeSec * 0.2 + cloud.phase) * 0.2;
-            const radius = cloud.radius * pulse * scaleFactor;
-            const driftX = Math.cos(timeSec * 0.08 + cloud.phase) * 28 * cloud.depth;
-            const driftY = Math.sin(timeSec * 0.06 + cloud.phase) * 18 * cloud.depth;
+    createOceanTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 128;
+        canvas.height = 128;
+        const ctx2d = canvas.getContext('2d');
+        const gradient = ctx2d.createRadialGradient(64, 64, 0, 64, 64, 64);
+        gradient.addColorStop(0, 'rgba(0, 255, 200, 0.5)');
+        gradient.addColorStop(0.3, 'rgba(0, 150, 255, 0.2)');
+        gradient.addColorStop(0.7, 'rgba(0, 20, 100, 0.1)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx2d.fillStyle = gradient;
+        ctx2d.fillRect(0, 0, 128, 128);
+        return new THREE.CanvasTexture(canvas);
+    }
 
-            const gradient = ctx.createRadialGradient(
-                cloud.x + driftX,
-                cloud.y + driftY,
-                0,
-                cloud.x + driftX,
-                cloud.y + driftY,
-                radius
+    createParticles() {
+        const pointCount = Math.max(4000, (CONFIG.BG.STAR_COUNT || 8000));
+        const bubbleGeo = new THREE.BufferGeometry();
+        const bubblePos = new Float32Array(pointCount * 3);
+        for (let i = 0; i < pointCount * 3; i++) {
+            bubblePos[i] = (Math.random() - 0.5) * 2000;
+        }
+        bubbleGeo.setAttribute('position', new THREE.BufferAttribute(bubblePos, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 2,
+            color: 0x88ffff,
+            transparent: true,
+            opacity: 0.5,
+            blending: THREE.AdditiveBlending
+        });
+        this.scene.add(new THREE.Points(bubbleGeo, material));
+    }
+
+    createSeaClouds() {
+        const oceanTex = this.createOceanTexture();
+        const seaGroup = new THREE.Group();
+        for (let i = 0; i < 60; i++) {
+            const material = new THREE.SpriteMaterial({
+                map: oceanTex,
+                transparent: true,
+                opacity: 0.6,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            const sprite = new THREE.Sprite(material);
+            const angle = Math.random() * Math.PI * 2;
+            const radius = 40 + Math.random() * 60;
+            sprite.position.set(
+                Math.cos(angle) * radius,
+                (Math.random() - 0.5) * 60,
+                Math.sin(angle) * radius
             );
-            gradient.addColorStop(0, `hsla(${cloud.hue}, 85%, 65%, ${0.12 * cloud.depth})`);
-            gradient.addColorStop(0.4, `hsla(${cloud.hue + 12}, 90%, 40%, ${0.08 * cloud.depth})`);
-            gradient.addColorStop(1, `hsla(${cloud.hue + 24}, 90%, 18%, 0)`);
-
-            ctx.beginPath();
-            ctx.fillStyle = gradient;
-            ctx.arc(cloud.x + driftX, cloud.y + driftY, radius, 0, Math.PI * 2);
-            ctx.fill();
+            sprite.scale.set(100 + Math.random() * 100, 100 + Math.random() * 100, 1);
+            sprite.userData = {
+                rotSpeed: (Math.random() - 0.5) * 0.005,
+                phase: Math.random() * Math.PI,
+                baseScale: sprite.scale.x
+            };
+            this.seaClouds.push(sprite);
+            seaGroup.add(sprite);
         }
+        this.seaGroup = seaGroup;
+        this.scene.add(this.seaGroup);
     }
 
-    drawStars(ctx, scaleFactor, timeSec) {
-        const twinkleSpeed = CONFIG.BG.STAR_TWINKLE_SPEED;
+    createNetwork(isRing, radiusOffset = 0) {
+        const group = new THREE.Group();
+        const count = isRing ? 700 : 500;
+        const positions = [];
+        const colors = [];
+        const color = new THREE.Color();
 
-        for (let i = 0; i < this.stars.length; i++) {
-            const star = this.stars[i];
-            const depthDriftX = Math.cos(timeSec * (0.08 + star.depth * 0.2) + star.phase) * 1.8 * (1 - star.depth);
-            const depthDriftY = Math.sin(timeSec * (0.09 + star.depth * 0.2) + star.phase) * 1.2 * (1 - star.depth);
+        for (let i = 0; i < count; i++) {
+            let x;
+            let y;
+            let z;
 
-            star.alpha += random(-twinkleSpeed, twinkleSpeed);
-            if (star.alpha > CONFIG.BG.STAR_ALPHA.MAX) star.alpha = CONFIG.BG.STAR_ALPHA.MAX;
-            else if (star.alpha < CONFIG.BG.STAR_ALPHA.MIN) star.alpha = CONFIG.BG.STAR_ALPHA.MIN;
-
-            const glowAlpha = star.alpha * (0.25 + star.depth * 0.75);
-            const renderSize = star.r * scaleFactor;
-
-            ctx.beginPath();
-            ctx.arc(star.x + depthDriftX, star.y + depthDriftY, renderSize, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(190,245,255,${glowAlpha})`;
-            ctx.fill();
-        }
-    }
-
-    drawSparkStreams(ctx, scaleFactor) {
-        const canvasWidth = ctx.canvas?.width || this.width;
-        const canvasHeight = ctx.canvas?.height || this.height;
-        for (let i = 0; i < this.sparkStreams.length; i++) {
-            const stream = this.sparkStreams[i];
-
-            if (!stream.active && Math.random() < 0.012) {
-                stream.active = true;
-                stream.timer = 1;
-                stream.x = random(-canvasWidth * 0.2, canvasWidth * 1.2);
-                stream.y = random(-canvasHeight * 0.2, canvasHeight * 1.2);
-                stream.angle = random(-Math.PI, Math.PI);
-                stream.length = random(80, 180);
+            if (isRing) {
+                const angle = (i / count) * Math.PI * 2;
+                const ringRadius = (70 + radiusOffset) + Math.random() * 25;
+                x = Math.cos(angle) * ringRadius;
+                z = Math.sin(angle) * ringRadius;
+                y = (Math.random() - 0.5) * 5;
+                color.setHSL(0.55 + (ringRadius - 70) * 0.002, 0.8, 0.5);
+            } else {
+                const phi = Math.acos(-1 + (2 * i) / count);
+                const theta = Math.sqrt(count * Math.PI) * phi;
+                const sphereRadius = 45;
+                x = sphereRadius * Math.cos(theta) * Math.sin(phi);
+                y = sphereRadius * Math.sin(theta) * Math.sin(phi);
+                z = sphereRadius * Math.cos(phi);
+                color.setHSL(0.5 + (Math.abs(y) / 45) * 0.1, 0.9, 0.5);
             }
+            positions.push(x, y, z);
+            colors.push(color.r, color.g, color.b);
+        }
 
-            if (!stream.active) continue;
+        const pointsGeo = new THREE.BufferGeometry();
+        pointsGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        pointsGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        group.add(new THREE.Points(pointsGeo, new THREE.PointsMaterial({
+            size: 1.8,
+            vertexColors: true,
+            blending: THREE.AdditiveBlending,
+            transparent: true
+        })));
 
-            stream.timer -= 0.06;
-            if (stream.timer <= 0) {
-                stream.active = false;
-                continue;
+        const linePos = [];
+        const lineColors = [];
+        const maxDist = isRing ? 15 : 20;
+        for (let i = 0; i < count; i++) {
+            for (let j = i + 1; j < count; j++) {
+                const dx = positions[i * 3] - positions[j * 3];
+                const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
+                const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
+                if (dx * dx + dy * dy + dz * dz < maxDist * maxDist) {
+                    linePos.push(
+                        positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
+                        positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
+                    );
+                    lineColors.push(
+                        colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2],
+                        colors[j * 3], colors[j * 3 + 1], colors[j * 3 + 2]
+                    );
+                }
             }
+        }
 
-            const endX = stream.x + Math.cos(stream.angle) * stream.length * scaleFactor;
-            const endY = stream.y + Math.sin(stream.angle) * stream.length * scaleFactor;
-            const grad = ctx.createLinearGradient(stream.x, stream.y, endX, endY);
-            grad.addColorStop(0, `rgba(160,255,255,${stream.timer * 0.5})`);
-            grad.addColorStop(1, 'rgba(80,180,255,0)');
+        const lineGeo = new THREE.BufferGeometry();
+        lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
+        lineGeo.setAttribute('color', new THREE.Float32BufferAttribute(lineColors, 3));
+        group.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.25
+        })));
 
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.2 * scaleFactor;
-            ctx.beginPath();
-            ctx.moveTo(stream.x, stream.y);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
+        return group;
+    }
+
+    createSparkLines() {
+        for (let i = 0; i < 6; i++) {
+            const line = new THREE.Line(
+                new THREE.BufferGeometry(),
+                new THREE.LineBasicMaterial({
+                    color: 0xe0ffff,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending
+                })
+            );
+            line.userData = { timer: 0, active: false };
+            this.scene.add(line);
+            this.sparkLines.push(line);
         }
     }
 
-    draw(ctx, scaleFactor) {
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.shadowBlur = 0;
+    launchSpark(line) {
+        const points = [];
+        let current = new THREE.Vector3(
+            (Math.random() - 0.5) * 100,
+            (Math.random() - 0.5) * 100,
+            (Math.random() - 0.5) * 100
+        );
 
+        for (let i = 0; i < 12; i++) {
+            points.push(current.clone());
+            current = current.clone().add(new THREE.Vector3(
+                (Math.random() - 0.5) * 25,
+                (Math.random() - 0.5) * 25,
+                (Math.random() - 0.5) * 25
+            ));
+        }
+        line.geometry.setFromPoints(points);
+        line.userData.active = true;
+        line.userData.timer = 1;
+    }
+
+    resize(width, height) {
+        if (!this.renderer || !this.camera) return;
+        this.width = width;
+        this.height = height;
+        this.camera.aspect = width / height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(width, height);
+    }
+
+    destroy() {
+        if (this.renderer?.domElement?.parentElement) {
+            this.renderer.domElement.parentElement.removeChild(this.renderer.domElement);
+        }
+        this.renderer?.dispose?.();
+    }
+
+    draw() {
+        if (!this.renderer || !this.camera) return;
         const timeSec = performance.now() * 0.001;
-        this.drawNebulae(ctx, scaleFactor, timeSec);
-        this.drawStars(ctx, scaleFactor, timeSec);
-        this.drawSparkStreams(ctx, scaleFactor);
 
-        ctx.restore();
+        this.planetNet.rotation.y += 0.0015;
+        this.ring1.rotation.z -= 0.003;
+        this.ring2.rotation.z += 0.004;
+        this.seaClouds.forEach(sprite => {
+            sprite.userData.phase += 0.005;
+            sprite.material.rotation += sprite.userData.rotSpeed;
+            sprite.material.opacity = 0.3 + Math.sin(sprite.userData.phase) * 0.2;
+            const pulse = 1 + Math.sin(sprite.userData.phase) * 0.1;
+            const scale = sprite.userData.baseScale * pulse;
+            sprite.scale.set(scale, scale, 1);
+        });
+        this.seaGroup.rotation.y += 0.0005;
+
+        this.sparkLines.forEach(line => {
+            if (!line.userData.active && Math.random() < 0.015) this.launchSpark(line);
+            if (!line.userData.active) return;
+            line.userData.timer -= 0.08;
+            line.material.opacity = line.userData.timer;
+            if (line.userData.timer <= 0) line.userData.active = false;
+        });
+
+        this.camera.position.x = Math.sin(timeSec * 0.25) * 20;
+        this.camera.position.y = 130 + Math.sin(timeSec * 0.17) * 18;
+        this.camera.lookAt(0, 0, 0);
+
+        this.renderer.render(this.scene, this.camera);
     }
 }

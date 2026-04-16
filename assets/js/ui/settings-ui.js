@@ -263,6 +263,7 @@ const SettingsUI = {
             }
             // Tạo lại bầu trời sao nếu số lượng sao thay đổi
             starField = new StarField(CONFIG.BG.STAR_COUNT, width, height);
+            window.starField = starField;
 
             showNotify("Trận pháp đã được tái thiết!", "#8fffe0");
             this.close();

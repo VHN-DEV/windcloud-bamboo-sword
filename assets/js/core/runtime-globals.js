@@ -1,7 +1,7 @@
 const random = (min, max) => Math.random() * (max - min) + min;
 const canvas = document.getElementById("c");
 const enemyIcons = {};
-const ctx = canvas.getContext("2d", { alpha: false });
+const ctx = canvas.getContext("2d", { alpha: true });
 const IS_TOUCH_ENVIRONMENT = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
 let scaleFactor = 1;
@@ -77,6 +77,9 @@ function resize() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
     scaleFactor = width / CONFIG.CORE.BASE_WIDTH;
+    if (typeof window.starField?.resize === 'function') {
+        window.starField.resize(width, height);
+    }
 
     if (document.body) {
         document.body.classList.toggle('is-touch-device', IS_TOUCH_ENVIRONMENT);
