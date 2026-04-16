@@ -41,7 +41,6 @@ gulp.task('build-js', function () {
     'assets/js/ui/cultivation-panels-ui.js',
     'assets/js/game-progress.js',
     'assets/js/input/input-state.js',
-    'assets/js/main.js',
     'assets/js/input/input-player-combat-methods.js',
     'assets/js/input/input-progression-insect-methods.js',
     'assets/js/input/input-item-artifact-methods.js',

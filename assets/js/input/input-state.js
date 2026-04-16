@@ -139,3 +139,7 @@ const INPUT_INITIAL_STATE = {
     },
     lastAttackBurstAt: 0,
 };
+
+const Input = {
+    ...INPUT_INITIAL_STATE
+};
