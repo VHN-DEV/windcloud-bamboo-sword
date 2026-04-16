@@ -23,11 +23,33 @@ class StarField {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(60, width / height, 1, 3000);
         this.camera.position.set(0, 150, 350);
+        this.hasOrbitControls = Boolean(window.THREE?.OrbitControls);
         this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         this.renderer.setPixelRatio(window.devicePixelRatio || 1);
         this.renderer.setSize(width, height);
         this.renderer.domElement.id = 'space-bg';
         document.body.prepend(this.renderer.domElement);
+
+        if (this.hasOrbitControls) {
+            const gameplayCanvas = document.getElementById('c') || this.renderer.domElement;
+            gameplayCanvas.addEventListener('contextmenu', event => event.preventDefault());
+            this.controls = new THREE.OrbitControls(this.camera, gameplayCanvas);
+            this.controls.enableDamping = true;
+            this.controls.enablePan = false;
+            this.controls.minDistance = 120;
+            this.controls.maxDistance = 900;
+            this.controls.mouseButtons = {
+                LEFT: null,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.ROTATE
+            };
+            this.controls.touches = {
+                ONE: THREE.TOUCH.ROTATE,
+                TWO: THREE.TOUCH.DOLLY_ROTATE
+            };
+            this.controls.target.set(0, 0, 0);
+            this.controls.update();
+        }
 
         this.createParticles();
         this.createSeaClouds();
@@ -230,6 +252,7 @@ class StarField {
     }
 
     destroy() {
+        this.controls?.dispose?.();
         if (this.renderer?.domElement?.parentElement) {
             this.renderer.domElement.parentElement.removeChild(this.renderer.domElement);
         }
@@ -261,9 +284,13 @@ class StarField {
             if (line.userData.timer <= 0) line.userData.active = false;
         });
 
-        this.camera.position.x = Math.sin(timeSec * 0.25) * 20;
-        this.camera.position.y = 130 + Math.sin(timeSec * 0.17) * 18;
-        this.camera.lookAt(0, 0, 0);
+        if (this.controls) {
+            this.controls.update();
+        } else {
+            this.camera.position.x = Math.sin(timeSec * 0.25) * 20;
+            this.camera.position.y = 130 + Math.sin(timeSec * 0.17) * 18;
+            this.camera.lookAt(0, 0, 0);
+        }
 
         this.renderer.render(this.scene, this.camera);
     }
