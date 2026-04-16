@@ -853,19 +853,19 @@ const CONFIG = {
         RANKS: [
             // --- NHÂN GIỚI ---
             // Luyện Khí Kỳ
-            { id: 1, name: "Luyện khí sơ kỳ (Tầng 1)", exp: 5, expGive: 1, chance: 1, swordDurability: 3, damage: 1, hp: 1000, maxMana: 10, color: "#E8EDF5", lightColor: "#F8FAFF" },
-            { id: 2, name: "Luyện khí sơ kỳ (Tầng 2)", exp: 6, expGive: 1, chance: 0.95, swordDurability: 4, damage: 2, hp: 1100, maxMana: 15, color: "#D7E1EE", lightColor: "#F3F7FF" },
-            { id: 3, name: "Luyện khí sơ kỳ (Tầng 3)", exp: 7, expGive: 1, chance: 0.95, swordDurability: 5, damage: 3, hp: 1200, maxMana: 20, color: "#C5D4E7", lightColor: "#EEF4FF" },
-            { id: 4, name: "Luyện khí sơ kỳ (Tầng 4)", exp: 9, expGive: 2, chance: 0.95, swordDurability: 6, damage: 4, hp: 1300, maxMana: 25, color: "#B4C7E0", lightColor: "#E9F1FF" },
-            { id: 5, name: "Luyện khí trung kỳ (Tầng 5)", exp: 12, expGive: 2, chance: 0.9, swordDurability: 7, damage: 5, hp: 1400, maxMana: 30, color: "#A2BAD9", lightColor: "#E4EEFF" },
-            { id: 6, name: "Luyện khí trung kỳ (Tầng 6)", exp: 16, expGive: 3, chance: 0.9, swordDurability: 8, damage: 6, hp: 1500, maxMana: 35, color: "#91ADD2", lightColor: "#DFEAFF" },
-            { id: 7, name: "Luyện khí trung kỳ (Tầng 7)", exp: 21, expGive: 4, chance: 0.9, swordDurability: 9, damage: 7, hp: 1600, maxMana: 40, color: "#7F9FCC", lightColor: "#DAE6FF" },
-            { id: 8, name: "Luyện khí trung kỳ (Tầng 8)", exp: 27, expGive: 5, chance: 0.9, swordDurability: 10, damage: 8, hp: 1700, maxMana: 45, color: "#6E92C5", lightColor: "#D5E2FF" },
-            { id: 9, name: "Luyện khí hậu kỳ (Tầng 9)", exp: 35, expGive: 7, chance: 0.85, swordDurability: 11, damage: 9, hp: 1800, maxMana: 50, color: "#5C85BE", lightColor: "#D0DEFF" },
-            { id: 10, name: "Luyện khí hậu kỳ (Tầng 10)", exp: 45, expGive: 9, chance: 0.85, swordDurability: 12, damage: 10, hp: 1900, maxMana: 55, color: "#4B78B7", lightColor: "#CBD9FF" },
-            { id: 11, name: "Luyện khí hậu kỳ (Tầng 11)", exp: 58, expGive: 12, chance: 0.85, swordDurability: 13, damage: 11, hp: 2000, maxMana: 60, color: "#3A6BB0", lightColor: "#C6D5FF" },
-            { id: 12, name: "Luyện khí hậu kỳ (Tầng 12)", exp: 75, expGive: 15, chance: 0.8, swordDurability: 14, damage: 12, hp: 2100, maxMana: 65, color: "#285EA9", lightColor: "#C1D1FF" },
-            { id: 13, name: "Luyện khí đại viên mãn (Tầng 13)", exp: 100, expGive: 20, chance: 0.75, swordDurability: 15, damage: 13, hp: 2200, maxMana: 70, bonus: 100, color: "#174FA0", lightColor: "#FFFFFF" },
+            { id: 1, name: "Luyện khí sơ kỳ (Tầng 1)", exp: 5, expGive: 1, chance: 1, swordDurability: 3, damage: 1, hp: 1000, maxMana: 10, color: "#CDD5E0", lightColor: "#F5F7FB" },
+            { id: 2, name: "Luyện khí sơ kỳ (Tầng 2)", exp: 6, expGive: 1, chance: 0.95, swordDurability: 4, damage: 2, hp: 1100, maxMana: 15, color: "#B8C2D0", lightColor: "#EEF2F8" },
+            { id: 3, name: "Luyện khí sơ kỳ (Tầng 3)", exp: 7, expGive: 1, chance: 0.95, swordDurability: 5, damage: 3, hp: 1200, maxMana: 20, color: "#A3AFBF", lightColor: "#E7ECF4" },
+            { id: 4, name: "Luyện khí sơ kỳ (Tầng 4)", exp: 9, expGive: 2, chance: 0.95, swordDurability: 6, damage: 4, hp: 1300, maxMana: 25, color: "#8F9DAF", lightColor: "#E0E6F0" },
+            { id: 5, name: "Luyện khí trung kỳ (Tầng 5)", exp: 12, expGive: 2, chance: 0.9, swordDurability: 7, damage: 5, hp: 1400, maxMana: 30, color: "#7A899E", lightColor: "#D8DFEA" },
+            { id: 6, name: "Luyện khí trung kỳ (Tầng 6)", exp: 16, expGive: 3, chance: 0.9, swordDurability: 8, damage: 6, hp: 1500, maxMana: 35, color: "#66758C", lightColor: "#D0D8E4" },
+            { id: 7, name: "Luyện khí trung kỳ (Tầng 7)", exp: 21, expGive: 4, chance: 0.9, swordDurability: 9, damage: 7, hp: 1600, maxMana: 40, color: "#55647A", lightColor: "#C8D1DE" },
+            { id: 8, name: "Luyện khí trung kỳ (Tầng 8)", exp: 27, expGive: 5, chance: 0.9, swordDurability: 10, damage: 8, hp: 1700, maxMana: 45, color: "#465567", lightColor: "#C0CAD8" },
+            { id: 9, name: "Luyện khí hậu kỳ (Tầng 9)", exp: 35, expGive: 7, chance: 0.85, swordDurability: 11, damage: 9, hp: 1800, maxMana: 50, color: "#394959", lightColor: "#B9C3D2" },
+            { id: 10, name: "Luyện khí hậu kỳ (Tầng 10)", exp: 45, expGive: 9, chance: 0.85, swordDurability: 12, damage: 10, hp: 1900, maxMana: 55, color: "#2D3D4B", lightColor: "#B2BDCC" },
+            { id: 11, name: "Luyện khí hậu kỳ (Tầng 11)", exp: 58, expGive: 12, chance: 0.85, swordDurability: 13, damage: 11, hp: 2000, maxMana: 60, color: "#233241", lightColor: "#ABB6C6" },
+            { id: 12, name: "Luyện khí hậu kỳ (Tầng 12)", exp: 75, expGive: 15, chance: 0.8, swordDurability: 14, damage: 12, hp: 2100, maxMana: 65, color: "#1B2937", lightColor: "#A4AFC0" },
+            { id: 13, name: "Luyện khí đại viên mãn (Tầng 13)", exp: 100, expGive: 20, chance: 0.75, swordDurability: 15, damage: 13, hp: 2200, maxMana: 70, bonus: 100, color: "#141F2D", lightColor: "#FFFFFF" },
 
             // Trúc Cơ Kỳ
             { id: 14, name: "Trúc cơ sơ kỳ", exp: 120, expGive: 25, chance: 0.7, swordDurability: 16, damage: 14, hp: 2300, maxMana: 75, color: "#6CCF6F", lightColor: "#E8F9EA" },
@@ -893,10 +893,10 @@ const CONFIG = {
 
             // --- LINH GIỚI ---
             // Luyện Hư Kỳ
-            { id: 30, name: "Luyện hư sơ kỳ", exp: 60000, expGive: 12000, chance: 0.12, swordDurability: 32, damage: 30, hp: 3900, maxMana: 155, color: "#FF8A8A", lightColor: "#FFE9E9" },
-            { id: 31, name: "Luyện hư trung kỳ", exp: 80000, expGive: 16000, chance: 0.1, swordDurability: 33, damage: 31, hp: 4000, maxMana: 160, color: "#FF7070", lightColor: "#FFDCDC" },
-            { id: 32, name: "Luyện hư hậu kỳ", exp: 110000, expGive: 22000, chance: 0.09, swordDurability: 34, damage: 32, hp: 4100, maxMana: 165, color: "#F45A5A", lightColor: "#FFD0D0" },
-            { id: 33, name: "Luyện hư đại viên mãn", exp: 150000, expGive: 30000, chance: 0.08, swordDurability: 35, damage: 33, hp: 4200, maxMana: 170, bonus: 30000, color: "#DE3E3E", lightColor: "#FFFFFF" },
+            { id: 30, name: "Luyện hư sơ kỳ", exp: 60000, expGive: 12000, chance: 0.12, swordDurability: 32, damage: 30, hp: 3900, maxMana: 155, color: "#FFC0C0", lightColor: "#FFF0F0" },
+            { id: 31, name: "Luyện hư trung kỳ", exp: 80000, expGive: 16000, chance: 0.1, swordDurability: 33, damage: 31, hp: 4000, maxMana: 160, color: "#FF9D9D", lightColor: "#FFE5E5" },
+            { id: 32, name: "Luyện hư hậu kỳ", exp: 110000, expGive: 22000, chance: 0.09, swordDurability: 34, damage: 32, hp: 4100, maxMana: 165, color: "#FF7878", lightColor: "#FFDADA" },
+            { id: 33, name: "Luyện hư đại viên mãn", exp: 150000, expGive: 30000, chance: 0.08, swordDurability: 35, damage: 33, hp: 4200, maxMana: 170, bonus: 30000, color: "#FF4D4D", lightColor: "#FFFFFF" },
 
             // Hợp Thể Kỳ
             { id: 34, name: "Hợp thể sơ kỳ", exp: 140000, expGive: 28000, chance: 0.08, swordDurability: 36, damage: 34, hp: 4300, maxMana: 175, color: "#FF9DC8", lightColor: "#FFEAF4" },
@@ -912,10 +912,10 @@ const CONFIG = {
 
             // --- TIÊN GIỚI ---
             // Chân Tiên
-            { id: 42, name: "Chân tiên sơ kỳ", exp: 2300000, expGive: 460000, chance: 0.011, swordDurability: 48, damage: 46, hp: 5800, maxMana: 260, color: "#8DE7E0", lightColor: "#E6FFFC" },
-            { id: 43, name: "Chân tiên trung kỳ", exp: 3200000, expGive: 640000, chance: 0.01, swordDurability: 49, damage: 47, hp: 6000, maxMana: 275, color: "#66DED5", lightColor: "#D8FFFA" },
-            { id: 44, name: "Chân tiên hậu kỳ", exp: 4500000, expGive: 900000, chance: 0.009, swordDurability: 50, damage: 48, hp: 6200, maxMana: 290, color: "#3DD2C9", lightColor: "#C9FFF8" },
-            { id: 45, name: "Chân tiên đại viên mãn", exp: 6200000, expGive: 1240000, chance: 0.008, swordDurability: 51, damage: 49, hp: 6400, maxMana: 305, bonus: 620000, color: "#1CB8AF", lightColor: "#FFFFFF" },
+            { id: 42, name: "Chân tiên sơ kỳ", exp: 2300000, expGive: 460000, chance: 0.011, swordDurability: 48, damage: 46, hp: 5800, maxMana: 260, color: "#AEEBFF", lightColor: "#ECFAFF" },
+            { id: 43, name: "Chân tiên trung kỳ", exp: 3200000, expGive: 640000, chance: 0.01, swordDurability: 49, damage: 47, hp: 6000, maxMana: 275, color: "#85DEFF", lightColor: "#E0F6FF" },
+            { id: 44, name: "Chân tiên hậu kỳ", exp: 4500000, expGive: 900000, chance: 0.009, swordDurability: 50, damage: 48, hp: 6200, maxMana: 290, color: "#5CCEFF", lightColor: "#D3F1FF" },
+            { id: 45, name: "Chân tiên đại viên mãn", exp: 6200000, expGive: 1240000, chance: 0.008, swordDurability: 51, damage: 49, hp: 6400, maxMana: 305, bonus: 620000, color: "#33BDFF", lightColor: "#FFFFFF" },
 
             // Kim Tiên (Pháp tắc ngưng tụ)
             { id: 46, name: "Kim tiên sơ kỳ", exp: 8500000, expGive: 1700000, chance: 0.007, swordDurability: 52, damage: 50, hp: 6700, maxMana: 320, color: "#9FA8FF", lightColor: "#ECEEFF" },
@@ -924,24 +924,24 @@ const CONFIG = {
             { id: 49, name: "Kim tiên đại viên mãn", exp: 21000000, expGive: 4200000, chance: 0.005, swordDurability: 55, damage: 53, hp: 7600, maxMana: 365, bonus: 2100000, color: "#5966D6", lightColor: "#FFFFFF" },
 
             // Thái Ất (Ngọc Tiên)
-            { id: 50, name: "Thái Ất sơ kỳ", exp: 28500000, expGive: 5700000, chance: 0.0048, swordDurability: 56, damage: 54, hp: 8000, maxMana: 380, color: "#8BEBB7", lightColor: "#E9FFF1" },
-            { id: 51, name: "Thái Ất trung kỳ", exp: 38000000, expGive: 7600000, chance: 0.0042, swordDurability: 57, damage: 55, hp: 8400, maxMana: 395, color: "#6FDEA0", lightColor: "#DBFFE8" },
-            { id: 52, name: "Thái Ất hậu kỳ", exp: 50000000, expGive: 10000000, chance: 0.0036, swordDurability: 58, damage: 56, hp: 8800, maxMana: 410, color: "#56D08B", lightColor: "#CDFFDF" },
-            { id: 53, name: "Thái Ất đại viên mãn", exp: 65000000, expGive: 13000000, chance: 0.003, swordDurability: 59, damage: 57, hp: 9200, maxMana: 425, bonus: 6500000, color: "#37B46F", lightColor: "#FFFFFF" },
+            { id: 50, name: "Thái Ất sơ kỳ", exp: 28500000, expGive: 5700000, chance: 0.0048, swordDurability: 56, damage: 54, hp: 8000, maxMana: 380, color: "#9EF0DD", lightColor: "#EBFFF8" },
+            { id: 51, name: "Thái Ất trung kỳ", exp: 38000000, expGive: 7600000, chance: 0.0042, swordDurability: 57, damage: 55, hp: 8400, maxMana: 395, color: "#72E3C8", lightColor: "#DDFFF3" },
+            { id: 52, name: "Thái Ất hậu kỳ", exp: 50000000, expGive: 10000000, chance: 0.0036, swordDurability: 58, damage: 56, hp: 8800, maxMana: 410, color: "#45D6B4", lightColor: "#CFFFEF" },
+            { id: 53, name: "Thái Ất đại viên mãn", exp: 65000000, expGive: 13000000, chance: 0.003, swordDurability: 59, damage: 57, hp: 9200, maxMana: 425, bonus: 6500000, color: "#1BC7A0", lightColor: "#FFFFFF" },
 
             // Đại La (Trảm Tam Thi)
-            { id: 54, name: "Đại la sơ kỳ", exp: 82000000, expGive: 16400000, chance: 0.0028, swordDurability: 60, damage: 58, hp: 9700, maxMana: 440, color: "#8ED6FF", lightColor: "#EAF6FF" },
-            { id: 55, name: "Đại la trung kỳ", exp: 102000000, expGive: 20400000, chance: 0.0026, swordDurability: 61, damage: 59, hp: 10200, maxMana: 455, color: "#6BC7FF", lightColor: "#DDF0FF" },
-            { id: 56, name: "Đại la hậu kỳ", exp: 128000000, expGive: 25600000, chance: 0.0024, swordDurability: 62, damage: 60, hp: 10700, maxMana: 470, color: "#47B8F7", lightColor: "#D0EAFF" },
-            { id: 57, name: "Đại la đại viên mãn", exp: 160000000, expGive: 32000000, chance: 0.0022, swordDurability: 63, damage: 61, hp: 11200, maxMana: 485, bonus: 16000000, color: "#2B9FE5", lightColor: "#C2E3FF" },
-            { id: 58, name: "Đại la trảm nhất thi", exp: 200000000, expGive: 40000000, chance: 0.002, swordDurability: 64, damage: 62, hp: 11800, maxMana: 500, color: "#1D88D6", lightColor: "#B5DCFF" },
-            { id: 59, name: "Đại la trảm nhị thi", exp: 260000000, expGive: 52000000, chance: 0.0018, swordDurability: 65, damage: 63, hp: 12400, maxMana: 520, color: "#1571BE", lightColor: "#A8D5FF" },
-            { id: 60, name: "Đại la trảm tam thi", exp: 340000000, expGive: 68000000, chance: 0.0015, swordDurability: 66, damage: 64, hp: 13000, maxMana: 540, bonus: 34000000, color: "#0F5B9D", lightColor: "#FFFFFF" },
+            { id: 54, name: "Đại la sơ kỳ", exp: 82000000, expGive: 16400000, chance: 0.0028, swordDurability: 60, damage: 58, hp: 9700, maxMana: 440, color: "#E4C2FF", lightColor: "#F8EEFF" },
+            { id: 55, name: "Đại la trung kỳ", exp: 102000000, expGive: 20400000, chance: 0.0026, swordDurability: 61, damage: 59, hp: 10200, maxMana: 455, color: "#D39AFF", lightColor: "#F2E1FF" },
+            { id: 56, name: "Đại la hậu kỳ", exp: 128000000, expGive: 25600000, chance: 0.0024, swordDurability: 62, damage: 60, hp: 10700, maxMana: 470, color: "#C272FF", lightColor: "#ECD4FF" },
+            { id: 57, name: "Đại la đại viên mãn", exp: 160000000, expGive: 32000000, chance: 0.0022, swordDurability: 63, damage: 61, hp: 11200, maxMana: 485, bonus: 16000000, color: "#B24AFF", lightColor: "#E6C7FF" },
+            { id: 58, name: "Đại la trảm nhất thi", exp: 200000000, expGive: 40000000, chance: 0.002, swordDurability: 64, damage: 62, hp: 11800, maxMana: 500, color: "#A225FF", lightColor: "#E0BBFF" },
+            { id: 59, name: "Đại la trảm nhị thi", exp: 260000000, expGive: 52000000, chance: 0.0018, swordDurability: 65, damage: 63, hp: 12400, maxMana: 520, color: "#8A12E6", lightColor: "#DAAEFF" },
+            { id: 60, name: "Đại la trảm tam thi", exp: 340000000, expGive: 68000000, chance: 0.0015, swordDurability: 66, damage: 64, hp: 13000, maxMana: 540, bonus: 34000000, color: "#7200CC", lightColor: "#FFFFFF" },
 
             // Đạo Tổ (Hợp đạo)
-            { id: 61, name: "Đạo tổ sơ cảnh", exp: 450000000, expGive: 90000000, chance: 0.0012, swordDurability: 67, damage: 65, hp: 14000, maxMana: 580, color: "#FF3B30", lightColor: "#FFE8E6" },
-            { id: 62, name: "Đạo tổ ổn định đạo", exp: 600000000, expGive: 120000000, chance: 0.001, swordDurability: 68, damage: 66, hp: 15200, maxMana: 620, color: "#FF9500", lightColor: "#FFF1DC" },
-            { id: 63, name: "Đạo tổ trung tầng", exp: 800000000, expGive: 160000000, chance: 0.0008, swordDurability: 69, damage: 67, hp: 16500, maxMana: 680, color: "#FFCC00", lightColor: "#FFF9D9" },
+            { id: 61, name: "Đạo tổ sơ cảnh", exp: 450000000, expGive: 90000000, chance: 0.0012, swordDurability: 67, damage: 65, hp: 14000, maxMana: 580, color: "#FFB38A", lightColor: "#FFF1E8" },
+            { id: 62, name: "Đạo tổ ổn định đạo", exp: 600000000, expGive: 120000000, chance: 0.001, swordDurability: 68, damage: 66, hp: 15200, maxMana: 620, color: "#FF8A5A", lightColor: "#FFE8D8" },
+            { id: 63, name: "Đạo tổ trung tầng", exp: 800000000, expGive: 160000000, chance: 0.0008, swordDurability: 69, damage: 67, hp: 16500, maxMana: 680, color: "#FF5F2E", lightColor: "#FFDFCC" },
             { id: 64, name: "Đạo tổ đỉnh phong", exp: Number.POSITIVE_INFINITY, expGive: 0, chance: 0, swordDurability: 99999, damage: Number.POSITIVE_INFINITY, hp: Number.POSITIVE_INFINITY, maxMana: Number.POSITIVE_INFINITY, color: "#34C759", lightColor: "#FFFFFF", accentColor: "#FFF4B8", barGradient: "linear-gradient(90deg, #ff3b30 0%, #ff9500 16%, #ffcc00 32%, #34c759 48%, #007aff 64%, #5856d6 80%, #af52de 100%)", textGradient: "linear-gradient(90deg, #ff3b30 0%, #ff9500 16%, #ffcc00 32%, #34c759 48%, #007aff 64%, #5856d6 80%, #af52de 100%)", infiniteStats: true }
         ]
     },
