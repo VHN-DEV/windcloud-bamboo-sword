@@ -4,6 +4,10 @@ class Enemy {
         id: 1,
         index: 0
     };
+    static rankIndexCache = {
+        ranksRef: null,
+        byId: new Map()
+    };
 
     constructor() {
         this.particles = [];
@@ -18,17 +22,22 @@ class Enemy {
         const realms = CONFIG.CULTIVATION?.MAJOR_REALMS || [];
         const ranks = CONFIG.CULTIVATION?.RANKS || [];
         const maxSpawnId = CONFIG.ENEMY?.SPAWN_RANK_RANGE?.MAX_ID || '';
-        const cacheKey = `${realms.length}|${ranks.length}|${maxSpawnId}`;
+        const daiLaRealm = realms.find(realm => realm.key === 'DAI_LA');
+        const daoToRealm = realms.find(realm => realm.key === 'DAO_TO');
+        const cacheKey = [
+            ranks.length,
+            maxSpawnId,
+            daiLaRealm?.endId || '',
+            daoToRealm?.startId || ''
+        ].join('|');
 
         if (Enemy.targetCapCache.key === cacheKey) {
             return Enemy.targetCapCache.id;
         }
 
-        const daiLaRealm = realms.find(realm => realm.key === 'DAI_LA');
         let capId = daiLaRealm?.endId;
 
         if (!capId) {
-            const daoToRealm = realms.find(realm => realm.key === 'DAO_TO');
             capId = daoToRealm?.startId ? Math.max(1, daoToRealm.startId - 1) : null;
         }
 
@@ -47,6 +56,20 @@ class Enemy {
     getTargetRankCapIndex() {
         this.getTargetRankCapId();
         return Enemy.targetCapCache.index;
+    }
+
+    getRankIndexById(rankId) {
+        const ranks = CONFIG.CULTIVATION?.RANKS || [];
+        const cache = Enemy.rankIndexCache;
+        if (cache.ranksRef !== ranks) {
+            cache.ranksRef = ranks;
+            cache.byId.clear();
+            for (let i = 0; i < ranks.length; i++) {
+                cache.byId.set(ranks[i].id, i);
+            }
+        }
+
+        return cache.byId.has(rankId) ? cache.byId.get(rankId) : -1;
     }
 
     respawn() {
@@ -94,7 +117,7 @@ class Enemy {
 
             const eRankIndex = Number.isInteger(e.rankIndex)
                 ? e.rankIndex
-                : CONFIG.CULTIVATION.RANKS.findIndex(r => r.id === e.rankData.id);
+                : this.getRankIndexById(e.rankData.id);
 
             if (eRankIndex >= 0 && (eRankIndex - playerRank) < diffLimit) {
                 killableCount++;
@@ -124,7 +147,7 @@ class Enemy {
             // 🔵 NGẪU NHIÊN THEO KHU VỰC
             const { MIN_ID, MAX_ID } = CONFIG.ENEMY.SPAWN_RANK_RANGE;
             const rank = this.getRandomRankById(MIN_ID, MAX_ID);
-            enemyRankIndex = CONFIG.CULTIVATION.RANKS.findIndex(r => r.id === (rank ? rank.id : 1));
+            enemyRankIndex = this.getRankIndexById(rank ? rank.id : 1);
             if (enemyRankIndex === -1) enemyRankIndex = 0;
             enemyRankIndex = Math.min(targetCapIndex, enemyRankIndex);
         }
@@ -265,7 +288,9 @@ class Enemy {
 
     hit(sword) {
         const playerRankIndex = Input.rankIndex || 0;
-        const enemyRankIndex = CONFIG.CULTIVATION.RANKS.indexOf(this.rankData);
+        const enemyRankIndex = Number.isInteger(this.rankIndex)
+            ? this.rankIndex
+            : this.getRankIndexById(this.rankData?.id);
         const rankDiff = enemyRankIndex - playerRankIndex;
         const now = Date.now();
         const effectNow = performance.now();
