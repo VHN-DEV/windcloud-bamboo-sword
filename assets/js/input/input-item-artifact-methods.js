@@ -2533,25 +2533,8 @@ Object.assign(Input, {
         this.updateTribulationPopupUI();
 
         const cloudEl = document.getElementById('tribulation-cloud');
-        const boltEl = document.getElementById('tribulation-bolt');
         const contentEl = document.querySelector('#tribulation-popup .tribulation-content');
         const cloudLightningEl = document.getElementById('tribulation-cloud-lightning');
-        const cloudWrapEl = cloudEl?.parentElement || null;
-
-        const spawnBoltFragment = (strikeIndex) => {
-            if (!cloudWrapEl) return;
-            const fragment = document.createElement('div');
-            fragment.className = 'tribulation-bolt-fragment';
-            const direction = strikeIndex % 2 === 0 ? 1 : -1;
-            const horizontalOffset = direction * (8 + (strikeIndex % 3) * 5);
-            const rotateDeg = direction * (4 + (strikeIndex % 4) * 3);
-            fragment.style.transform = `translateX(calc(-50% + ${horizontalOffset}px)) rotate(${rotateDeg}deg)`;
-            cloudWrapEl.appendChild(fragment);
-            requestAnimationFrame(() => {
-                fragment.classList.add('is-striking');
-            });
-            setTimeout(() => fragment.remove(), 980);
-        };
 
         const ensureTribulationLightningCanvas = () => {
             if (!cloudLightningEl) return null;
@@ -2587,29 +2570,30 @@ Object.assign(Input, {
             const wrapRect = cloudLightningEl.getBoundingClientRect();
             if (!cloudRect.width || !wrapRect.width) return;
 
-            const cloudCenterX = (cloudRect.left - wrapRect.left) + (cloudRect.width / 2);
+            const cloudLeft = cloudRect.left - wrapRect.left;
+            const cloudCenterX = cloudLeft + (cloudRect.width / 2);
             const topAnchor = Math.max(10, (cloudRect.top - wrapRect.top) + (cloudRect.height * 0.35));
             const strikeDistance = Math.max(120, height - topAnchor - 18);
             const depthRatio = Math.max(0, Math.min(1, strikePower / 7));
-            const branchChance = Math.min(0.38, 0.14 + (depthRatio * 0.2));
             const spreadDeg = 10 + Math.round(depthRatio * 18);
             const speedPx = 18 + Math.round(depthRatio * 14);
 
             const rand = (min, max) => Math.random() * (max - min) + min;
             const toRadians = (deg) => (deg * Math.PI) / 180;
             let totalBranches = 0;
-            const maxTotalBranches = 18 + Math.floor(depthRatio * 12);
             const maxSegmentsPerBolt = 120;
-            const drawBolt = ({ startX, startY, angle, length, depth, maxDepth }) => {
+            const drawBolt = ({ startX, startY, angle, length, depth, maxDepth, branchChance, maxTotalBranches, spreadOverride, speedOverride }) => {
                 let x = startX;
                 let y = startY;
                 let lastAngle = angle;
                 let remaining = Math.max(0, length);
                 let segmentCount = 0;
+                const localSpreadDeg = Math.max(2, spreadOverride ?? spreadDeg);
+                const localSpeedPx = Math.max(4, speedOverride ?? speedPx);
 
                 while (remaining > 0 && segmentCount < maxSegmentsPerBolt) {
-                    const segmentLength = Math.min(remaining, rand(speedPx * 0.7, speedPx * 1.2));
-                    const angleChange = rand(1, Math.max(2, spreadDeg));
+                    const segmentLength = Math.min(remaining, rand(localSpeedPx * 0.7, localSpeedPx * 1.2));
+                    const angleChange = rand(1, localSpreadDeg);
                     lastAngle += (Math.random() > 0.5 ? 1 : -1) * angleChange;
                     const radians = toRadians(lastAngle);
                     const nextX = x + (Math.cos(radians) * segmentLength);
@@ -2625,7 +2609,7 @@ Object.assign(Input, {
                     remaining -= segmentLength;
                     segmentCount += 1;
 
-                    const canBranch = depth < maxDepth && totalBranches < maxTotalBranches && remaining > speedPx * 0.5;
+                    const canBranch = depth < maxDepth && totalBranches < maxTotalBranches && remaining > localSpeedPx * 0.5;
                     if (canBranch && Math.random() < branchChance) {
                         totalBranches += 1;
                         drawBolt({
@@ -2634,7 +2618,11 @@ Object.assign(Input, {
                             angle: lastAngle + rand(-68, 68),
                             length: remaining * rand(0.32, 0.72),
                             depth: depth + 1,
-                            maxDepth
+                            maxDepth,
+                            branchChance: branchChance * 0.92,
+                            maxTotalBranches,
+                            spreadOverride: localSpreadDeg * 1.08,
+                            speedOverride: localSpeedPx * 0.94
                         });
                     }
                 }
@@ -2643,21 +2631,102 @@ Object.assign(Input, {
             ctx.clearRect(0, 0, width, height);
             ctx.globalCompositeOperation = 'screen';
             ctx.lineCap = 'round';
-            ctx.shadowColor = 'rgba(236, 252, 255, 0.95)';
-            ctx.shadowBlur = 9 + (strikePower * 1.6);
-            ctx.lineWidth = Math.max(1.6, 2.1 + (depthRatio * 1.3));
-            ctx.strokeStyle = 'rgba(236, 252, 255, 0.96)';
+            ctx.shadowColor = 'rgba(236, 252, 255, 0.96)';
 
-            drawBolt({
-                startX: cloudCenterX + rand(-22, 22),
-                startY: topAnchor,
-                length: strikeDistance,
-                angle: 90 + rand(-6, 6),
-                depth: 0,
-                maxDepth: 2 + Math.floor(depthRatio * 3)
+            const drawLightningPass = ({ lineWidth, shadowBlur, strokeStyle, offsetX, startX, startY, angle, length, branchChance, maxDepth, maxTotalBranches, spreadOverride, speedOverride }) => {
+                ctx.shadowBlur = shadowBlur;
+                ctx.lineWidth = lineWidth;
+                ctx.strokeStyle = strokeStyle;
+                drawBolt({
+                    startX: startX ?? (cloudCenterX + offsetX),
+                    startY: startY ?? topAnchor,
+                    length,
+                    angle,
+                    depth: 0,
+                    maxDepth,
+                    branchChance,
+                    maxTotalBranches,
+                    spreadOverride,
+                    speedOverride
+                });
+            };
+
+            // Trục sét lớn ở giữa (dày + gần như thẳng).
+            drawLightningPass({
+                lineWidth: Math.max(5.2, 6.8 + (depthRatio * 2.1)),
+                shadowBlur: 18 + (strikePower * 2),
+                strokeStyle: 'rgba(252, 255, 255, 0.99)',
+                offsetX: rand(-4, 4),
+                angle: 90 + rand(-1.8, 1.8),
+                length: strikeDistance * rand(1, 1.08),
+                branchChance: 0.06,
+                maxDepth: 1,
+                maxTotalBranches: 5,
+                spreadOverride: 3.5,
+                speedOverride: speedPx * 1.06
             });
 
-            const fadeStartMs = 72;
+            // Lớp glow quanh trục sét chính.
+            drawLightningPass({
+                lineWidth: Math.max(3.2, 4.4 + (depthRatio * 2.4)),
+                shadowBlur: 15 + (strikePower * 1.8),
+                strokeStyle: 'rgba(244, 254, 255, 0.98)',
+                offsetX: rand(-10, 10),
+                angle: 90 + rand(-4, 4),
+                length: strikeDistance * rand(0.94, 1.08),
+                branchChance: 0.32,
+                maxDepth: 4 + Math.floor(depthRatio * 2),
+                maxTotalBranches: 24 + Math.floor(depthRatio * 10)
+            });
+
+            // Tia sét nhỏ tản đều ngang đám mây + lệch nhịp.
+            const sideBoltCount = 6 + Math.floor(rand(0, 3));
+            for (let i = 0; i < sideBoltCount; i += 1) {
+                const ratio = (i + 1) / (sideBoltCount + 1);
+                const anchorX = cloudLeft + (cloudRect.width * ratio);
+                const delayMs = 28 + (i * 52) + Math.round(rand(0, 44));
+                setTimeout(() => {
+                    if (canvas.parentElement !== cloudLightningEl || !this.tribulation?.active) return;
+                    drawLightningPass({
+                        lineWidth: Math.max(1.3, 1.8 + (depthRatio * 0.9)),
+                        shadowBlur: 8 + (strikePower * 0.9),
+                        strokeStyle: 'rgba(204, 241, 255, 0.92)',
+                        startX: anchorX + rand(-18, 18),
+                        angle: 90 + rand(-14, 14),
+                        length: strikeDistance * rand(0.42, 0.78),
+                        branchChance: 0.12 + (depthRatio * 0.08),
+                        maxDepth: 1 + Math.floor(depthRatio * 2),
+                        maxTotalBranches: 8 + Math.floor(depthRatio * 4)
+                    });
+                }, delayMs);
+            }
+
+            // Một vài tia sét nhỏ nằm ngang trong mây.
+            const horizontalBoltCount = 2 + Math.floor(rand(0, 2));
+            for (let i = 0; i < horizontalBoltCount; i += 1) {
+                const ratio = (i + 1) / (horizontalBoltCount + 1);
+                const delayMs = 60 + (i * 96) + Math.round(rand(0, 64));
+                setTimeout(() => {
+                    if (canvas.parentElement !== cloudLightningEl || !this.tribulation?.active) return;
+                    const fromLeft = Math.random() > 0.5;
+                    drawLightningPass({
+                        lineWidth: Math.max(1.1, 1.5 + (depthRatio * 0.55)),
+                        shadowBlur: 6 + (strikePower * 0.65),
+                        strokeStyle: 'rgba(193, 235, 255, 0.84)',
+                        startX: cloudLeft + (cloudRect.width * ratio) + rand(-26, 26),
+                        startY: (cloudRect.top - wrapRect.top) + (cloudRect.height * rand(0.28, 0.62)),
+                        angle: fromLeft ? rand(-16, 16) : rand(164, 196),
+                        length: cloudRect.width * rand(0.18, 0.32),
+                        branchChance: 0.05,
+                        maxDepth: 1,
+                        maxTotalBranches: 4,
+                        spreadOverride: 4.2,
+                        speedOverride: speedPx * 0.78
+                    });
+                }, delayMs);
+            }
+
+            const fadeStartMs = 180;
             const fadeDurationMs = 360;
             setTimeout(() => {
                 const fadeStartedAt = performance.now();
@@ -2682,32 +2751,6 @@ Object.assign(Input, {
             }, 720);
         };
 
-        const spawnPreStrikeBolts = (strikeIndex, strikePower) => {
-            if (!cloudWrapEl) return;
-            const preStrikeCount = Math.min(7, 2 + Math.floor(strikePower * 0.65));
-            const preStrikeVariants = ['tribulation-prestrike-bolt--forked', 'tribulation-prestrike-bolt--needle', ''];
-
-            for (let i = 0; i < preStrikeCount; i += 1) {
-                const preStrikeBolt = document.createElement('div');
-                preStrikeBolt.className = 'tribulation-prestrike-bolt';
-                const variant = preStrikeVariants[(strikeIndex + i) % preStrikeVariants.length];
-                if (variant) preStrikeBolt.classList.add(variant);
-                const direction = (i + strikeIndex) % 2 === 0 ? 1 : -1;
-                const baseOffset = 82 + (i * 26);
-                const randomOffset = Math.random() * 34;
-                const horizontalOffset = direction * (baseOffset + randomOffset);
-                const rotateDeg = direction * (6 + Math.random() * (5 + strikePower));
-                const preStrikeScale = (0.78 + Math.random() * 0.58).toFixed(2);
-                preStrikeBolt.style.setProperty('--prestrike-x', `${horizontalOffset}px`);
-                preStrikeBolt.style.setProperty('--prestrike-rot', `${rotateDeg}deg`);
-                preStrikeBolt.style.setProperty('--prestrike-scale', preStrikeScale);
-                preStrikeBolt.style.animationDelay = `${i * 0.026}s`;
-                cloudWrapEl.appendChild(preStrikeBolt);
-                requestAnimationFrame(() => preStrikeBolt.classList.add('is-striking'));
-                setTimeout(() => preStrikeBolt.remove(), 520);
-            }
-        };
-
         const performStrike = () => {
             if (!this.tribulation.active) return;
 
@@ -2717,25 +2760,20 @@ Object.assign(Input, {
                 : 1;
             const strikePower = 1 + (progress * 6);
             cloudEl?.classList.remove('is-striking');
-            boltEl?.classList.remove('is-striking');
             contentEl?.classList.remove('is-striking');
             void cloudEl?.offsetWidth;
-            void boltEl?.offsetWidth;
             void contentEl?.offsetWidth;
             if (contentEl) {
                 contentEl.style.setProperty('--tribulation-strike-power', strikePower.toFixed(2));
             }
             cloudEl?.classList.add('is-striking');
             drawTribulationLightning(strikePower);
-            spawnPreStrikeBolts(this.tribulation.currentStrike, strikePower);
 
             const mainStrikeDelay = Math.round(130 + Math.min(140, strikePower * 13));
             setTimeout(() => {
                 if (!this.tribulation.active) return;
 
-                boltEl?.classList.add('is-striking');
                 contentEl?.classList.add('is-striking');
-                spawnBoltFragment(this.tribulation.currentStrike);
 
                 const damageRatio = damageMin + (Math.random() * (damageMax - damageMin));
                 const damage = Math.max(1, Math.round(this.tribulation.maxHp * damageRatio));

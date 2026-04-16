@@ -6026,6 +6026,14 @@ select.shop-control-input {
     pointer-events: none;
 }
 
+// Tắt hoàn toàn hệ tia sét DOM cũ, chỉ dùng canvas procedural.
+.tribulation-bolt,
+.tribulation-bolt-fragment,
+.tribulation-prestrike-bolt,
+.tribulation-cloud-bolt {
+    display: none !important;
+}
+
 .tribulation-ambient-mist {
     position: absolute;
     inset: 0;
