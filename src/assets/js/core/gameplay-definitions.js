@@ -114,7 +114,7 @@ const SWORD_UI_TEXT = Object.freeze({
         return `Bí pháp đang nằm trong túi, hãy lĩnh ngộ trước rồi mới khai triển khi đủ ${required} thanh.`;
     },
     noteRecovering(bonded, required) {
-        return `Đã kết duyên bí pháp nhưng chưa thể phục hồi vật dẫn, hiện có ${bonded}/${required} thanh.`;
+        return `Đã mua bí pháp nhưng chưa thể phục hồi vật dẫn, hiện có ${bonded}/${required} thanh.`;
     },
     noteCollecting(bonded, required, stockedSuffix = '') {
         return `Đã triển khai ${bonded}/${required} thanh${stockedSuffix}`;

@@ -62,7 +62,7 @@ Object.assign(Input, {
         }
 
         if (purchased) {
-            return 'Đã kết duyên nhưng còn chờ luyện hóa trong túi trữ vật.';
+            return 'Đã mua nhưng còn chờ luyện hóa trong túi trữ vật.';
         }
 
         return 'Chưa từng kết duyên với pháp bảo này.';
@@ -2016,7 +2016,7 @@ Object.assign(Input, {
             const progress = this.getSwordFormationProgress();
             if (progress.owned >= progress.required) {
                 showNotify(
-                    `Đã kết duyên đủ ${formatNumber(progress.required)} thanh Thanh Trúc Phong Vân Kiếm, không cần mua thêm.`,
+                    `Đã mua đủ ${formatNumber(progress.required)} thanh Thanh Trúc Phong Vân Kiếm, không cần mua thêm.`,
                     qualityConfig.color || '#66f0c2'
                 );
                 return false;

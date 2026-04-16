@@ -172,7 +172,7 @@ SkillsUI = {
         const summary = unlockedCount > 0
             ? `${formatNumber(activeArtifacts.length)} đang triển khai | ${formatNumber(unlockedCount)} đã luyện hóa | ${formatNumber(purchasedCount)} đã kết duyên`
             : purchasedCount > 0
-                ? `Đã kết duyên ${formatNumber(purchasedCount)} pháp bảo nhưng còn chờ luyện hóa`
+                ? `Đã mua ${formatNumber(purchasedCount)} pháp bảo nhưng còn chờ luyện hóa`
                 : 'Chưa có pháp bảo nào nhập túi trữ vật';
 
         return `
@@ -819,14 +819,14 @@ Object.assign(SkillsUI, {
                     ? 'Đã lĩnh ngộ'
                     : daiCanhItem
                         ? 'Chờ lĩnh ngộ'
-                        : 'Đã kết duyên',
+                        : 'Đã mua',
                 note: daiCanhLearned
                     ? (Input.canDeployDaiCanhKiemTran()
                         ? `${formatNumber(swordProgress.formationBonded)}/${formatNumber(swordProgress.required)} kiếm đủ chuẩn, có thể khai triển kiếm trận.`
                         : `Còn thiếu ${formatNumber(swordProgress.remaining)} thanh kiếm đủ độ bền để khai triển.`)
                     : daiCanhItem
                         ? `Bí pháp đã nằm trong túi. Hiện có ${formatNumber(swordProgress.usableBonded)}/${formatNumber(swordProgress.required)} thanh kiếm sẵn sàng.`
-                        : `Đã kết duyên nhưng chưa lĩnh ngộ. Hiện có ${formatNumber(swordProgress.usableBonded)} thanh kiếm đủ độ bền.`,
+                        : `Đã mua nhưng chưa lĩnh ngộ. Hiện có ${formatNumber(swordProgress.usableBonded)} thanh kiếm đủ độ bền.`,
                 modeKey: 'SWORD',
                 buttonLabel: daiCanhLearned ? (Input.attackMode === 'SWORD' ? 'Thu hồi' : 'Khai triển') : 'Lĩnh ngộ',
                 buttonDisabled: daiCanhLearned ? !Input.canDeployDaiCanhKiemTran() : !daiCanhItem,
@@ -848,7 +848,7 @@ Object.assign(SkillsUI, {
                     ? 'Đã lĩnh ngộ'
                     : thanhLinhItem
                         ? 'Chờ lĩnh ngộ'
-                        : 'Đã kết duyên',
+                        : 'Đã mua',
                 note: thanhLinhLearned
                     ? `Thần thức hiện tại ${formatNumber(swordProgress.consciousness)}. Có thể giữ tối đa ${formatNumber(swordProgress.capacity)} thanh kiếm hộ thân.`
                     : `Chưa lĩnh ngộ nên chỉ có thể dùng ${formatNumber(Math.max(1, Math.floor(Number(CONFIG.SWORD?.CONTROL?.WITHOUT_SECRET_ART) || 1)))} thanh kiếm đứng hộ thân.`,
@@ -873,7 +873,7 @@ Object.assign(SkillsUI, {
                     ? 'Đã lĩnh ngộ'
                     : khuTrungItem
                         ? 'Chờ lĩnh ngộ'
-                        : 'Đã kết duyên',
+                        : 'Đã mua',
                 note: khuTrungLearned
                     ? (combatReadyCount > 0
                         ? `${formatNumber(combatReadyCount)} linh trùng xuất trận${reservedCount > 0 ? ` | ${formatNumber(reservedCount)} đang dưỡng đàn` : ''}`
@@ -905,7 +905,7 @@ Object.assign(SkillsUI, {
                 active: false,
                 ready: canLamLearned,
                 accent: CONFIG.SECRET_ARTS?.CAN_LAM_BANG_DIEM?.color || '#69d9ff',
-                statusLabel: canLamLearned ? 'Đã lĩnh ngộ' : canLamItem ? 'Chờ lĩnh ngộ' : 'Đã kết duyên',
+                statusLabel: canLamLearned ? 'Đã lĩnh ngộ' : canLamItem ? 'Chờ lĩnh ngộ' : 'Đã mua',
                 note: canLamLearned
                     ? 'Kích hoạt để truy kích mục tiêu gần nhất, đóng băng thiêu đốt rồi tan rã khi sinh lực cạn.'
                     : 'Cần lĩnh ngộ bí pháp trong túi trước khi có thể thi triển.',
@@ -1202,7 +1202,7 @@ Object.assign(SkillsUI, {
                 ? 'Đang triển khai'
                 : artifact.unlocked
                     ? 'Đã luyện hóa'
-                    : 'Đã kết duyên';
+                    : 'Đã mua';
 
             cards.push(`
                 <article class="attack-skill-card ${artifact.active ? 'is-active' : ''} ${!artifact.unlocked ? 'is-disabled' : ''}" style="--skill-accent:${artifact.accent}">
