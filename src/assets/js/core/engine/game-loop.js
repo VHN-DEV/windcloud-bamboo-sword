@@ -488,7 +488,7 @@ function animate() {
     ctx.save();
     ctx.translate(width / 2, height / 2);
     ctx.scale(Camera.currentZoom, Camera.currentZoom);
-    ctx.translate(-width / 2, -height / 2);
+    ctx.translate(-Camera.centerX, -Camera.centerY);
 
     starField.draw(ctx, scaleFactor);
 

@@ -1,13 +1,57 @@
 const Camera = {
     currentZoom: 1,
     targetZoom: 1,
+    centerX: window.innerWidth / 2,
+    centerY: window.innerHeight / 2,
+    zoomAnchorScreenX: null,
+    zoomAnchorScreenY: null,
+    zoomAnchorWorldX: null,
+    zoomAnchorWorldY: null,
     
     // Cần biến width, height từ hệ thống để tính toán chính xác
     update() {
+        const previousZoom = this.currentZoom;
         this.currentZoom += (this.targetZoom - this.currentZoom) * CONFIG.ZOOM.SMOOTH;
+
+        // Giữ điểm neo (vị trí con trỏ/ngón tay) đứng yên trên màn hình khi zoom
+        if (
+            this.zoomAnchorScreenX !== null &&
+            this.zoomAnchorScreenY !== null &&
+            this.zoomAnchorWorldX !== null &&
+            this.zoomAnchorWorldY !== null &&
+            Math.abs(this.currentZoom - previousZoom) > 0.0001
+        ) {
+            const screenCenterX = window.innerWidth / 2;
+            const screenCenterY = window.innerHeight / 2;
+
+            this.centerX = this.zoomAnchorWorldX - (this.zoomAnchorScreenX - screenCenterX) / this.currentZoom;
+            this.centerY = this.zoomAnchorWorldY - (this.zoomAnchorScreenY - screenCenterY) / this.currentZoom;
+        }
+
+        if (Math.abs(this.targetZoom - this.currentZoom) < 0.0001) {
+            this.currentZoom = this.targetZoom;
+            this.clearZoomAnchor();
+        }
     },
 
-    adjustZoom(amount) {
+    clearZoomAnchor() {
+        this.zoomAnchorScreenX = null;
+        this.zoomAnchorScreenY = null;
+        this.zoomAnchorWorldX = null;
+        this.zoomAnchorWorldY = null;
+    },
+
+    setZoomAnchor(screenX, screenY) {
+        this.zoomAnchorScreenX = screenX;
+        this.zoomAnchorScreenY = screenY;
+        const worldPosition = this.screenToWorld(screenX, screenY);
+        this.zoomAnchorWorldX = worldPosition.x;
+        this.zoomAnchorWorldY = worldPosition.y;
+    },
+
+    adjustZoom(amount, screenX = window.innerWidth / 2, screenY = window.innerHeight / 2) {
+        if (!Number.isFinite(amount) || amount === 0) return;
+        this.setZoomAnchor(screenX, screenY);
         this.targetZoom = Math.max(CONFIG.ZOOM.MIN, Math.min(CONFIG.ZOOM.MAX, this.targetZoom + amount));
     },
 
@@ -16,13 +60,12 @@ const Camera = {
      * Dựa trên điểm trung tâm của canvas và mức độ Zoom hiện tại
      */
     screenToWorld(screenX, screenY) {
-        // width và height được lấy từ biến global trong main script
         const centerX = window.innerWidth / 2;
         const centerY = window.innerHeight / 2;
         
         return {
-            x: (screenX - centerX) / this.currentZoom + centerX,
-            y: (screenY - centerY) / this.currentZoom + centerY
+            x: (screenX - centerX) / this.currentZoom + this.centerX,
+            y: (screenY - centerY) / this.currentZoom + this.centerY
         };
     }
 };

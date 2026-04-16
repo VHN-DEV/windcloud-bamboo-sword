@@ -21,7 +21,8 @@ window.addEventListener('pointerdown', e => Input.handleDown(e));
 window.addEventListener('pointerup', e => Input.handleUp(e));
 window.addEventListener('pointercancel', e => Input.handleUp(e));
 window.addEventListener('wheel', e => {
-    Camera.adjustZoom(-e.deltaY * CONFIG.ZOOM.SENSITIVITY);
+    e.preventDefault();
+    Camera.adjustZoom(-e.deltaY * CONFIG.ZOOM.SENSITIVITY, e.clientX, e.clientY);
 }, { passive: false });
 
 window.addEventListener('keydown', e => {
@@ -61,7 +62,9 @@ window.addEventListener('touchmove', e => {
             e.touches[0].clientY - e.touches[1].clientY
         );
         const delta = (currentDist - Input.initialPinchDist) * 0.01;
-        Camera.adjustZoom(delta);
+        const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        Camera.adjustZoom(delta, centerX, centerY);
         Input.initialPinchDist = currentDist;
         return;
     }
@@ -85,4 +88,3 @@ window.addEventListener('touchcancel', () => {
     Input.initialPinchDist = 0;
     Input.pinchZoomActive = false;
 }, { passive: false });
-
