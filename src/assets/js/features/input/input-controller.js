@@ -21,6 +21,15 @@ window.addEventListener('pointerdown', e => Input.handleDown(e));
 window.addEventListener('pointerup', e => Input.handleUp(e));
 window.addEventListener('pointercancel', e => Input.handleUp(e));
 window.addEventListener('wheel', e => {
+    const hitTarget = typeof Input.getTouchHitTarget === 'function'
+        ? Input.getTouchHitTarget(e.target, e.clientX, e.clientY)
+        : e.target;
+
+    // Ưu tiên cuộn nội dung popup/UI, không ép zoom khi con trỏ đang ở vùng giao diện.
+    if (typeof Input.isUiInteractionTarget === 'function' && Input.isUiInteractionTarget(hitTarget)) {
+        return;
+    }
+
     e.preventDefault();
     Camera.adjustZoom(-e.deltaY * CONFIG.ZOOM.SENSITIVITY, e.clientX, e.clientY);
 }, { passive: false });
