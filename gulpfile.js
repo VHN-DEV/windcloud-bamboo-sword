@@ -47,7 +47,10 @@ gulp.task('build-js', function () {
     'assets/js/input/input-controller.js',
     'assets/js/core/input-and-sword-overrides.js',
     'assets/js/core/game-loop.js',
-    'assets/js/thunder-bamboo-system.js'
+    'assets/js/thunder-bamboo-system.js',
+    'assets/js/libs/three/three.min.js',
+    'assets/js/libs/three/OrbitControls.js',
+    'assets/js/libs/seedrandom/seedrandom.min.js',
   ])
     .pipe(concat('scripts.js'))
     .pipe(terser())
