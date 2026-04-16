@@ -54,6 +54,9 @@ class Enemy {
         this.lastAttackAt = 0;
         this.proactiveAggroUntil = 0;
         this.nextProactiveAggroRollAt = 0;
+        this.devourStacks = 0;
+        this.nextDevourCheckAt = 0;
+        this.lastDevourAt = 0;
 
         // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
         const playerRank = Input.rankIndex || 0;
@@ -129,6 +132,81 @@ class Enemy {
 
         this.dodgeChance = CONFIG.ENEMY.BASE_DODGE_CHANCE + (this.isElite ? CONFIG.ENEMY.ELITE_DODGE_BONUS : 0);
         // Có thể cộng thêm tỉ lệ dựa trên chênh lệch cảnh giới nếu muốn
+    }
+
+    getRankIndex() {
+        return CONFIG.CULTIVATION.RANKS.indexOf(this.rankData);
+    }
+
+    canDevourTarget(target) {
+        if (!target || target === this || !target.rankData || target.hp <= 0) return false;
+
+        const devourCfg = CONFIG.ENEMY?.DEVOUR || {};
+        const selfRankIndex = this.getRankIndex();
+        const targetRankIndex = CONFIG.CULTIVATION.RANKS.indexOf(target.rankData);
+        if (selfRankIndex < 0 || targetRankIndex < 0) return false;
+
+        const rankDiff = selfRankIndex - targetRankIndex;
+        if (rankDiff < Math.max(1, Math.floor(devourCfg.MIN_RANK_DIFF || 1))) return false;
+
+        const distance = Math.hypot(this.x - target.x, this.y - target.y);
+        const rangeFactor = Math.max(1.2, Number(devourCfg.RANGE_FACTOR) || 2);
+        const devourRange = Math.max(18, (this.r + target.r) * rangeFactor);
+        return distance <= devourRange;
+    }
+
+    applyDevourGrowth(target) {
+        const devourCfg = CONFIG.ENEMY?.DEVOUR || {};
+        const maxStacks = Math.max(1, Math.floor(devourCfg.MAX_STACKS || 3));
+        if (this.devourStacks >= maxStacks) return false;
+
+        this.devourStacks += 1;
+        this.lastDevourAt = performance.now();
+
+        const hpGainRatio = Math.max(0.02, Number(devourCfg.HP_GAIN_RATIO) || 0.12);
+        const damageGainRatio = Math.max(0.01, Number(devourCfg.DAMAGE_GAIN_RATIO) || 0.05);
+        const speedGainRatio = Math.max(0.005, Number(devourCfg.SPEED_GAIN_RATIO) || 0.03);
+        const sizeGainRatio = Math.max(0.005, Number(devourCfg.SIZE_GAIN_RATIO) || 0.02);
+
+        const bonusHp = Math.max(1, Math.round((target.maxHp || target.hp || 1) * hpGainRatio));
+        this.maxHp += bonusHp;
+        this.hp = Math.min(this.maxHp, this.hp + bonusHp);
+        this.damage = Math.max(1, Math.ceil(this.damage * (1 + damageGainRatio)));
+        this.wanderSpeed *= (1 + speedGainRatio);
+        this.r *= (1 + sizeGainRatio);
+
+        if (this.hasShield && this.maxShieldHp > 0) {
+            this.maxShieldHp = Math.ceil(this.maxShieldHp * (1 + hpGainRatio * 0.75));
+            this.shieldHp = Math.min(this.maxShieldHp, Math.ceil((this.shieldHp || 0) + (bonusHp * 0.35)));
+        }
+
+        return true;
+    }
+
+    tryDevourNearbyEnemy() {
+        const devourCfg = CONFIG.ENEMY?.DEVOUR || {};
+        if (!devourCfg.ENABLED) return;
+
+        const now = performance.now();
+        if (now < (this.nextDevourCheckAt || 0)) return;
+        this.nextDevourCheckAt = now + Math.max(450, Number(devourCfg.CHECK_INTERVAL_MS) || 1200);
+
+        const maxStacks = Math.max(1, Math.floor(devourCfg.MAX_STACKS || 3));
+        if (this.devourStacks >= maxStacks) return;
+
+        const baseChance = Math.max(0, Math.min(1, Number(devourCfg.BASE_CHANCE) || 0));
+        const eliteBonusChance = this.isElite ? Math.max(0, Number(devourCfg.ELITE_BONUS_CHANCE) || 0) : 0;
+        if (Math.random() >= Math.min(1, baseChance + eliteBonusChance)) return;
+
+        const candidates = enemies.filter(enemy => this.canDevourTarget(enemy));
+        if (!candidates.length) return;
+
+        candidates.sort((a, b) => (a.hp / Math.max(1, a.maxHp)) - (b.hp / Math.max(1, b.maxHp)));
+        const target = candidates[0];
+        if (!this.applyDevourGrowth(target)) return;
+
+        target.respawn();
+        showNotify("Quái mạnh thôn phệ đồng loại, khí tức tăng vọt!", this.rankData?.lightColor || "#ff9966");
     }
 
     getRandomRankById(minId, maxId) {
@@ -549,6 +627,7 @@ class Enemy {
         // 1. CẬP NHẬT LOGIC: Chuyển động và Hồi khiên
         this.updateMovement(scaleFactor);
         this.updateShieldRecovery();
+        this.tryDevourNearbyEnemy();
         
         // 2. TÍNH TOÁN HIỆU ỨNG SINH ĐỘNG
         const now = Date.now();

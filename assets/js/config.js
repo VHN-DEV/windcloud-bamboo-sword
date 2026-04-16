@@ -296,6 +296,19 @@ const CONFIG = {
             ROLL_INTERVAL_MS: 900,                  // Khoảng thời gian giữa mỗi lần "quyết định" có chủ động hay không
             AGGRO_WINDOW_MS: 2800                   // Sau khi đã chủ động thì duy trì đà tấn công trong khoảng này
         },
+        DEVOUR: {
+            ENABLED: true,                          // Cho phép quái mạnh thôn phệ quái yếu hơn trong PvE
+            CHECK_INTERVAL_MS: 1400,                // Chu kỳ kiểm tra có thôn phệ hay không
+            RANGE_FACTOR: 2.2,                      // Bán kính thôn phệ theo kích thước quái
+            MIN_RANK_DIFF: 2,                       // Cần hơn ít nhất 2 cấp cảnh giới mới thôn phệ được
+            BASE_CHANCE: 0.2,                       // Tỉ lệ cơ bản khi đã đủ điều kiện
+            ELITE_BONUS_CHANCE: 0.22,               // Tinh anh dễ thôn phệ hơn
+            HP_GAIN_RATIO: 0.18,                    // Nhận % máu tối đa của mục tiêu
+            DAMAGE_GAIN_RATIO: 0.08,                // Tăng % sát thương mỗi lần thôn phệ
+            SPEED_GAIN_RATIO: 0.04,                 // Tăng % tốc độ di chuyển mỗi lần thôn phệ
+            SIZE_GAIN_RATIO: 0.03,                  // Tăng kích thước hiển thị mỗi lần thôn phệ
+            MAX_STACKS: 5                           // Giới hạn cộng dồn để cân bằng PvE
+        },
         DEBRIS: {                                   // Mảnh vỡ khi quái chết
             COUNT: 10,                              // Số lượng mảnh bắn ra
             SPEED: { MIN: 4, MAX: 12 },             // Tốc độ bắn mảnh vỡ
