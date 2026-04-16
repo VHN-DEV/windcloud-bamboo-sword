@@ -1624,9 +1624,10 @@ Object.assign(Input, {
             );
         }
 
+        // Thần thức là tài nguyên tiêu hao để trang bị pháp bảo.
+        // Với Thanh Trúc kiếm, mỗi thanh chiếm 1 điểm thần thức.
         return Math.max(1, Math.min(
             getConfiguredSwordCount(),
-            Math.max(1, Math.floor(Number(this.getSwordControlConfig().MAX_CONSCIOUSNESS_CONTROL) || getConfiguredSwordCount())),
             this.getSwordConsciousnessStat()
         ));
     },
