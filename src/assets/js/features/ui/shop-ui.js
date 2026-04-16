@@ -271,7 +271,7 @@ ShopUI.getActionLabel = function (item, options = {}) {
     }
 
     if (item.category === 'SWORD_ART' || item.category === 'FLAME_ART') {
-        return isOwnedUnique ? 'Đã kết duyên' : (canStoreOrUpgrade ? 'Thỉnh bảo' : 'Túi trữ vật đã mãn');
+        return isOwnedUnique ? 'Đã mua' : (canStoreOrUpgrade ? 'Mua' : 'Túi trữ vật đã mãn');
     }
 
     if (item.category === 'ARTIFACT') {
