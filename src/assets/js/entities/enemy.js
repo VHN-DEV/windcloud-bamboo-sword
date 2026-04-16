@@ -1,4 +1,10 @@
 class Enemy {
+    static targetCapCache = {
+        key: null,
+        id: 1,
+        index: 0
+    };
+
     constructor() {
         this.particles = [];
         this.angle = Math.random() * Math.PI * 2; // Hướng di chuyển hiện tại
@@ -9,19 +15,38 @@ class Enemy {
     }
 
     getTargetRankCapId() {
-        const daiLaRealm = CONFIG.CULTIVATION?.MAJOR_REALMS?.find(realm => realm.key === 'DAI_LA');
-        if (daiLaRealm?.endId) return daiLaRealm.endId;
+        const realms = CONFIG.CULTIVATION?.MAJOR_REALMS || [];
+        const ranks = CONFIG.CULTIVATION?.RANKS || [];
+        const maxSpawnId = CONFIG.ENEMY?.SPAWN_RANK_RANGE?.MAX_ID || '';
+        const cacheKey = `${realms.length}|${ranks.length}|${maxSpawnId}`;
 
-        const daoToRealm = CONFIG.CULTIVATION?.MAJOR_REALMS?.find(realm => realm.key === 'DAO_TO');
-        if (daoToRealm?.startId) return Math.max(1, daoToRealm.startId - 1);
+        if (Enemy.targetCapCache.key === cacheKey) {
+            return Enemy.targetCapCache.id;
+        }
 
-        return CONFIG.ENEMY?.SPAWN_RANK_RANGE?.MAX_ID || CONFIG.CULTIVATION.RANKS[CONFIG.CULTIVATION.RANKS.length - 1]?.id || 1;
+        const daiLaRealm = realms.find(realm => realm.key === 'DAI_LA');
+        let capId = daiLaRealm?.endId;
+
+        if (!capId) {
+            const daoToRealm = realms.find(realm => realm.key === 'DAO_TO');
+            capId = daoToRealm?.startId ? Math.max(1, daoToRealm.startId - 1) : null;
+        }
+
+        if (!capId) {
+            capId = maxSpawnId || ranks[ranks.length - 1]?.id || 1;
+        }
+
+        const capIndex = ranks.findIndex(rank => rank.id === capId);
+        Enemy.targetCapCache.key = cacheKey;
+        Enemy.targetCapCache.id = capId;
+        Enemy.targetCapCache.index = capIndex >= 0 ? capIndex : Math.max(0, ranks.length - 1);
+
+        return Enemy.targetCapCache.id;
     }
 
     getTargetRankCapIndex() {
-        const capId = this.getTargetRankCapId();
-        const capIndex = CONFIG.CULTIVATION.RANKS.findIndex(rank => rank.id === capId);
-        return capIndex >= 0 ? capIndex : Math.max(0, CONFIG.CULTIVATION.RANKS.length - 1);
+        this.getTargetRankCapId();
+        return Enemy.targetCapCache.index;
     }
 
     respawn() {
@@ -62,14 +87,23 @@ class Enemy {
 
         // Đếm xem trong mảng enemies hiện tại có bao nhiêu con quái mà người chơi đánh được
         // Lưu ý: Loại trừ chính bản thân con quái đang respawn này ra khỏi danh sách đếm
-        const killableEnemies = enemies.filter(e => {
-            if (e === this || !e.rankData) return false;
-            const eRankIndex = CONFIG.CULTIVATION.RANKS.findIndex(r => r.id === e.rankData.id);
-            return (eRankIndex - playerRank) < diffLimit;
-        });
+        let killableCount = 0;
+        for (let i = 0; i < enemies.length; i++) {
+            const e = enemies[i];
+            if (e === this || !e.rankData) continue;
+
+            const eRankIndex = Number.isInteger(e.rankIndex)
+                ? e.rankIndex
+                : CONFIG.CULTIVATION.RANKS.findIndex(r => r.id === e.rankData.id);
+
+            if (eRankIndex >= 0 && (eRankIndex - playerRank) < diffLimit) {
+                killableCount++;
+                if (killableCount >= 2) break;
+            }
+        }
 
         // Nếu số lượng quái đánh được ít hơn 2, con này BẮT BUỘC phải là quái vừa sức
-        const forceEasy = killableEnemies.length < 2;
+        const forceEasy = killableCount < 2;
 
         this.isElite = Math.random() < CONFIG.ENEMY.ELITE_CHANCE;
         let enemyRankIndex;
@@ -97,6 +131,7 @@ class Enemy {
 
         // 2. CẬP NHẬT DỮ LIỆU RANK
         this.rankData = CONFIG.CULTIVATION.RANKS[enemyRankIndex];
+        this.rankIndex = enemyRankIndex;
         this.rankName = (this.isElite ? "★ TINH ANH ★ " : "") + this.rankData.name;
         this.colors = [this.rankData.lightColor, this.rankData.color];
 
@@ -135,18 +170,25 @@ class Enemy {
         const ranks = CONFIG.CULTIVATION.RANKS;
         const cappedMaxId = Math.min(maxId, this.getTargetRankCapId());
 
-        // Lọc các rank nằm trong khoảng id
-        const candidates = ranks.filter(
-            r => r.id >= minId && r.id <= cappedMaxId
-        );
+        let chosenRank = null;
+        let candidateCount = 0;
 
-        if (candidates.length === 0) {
+        for (let i = 0; i < ranks.length; i++) {
+            const rank = ranks[i];
+            if (rank.id < minId || rank.id > cappedMaxId) continue;
+
+            candidateCount++;
+            if (Math.random() < (1 / candidateCount)) {
+                chosenRank = rank;
+            }
+        }
+
+        if (!chosenRank) {
             console.warn("Không tìm thấy cảnh giới trong khoảng id:", minId, cappedMaxId);
             return null;
         }
 
-        // Random 1 rank trong danh sách hợp lệ
-        return candidates[Math.floor(Math.random() * candidates.length)];
+        return chosenRank;
     }
 
     updateMovement(scaleFactor) {

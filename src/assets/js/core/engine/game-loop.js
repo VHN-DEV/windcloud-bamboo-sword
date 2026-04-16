@@ -133,7 +133,7 @@ const startAttack = (e) => {
     }
 
     // 1. Kiểm tra xem còn thanh kiếm nào còn sống (hp > 0) không
-    const aliveSwords = swords.filter(s => !s.isDead).length;
+    const hasAliveSword = swords.some(s => !s.isDead);
 
     // 2. Nếu đang dùng Khu Trùng Thuật thì chỉ cần còn mana
     if (Input.isInsectSwarmActive() && Input.mana <= 0) {
@@ -142,7 +142,7 @@ const startAttack = (e) => {
     }
 
     // 3. Nếu mana = 0 VÀ không còn kiếm nào sống
-    if (!Input.isInsectSwarmActive() && Input.mana <= 0 && aliveSwords === 0) {
+    if (!Input.isInsectSwarmActive() && Input.mana <= 0 && !hasAliveSword) {
         Input.triggerManaShake();
         return false;
     }
