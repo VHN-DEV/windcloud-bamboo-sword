@@ -1597,10 +1597,15 @@ Object.assign(Input, {
 
     getSwordConsciousnessStat() {
         const currentRank = this.getCurrentRank();
-        const rankConsciousness = Math.floor(Number(currentRank?.consciousness) || 0);
-        if (rankConsciousness > 0) return rankConsciousness;
+        const rankConsciousness = Number(currentRank?.consciousness);
+        if (Number.isFinite(rankConsciousness)) {
+            return Math.max(1, Math.floor(rankConsciousness));
+        }
+        if (rankConsciousness === Number.POSITIVE_INFINITY) {
+            return Number.POSITIVE_INFINITY;
+        }
 
-        return Math.max(1, this.rankIndex + 1);
+        return 1;
     },
 
     getSwordConsciousnessLabel() {
