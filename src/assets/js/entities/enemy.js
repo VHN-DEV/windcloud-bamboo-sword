@@ -549,6 +549,25 @@ class Enemy {
         // 1. CẬP NHẬT LOGIC: Chuyển động và Hồi khiên
         this.updateMovement(scaleFactor);
         this.updateShieldRecovery();
+
+        const zoom = Math.max(0.001, Camera.currentZoom || 1);
+        const visibleHalfWidth = window.innerWidth / (2 * zoom);
+        const visibleHalfHeight = window.innerHeight / (2 * zoom);
+        const visibleLeft = Camera.centerX - visibleHalfWidth;
+        const visibleRight = Camera.centerX + visibleHalfWidth;
+        const visibleTop = Camera.centerY - visibleHalfHeight;
+        const visibleBottom = Camera.centerY + visibleHalfHeight;
+        const margin = Math.max(140, this.r * 5);
+
+        // Chỉ vẽ các quái trong vùng nhìn thấy để giảm lag khi zoom.
+        if (
+            this.x + margin < visibleLeft ||
+            this.x - margin > visibleRight ||
+            this.y + margin < visibleTop ||
+            this.y - margin > visibleBottom
+        ) {
+            return;
+        }
         
         // 2. TÍNH TOÁN HIỆU ỨNG SINH ĐỘNG
         const now = Date.now();

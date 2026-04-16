@@ -24,8 +24,12 @@ class StarField {
         this.camera = new THREE.PerspectiveCamera(60, width / height, 1, 3000);
         this.camera.position.set(0, 150, 350);
         this.hasOrbitControls = Boolean(window.THREE?.OrbitControls);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+        this.renderer = new THREE.WebGLRenderer({
+            antialias: false,
+            alpha: true,
+            powerPreference: 'high-performance'
+        });
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
         this.renderer.setSize(width, height);
         this.renderer.domElement.id = 'space-bg';
         document.body.prepend(this.renderer.domElement);

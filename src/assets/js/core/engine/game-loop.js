@@ -578,6 +578,14 @@ function animate() {
     Input.drawSingleSwordUltimateChargeIndicator(ctx, scaleFactor);
     renderCursor();
 
+    const zoom = Math.max(0.001, Camera.currentZoom || 1);
+    const visibleHalfWidth = window.innerWidth / (2 * zoom);
+    const visibleHalfHeight = window.innerHeight / (2 * zoom);
+    const visibleLeft = Camera.centerX - visibleHalfWidth;
+    const visibleRight = Camera.centerX + visibleHalfWidth;
+    const visibleTop = Camera.centerY - visibleHalfHeight;
+    const visibleBottom = Camera.centerY + visibleHalfHeight;
+
     // Vẽ và cập nhật hạt hiệu ứng
     let nextParticleIndex = 0;
     for (let i = 0; i < visualParticles.length; i++) {
@@ -611,6 +619,17 @@ function animate() {
 
         p.life -= p.decay ?? 0.02;
         if (p.life <= 0) {
+            continue;
+        }
+
+        const particleRadius = Math.max(8, (p.size || 0) + (p.radius || 0) + (p.length || 0));
+        if (
+            p.x + particleRadius < visibleLeft ||
+            p.x - particleRadius > visibleRight ||
+            p.y + particleRadius < visibleTop ||
+            p.y - particleRadius > visibleBottom
+        ) {
+            visualParticles[nextParticleIndex++] = p;
             continue;
         }
 
