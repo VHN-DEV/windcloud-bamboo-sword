@@ -80,28 +80,10 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-function normalizeImageAssetName(imageName) {
-    const normalizedPath = String(imageName || '')
-        .trim()
-        .replace(/\\/g, '/')
-        .replace(/[?#].*$/, '');
-
-    if (!normalizedPath) return '';
-
-    const imageRootMarker = '/assets/images/';
-    const markerIndex = normalizedPath.indexOf(imageRootMarker);
-    if (markerIndex !== -1) {
-        return normalizedPath.slice(markerIndex + imageRootMarker.length);
-    }
-
-    return normalizedPath
-        .replace(/^\.?\/?(?:src\/)?assets\/images\//, '')
-        .replace(/^\.?\/?public\/assets\/images\//, '')
-        .replace(/^\.?\/+/, '');
-}
-
 function resolveImagePathFromPublic(imageName) {
-    const normalizedImageName = normalizeImageAssetName(imageName);
+    const normalizedImageName = typeof normalizeImageAssetName === 'function'
+        ? normalizeImageAssetName(imageName)
+        : String(imageName || '').trim();
     if (!normalizedImageName) {
         return {
             primarySrc: '',

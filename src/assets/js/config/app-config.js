@@ -34,32 +34,57 @@ function createLabeledQualityConfig(definitions) {
     return createTieredConfig(definitions, QUALITY_META_BASE);
 }
 
+function normalizeImageAssetName(imageName) {
+    const normalizedPath = String(imageName || '')
+        .trim()
+        .replace(/\\/g, '/')
+        .replace(/[?#].*$/, '');
+
+    if (!normalizedPath) return '';
+
+    const imageRootMarker = '/assets/images/';
+    const markerIndex = normalizedPath.indexOf(imageRootMarker);
+    if (markerIndex !== -1) {
+        return normalizedPath.slice(markerIndex + imageRootMarker.length);
+    }
+
+    return normalizedPath
+        .replace(/^\.?\/?(?:src\/)?assets\/images\//, '')
+        .replace(/^\.?\/?public\/assets\/images\//, '')
+        .replace(/^\.?\/+/, '');
+}
+
+function imagePath(imageName) {
+    const normalizedName = normalizeImageAssetName(imageName);
+    return normalizedName ? `./assets/images/${normalizedName}` : '';
+}
+
 const IMAGE_PATHS = {
     UI: {
-        PROFILE_SWORD: "./assets/images/sword-light.svg"
+        PROFILE_SWORD: imagePath("sword-light.svg")
     },
     BAGS: {
-        STORAGE: "./assets/images/bag.svg",
-        TREASURE: "./assets/images/tui-tru-vat.svg"
+        STORAGE: imagePath("bag.svg"),
+        TREASURE: imagePath("tui-tru-vat.svg")
     },
     ARTIFACTS: {
-        CAN_LAM_BANG_DIEM: "./assets/images/artifacts/can-lam-bang-diem.svg",
-        CHUONG_THIEN_BINH: "./assets/images/artifacts/chuong-thien-binh.svg",
-        PHONG_LOI_SI: "./assets/images/artifacts/phong-loi-si.svg",
-        HUYET_SAC_PHI_PHONG: "./assets/images/artifacts/huyet-sac-phi-phong.svg",
-        HU_THIEN_DINH: "./assets/images/artifacts/hu-thien-dinh.svg"
+        CAN_LAM_BANG_DIEM: imagePath("artifacts/can-lam-bang-diem.svg"),
+        CHUONG_THIEN_BINH: imagePath("artifacts/chuong-thien-binh.svg"),
+        PHONG_LOI_SI: imagePath("artifacts/phong-loi-si.svg"),
+        HUYET_SAC_PHI_PHONG: imagePath("artifacts/huyet-sac-phi-phong.svg"),
+        HU_THIEN_DINH: imagePath("artifacts/hu-thien-dinh.svg")
     },
     ABERRATIONS: {
-        KIEN_THIEN_TINH: "./assets/images/aberrations/kien-thien-tinh.svg",
-        PHE_KIM_TRUNG: "./assets/images/aberrations/phe-kim-trung.svg",
-        PHI_THIEN_TU_VAN_HAT: "./assets/images/aberrations/phi-thien-tu-van-hac.svg",
-        HUYET_NGOC_TRI_CHU: "./assets/images/aberrations/huyet-ngoc-tri-chu.svg",
-        HUYEN_DIEM_NGA: "./assets/images/aberrations/huyen-diem-nga.svg",
-        THIET_HOA_NGHI: "./assets/images/aberrations/thiet-hoa-nghi.svg",
-        KIM_GIAP_HAT: "./assets/images/aberrations/kim-giap-hac.svg",
-        HUYET_THUC_NGHI: "./assets/images/aberrations/huyet-thuc-nghi.svg",
-        BANG_TAM: "./assets/images/aberrations/bang-tam.svg",
-        LUC_DUC_SUONG_CONG: "./assets/images/aberrations/luc-duc-suong-cong.svg"
+        KIEN_THIEN_TINH: imagePath("aberrations/kien-thien-tinh.svg"),
+        PHE_KIM_TRUNG: imagePath("aberrations/phe-kim-trung.svg"),
+        PHI_THIEN_TU_VAN_HAT: imagePath("aberrations/phi-thien-tu-van-hac.svg"),
+        HUYET_NGOC_TRI_CHU: imagePath("aberrations/huyet-ngoc-tri-chu.svg"),
+        HUYEN_DIEM_NGA: imagePath("aberrations/huyen-diem-nga.svg"),
+        THIET_HOA_NGHI: imagePath("aberrations/thiet-hoa-nghi.svg"),
+        KIM_GIAP_HAT: imagePath("aberrations/kim-giap-hac.svg"),
+        HUYET_THUC_NGHI: imagePath("aberrations/huyet-thuc-nghi.svg"),
+        BANG_TAM: imagePath("aberrations/bang-tam.svg"),
+        LUC_DUC_SUONG_CONG: imagePath("aberrations/luc-duc-suong-cong.svg")
     }
 };
 
@@ -308,47 +333,47 @@ const CONFIG = {
             ["#ff99ff", "#cc33cc"], ["#ffff99", "#cccc33"]
         ],
         ANIMALS: [
-            "./assets/images/animals/ammonite.svg",
-            "./assets/images/animals/angel-wings.svg",
-            "./assets/images/animals/angler-fish.svg",
-            "./assets/images/animals/angular-spider.svg",
-            "./assets/images/animals/animal-skull.svg",
-            "./assets/images/animals/ant.svg",
-            "./assets/images/animals/bear.svg",
-            "./assets/images/animals/bee.svg",
-            "./assets/images/animals/cat-kitty.svg",
-            "./assets/images/animals/cat.svg",
-            "./assets/images/animals/crab.svg",
-            "./assets/images/animals/crocodile.svg",
-            "./assets/images/animals/deer.svg",
-            "./assets/images/animals/double-dragon.svg",
-            "./assets/images/animals/dragon.svg",
-            "./assets/images/animals/elephant.svg",
-            "./assets/images/animals/fish-seafood.svg",
-            "./assets/images/animals/flying-dragon.svg",
-            "./assets/images/animals/fox.svg",
-            "./assets/images/animals/gorilla.svg",
-            "./assets/images/animals/hydra.svg",
-            "./assets/images/animals/jelly-fish.svg",
-            "./assets/images/animals/lion.svg",
-            "./assets/images/animals/maggot.svg",
-            "./assets/images/animals/minotaur.svg",
-            "./assets/images/animals/monkey.svg",
-            "./assets/images/animals/octopus.svg",
-            "./assets/images/animals/perana.svg",
-            "./assets/images/animals/rabbit.svg",
-            "./assets/images/animals/shark.svg",
-            "./assets/images/animals/snail-crawl.svg",
-            "./assets/images/animals/squid.svg",
-            "./assets/images/animals/squirrel.svg",
-            "./assets/images/animals/tapir.svg",
-            "./assets/images/animals/three-headed-dragon.svg",
-            "./assets/images/animals/tiger.svg",
-            "./assets/images/animals/turtle.svg",
-            "./assets/images/animals/whale-tail.svg",
-            "./assets/images/animals/whale.svg",
-            "./assets/images/animals/wolf.svg",
-        ],
+            "ammonite.svg",
+            "angel-wings.svg",
+            "angler-fish.svg",
+            "angular-spider.svg",
+            "animal-skull.svg",
+            "ant.svg",
+            "bear.svg",
+            "bee.svg",
+            "cat-kitty.svg",
+            "cat.svg",
+            "crab.svg",
+            "crocodile.svg",
+            "deer.svg",
+            "double-dragon.svg",
+            "dragon.svg",
+            "elephant.svg",
+            "fish-seafood.svg",
+            "flying-dragon.svg",
+            "fox.svg",
+            "gorilla.svg",
+            "hydra.svg",
+            "jelly-fish.svg",
+            "lion.svg",
+            "maggot.svg",
+            "minotaur.svg",
+            "monkey.svg",
+            "octopus.svg",
+            "perana.svg",
+            "rabbit.svg",
+            "shark.svg",
+            "snail-crawl.svg",
+            "squid.svg",
+            "squirrel.svg",
+            "tapir.svg",
+            "three-headed-dragon.svg",
+            "tiger.svg",
+            "turtle.svg",
+            "whale-tail.svg",
+            "whale.svg",
+            "wolf.svg",
+        ].map(fileName => imagePath(`animals/${fileName}`)),
         MATERIAL_DROPS: {
             "ammonite": { GIAP_XAC: 5.2, LINH_LAN: 1.4 },
             "angel-wings": { LINH_VU: 5.1, LINH_TY: 1.9, YEU_HUYET: 1.2 },
