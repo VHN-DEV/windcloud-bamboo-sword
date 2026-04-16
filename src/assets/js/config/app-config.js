@@ -1564,6 +1564,13 @@ CONFIG.ENEMY.MAX_SHIELD_CRACK_RINGS = 4; // Số lượng vòng nứt tối đa 
 // Thần thức nên đi theo từng cảnh giới trong RANKS.
 // Nếu rank chưa khai báo consciousness thủ công thì tự suy ra theo id/rankIndex để tương thích save cũ.
 CONFIG.CULTIVATION.RANKS = (CONFIG.CULTIVATION.RANKS || []).map((rank, index) => {
+    if (rank?.infiniteStats) {
+        return {
+            ...rank,
+            consciousness: Number.POSITIVE_INFINITY
+        };
+    }
+
     const fallbackConsciousness = Math.max(1, Math.floor(Number(rank?.id) || (index + 1)));
     const configuredConsciousness = Math.floor(Number(rank?.consciousness) || 0);
 
