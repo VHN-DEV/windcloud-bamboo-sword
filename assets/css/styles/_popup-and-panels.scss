@@ -6018,6 +6018,14 @@ select.shop-control-input {
     z-index: 3;
 }
 
+.tribulation-cloud-lightning-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
 .tribulation-ambient-mist {
     position: absolute;
     inset: 0;
