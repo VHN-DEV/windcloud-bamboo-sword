@@ -383,7 +383,7 @@ Object.assign(Input, {
 
     performSingleSwordTapStrike() {
         if (!Array.isArray(enemies) || !enemies.length) return false;
-        const attackRange = 140 * scaleFactor;
+        const attackRange = 102 * scaleFactor;
         const sourceX = Number.isFinite(this.x) ? this.x : guardCenter.x;
         const sourceY = Number.isFinite(this.y) ? this.y : guardCenter.y;
         let nearestEnemy = null;

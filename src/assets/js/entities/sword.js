@@ -723,16 +723,19 @@ class Sword {
             const desiredY = anchor.y + (Math.sin(orbitAngle) * orbitRadius);
             const toDesiredX = desiredX - this.x;
             const toDesiredY = desiredY - this.y;
+            const closeSlashFrameScale = clampNumber(frameComp, 0.85, 1.22);
+            const closeSlashVelocityDamping = Math.pow(0.52, closeSlashFrameScale);
+            const closeSlashSteerStrength = 0.2 * speedMult * closeSlashFrameScale;
 
-            this.vx = this.vx * Math.pow(0.42, frameComp) + toDesiredX * 0.22 * speedMult * frameComp;
-            this.vy = this.vy * Math.pow(0.42, frameComp) + toDesiredY * 0.22 * speedMult * frameComp;
-            this.x += this.vx * frameComp;
-            this.y += this.vy * frameComp;
+            this.vx = this.vx * closeSlashVelocityDamping + toDesiredX * closeSlashSteerStrength;
+            this.vy = this.vy * closeSlashVelocityDamping + toDesiredY * closeSlashSteerStrength;
+            this.x += this.vx;
+            this.y += this.vy;
             const desiredDrawAngle = Math.atan2(this.vy || toDesiredY, this.vx || toDesiredX) + Math.PI / 2;
             let drawDiff = desiredDrawAngle - this.drawAngle;
             while (drawDiff < -Math.PI) drawDiff += Math.PI * 2;
             while (drawDiff > Math.PI) drawDiff -= Math.PI * 2;
-            this.drawAngle += drawDiff * 0.32;
+            this.drawAngle += drawDiff * (0.28 + (0.05 * closeSlashFrameScale));
             this.pierceCount = 0;
 
             if (!canSlashTarget) {
