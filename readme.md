@@ -4,8 +4,8 @@ Demo game tu tiên hành động 2D viết bằng `HTML5 Canvas`, nơi người 
 
 ## ✦ Link dự án
 
-- Demo trực tuyến: [https://vhn-dev.github.io/thanh-truc-phong-van-kiem/](https://vhn-dev.github.io/thanh-truc-phong-van-kiem/)
-- Mã nguồn GitHub: [https://github.com/VHN-DEV/thanh-truc-phong-van-kiem](https://github.com/VHN-DEV/thanh-truc-phong-van-kiem)
+- Demo trực tuyến: [https://vhn-dev.github.io/windcloud-bamboo-sword/](https://vhn-dev.github.io/windcloud-bamboo-sword/)
+- Mã nguồn GitHub: [https://github.com/VHN-DEV/windcloud-bamboo-sword](https://github.com/VHN-DEV/windcloud-bamboo-sword)
 
 ---
 
@@ -85,7 +85,7 @@ Sau khi build, mở `public/index.html` bằng static server (hoặc deploy thư
 ## ✦ Cấu trúc dự án đầy đủ
 
 ```text
-thanh-truc-phong-van-kiem/
+windcloud-bamboo-sword/
 ├─ src/
 │  └─ assets/
 │     ├─ css/
