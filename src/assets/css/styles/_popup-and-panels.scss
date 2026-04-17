@@ -4257,6 +4257,177 @@ select.shop-control-input {
         }
     }
 
+    &--ngan-nam-hoang-tinh {
+        .material-art__piece--1 {
+            left: 14px;
+            top: 18px;
+            width: 36px;
+            height: 28px;
+            border-radius: 58% 42% 56% 44% / 52% 44% 56% 48%;
+            transform: rotate(-10deg);
+            background:
+                radial-gradient(circle at 28% 30%, rgba(255, 250, 208, 0.74), transparent 46%),
+                linear-gradient(160deg, color-mix(in srgb, #fff2a8 62%, var(--pill-accent)), color-mix(in srgb, #b8842a 48%, rgba(12, 18, 28, 0.92)));
+        }
+
+        .material-art__piece--2,
+        .material-art__piece--3 {
+            width: 18px;
+            height: 12px;
+            border-radius: 999px;
+            background: color-mix(in srgb, #ffe68f 56%, var(--pill-accent));
+        }
+
+        .material-art__piece--2 {
+            left: 10px;
+            top: 32px;
+            transform: rotate(-30deg);
+        }
+
+        .material-art__piece--3 {
+            right: 10px;
+            top: 18px;
+            transform: rotate(26deg);
+        }
+
+        .material-art__piece--4 {
+            left: 24px;
+            top: 10px;
+            width: 16px;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.28);
+        }
+    }
+
+    &--tuyet-ngoc-thao {
+        .material-art__piece--1 {
+            left: 30px;
+            top: 12px;
+            width: 8px;
+            height: 34px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, color-mix(in srgb, #efffff 68%, var(--pill-accent)), color-mix(in srgb, #75bfd0 54%, rgba(9, 16, 28, 0.92)));
+        }
+
+        .material-art__piece--2,
+        .material-art__piece--3,
+        .material-art__piece--4 {
+            width: 20px;
+            height: 14px;
+            border-radius: 68% 32% 62% 38% / 62% 38% 62% 38%;
+            background:
+                radial-gradient(circle at 22% 28%, rgba(255, 255, 255, 0.84), transparent 42%),
+                linear-gradient(160deg, color-mix(in srgb, #f3ffff 74%, var(--pill-accent)), color-mix(in srgb, #86d5e6 52%, rgba(9, 16, 28, 0.9)));
+        }
+
+        .material-art__piece--2 {
+            left: 12px;
+            top: 16px;
+            transform: rotate(-36deg);
+        }
+
+        .material-art__piece--3 {
+            right: 12px;
+            top: 14px;
+            transform: rotate(32deg);
+        }
+
+        .material-art__piece--4 {
+            left: 24px;
+            top: 28px;
+            width: 16px;
+            transform: rotate(8deg);
+            background:
+                radial-gradient(circle at 36% 28%, rgba(255, 255, 255, 0.8), transparent 46%),
+                linear-gradient(160deg, color-mix(in srgb, #eaffff 64%, var(--pill-accent)), color-mix(in srgb, #7dcfe1 58%, rgba(8, 14, 24, 0.92)));
+        }
+    }
+
+    &--huyen-hoa-lien {
+        .material-art__piece--1 {
+            left: 24px;
+            top: 10px;
+            width: 16px;
+            height: 18px;
+            border-radius: 52% 48% 50% 50%;
+            background: color-mix(in srgb, #ffe8c8 62%, var(--pill-accent));
+            box-shadow: 0 0 14px color-mix(in srgb, #ffb77a 48%, transparent);
+        }
+
+        .material-art__piece--2,
+        .material-art__piece--3,
+        .material-art__piece--4 {
+            width: 18px;
+            height: 26px;
+            clip-path: polygon(50% 0, 78% 18%, 100% 58%, 74% 100%, 26% 100%, 0 58%, 22% 18%);
+            background:
+                radial-gradient(circle at 50% 24%, rgba(255, 243, 222, 0.74), transparent 44%),
+                linear-gradient(180deg, color-mix(in srgb, #ffcb98 58%, var(--pill-accent)), color-mix(in srgb, #d95f2d 52%, rgba(10, 14, 24, 0.92)));
+            box-shadow: 0 0 14px color-mix(in srgb, #ff8752 38%, transparent);
+        }
+
+        .material-art__piece--2 {
+            left: 12px;
+            top: 18px;
+            transform: rotate(-26deg);
+        }
+
+        .material-art__piece--3 {
+            left: 30px;
+            top: 20px;
+            transform: rotate(6deg);
+        }
+
+        .material-art__piece--4 {
+            right: 10px;
+            top: 18px;
+            transform: rotate(28deg);
+        }
+    }
+
+    &--thien-linh-qua {
+        .material-art__piece--1 {
+            left: 18px;
+            top: 14px;
+            width: 30px;
+            height: 30px;
+            border-radius: 56% 44% 58% 42% / 46% 54% 52% 48%;
+            background:
+                radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.78), transparent 40%),
+                radial-gradient(circle at 70% 66%, color-mix(in srgb, #9affd3 64%, var(--pill-accent)), color-mix(in srgb, #2f9e77 56%, rgba(10, 18, 26, 0.88)));
+        }
+
+        .material-art__piece--2 {
+            left: 26px;
+            top: 8px;
+            width: 12px;
+            height: 8px;
+            border-radius: 999px;
+            background: color-mix(in srgb, #e8ffd4 72%, var(--pill-accent));
+            transform: rotate(-8deg);
+        }
+
+        .material-art__piece--3,
+        .material-art__piece--4 {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: 0 0 10px rgba(183, 255, 228, 0.52);
+        }
+
+        .material-art__piece--3 {
+            left: 14px;
+            top: 30px;
+        }
+
+        .material-art__piece--4 {
+            right: 14px;
+            top: 20px;
+        }
+    }
+
     &--nguyet-hoa-lo {
         .material-art__piece--1 {
             left: 16px;
@@ -4731,6 +4902,12 @@ select.shop-control-input {
 }
 
 @media (max-width: 720px) {
+    .popup-overlay {
+        padding-top: max(8px, env(safe-area-inset-top));
+        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        box-sizing: border-box;
+    }
+
     .controls-layer {
         .setting-group {
             top: 135px;
@@ -4745,19 +4922,23 @@ select.shop-control-input {
         }
     }
 
+    .popup-content,
+    .popup-content-wide,
+    .popup-content-profile,
+    .popup-content-beast {
+        max-height: calc(100dvh - max(8px, env(safe-area-inset-top)) - max(8px, env(safe-area-inset-bottom)) - 4px);
+    }
+
     .popup-content-wide {
         width: calc(100% - 8px);
-        max-height: 92vh;
     }
 
     .popup-content-profile {
         width: calc(100% - 8px);
-        max-height: 92vh;
     }
 
     .popup-content-beast {
         width: calc(100% - 8px);
-        max-height: 92vh;
     }
 
     .popup-header {
@@ -4981,12 +5162,12 @@ select.shop-control-input {
 
     .pill-visual__core {
         width: 42px;
-        // height: 42px;
+        height: 42px;
     }
 
     .pill-visual__core--bag {
         width: 44px;
-        // height: 44px;
+        height: 44px;
     }
 
     .pill-visual__item-icon {
@@ -5108,11 +5289,19 @@ select.shop-control-input {
 
     .shop-pagination {
         justify-content: center;
+        align-items: center;
+        row-gap: 8px;
     }
 
     .shop-page-list {
+        flex: 1 1 auto;
         justify-content: center;
-        width: 100%;
+        width: auto;
+        min-width: 0;
+    }
+
+    .btn-shop-page-nav {
+        flex: 0 0 auto;
     }
 }
 
@@ -5275,13 +5464,9 @@ select.shop-control-input {
         font-size: 15px;
     }
 
-    .btn-shop-reset,
     .btn-shop-page-nav {
-        width: 100%;
-    }
-
-    .btn-shop-page-nav {
-        min-width: 0;
+        min-width: 72px;
+        width: auto;
     }
 
     .shop-page-status {
