@@ -456,7 +456,9 @@ BeastBagUI = {
         const lockedTitle = 'Chưa khai mở Linh Thú Đại, chưa thể mở giới vực dưỡng trùng.';
         const activeTitle = 'Mở Linh Thú Đại';
 
-        this.btnOpen.classList.toggle('is-disabled', !unlocked);
+        this.btnOpen.classList.toggle('is-hidden', !unlocked);
+        this.btnOpen.classList.remove('is-disabled');
+        this.btnOpen.style.display = unlocked ? 'flex' : 'none';
         this.btnOpen.setAttribute('aria-disabled', unlocked ? 'false' : 'true');
         this.btnOpen.setAttribute('title', unlocked ? activeTitle : lockedTitle);
     },
