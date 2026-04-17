@@ -5310,13 +5310,13 @@ select.shop-control-input {
     100% {
         filter:
             drop-shadow(0 0 16px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 24%, transparent)) brightness(0.98);
-        transform: translateY(1px) scale(0.975);
+        transform: translate(-50%, -50%) translateY(1px) scale(0.975);
     }
 
     50% {
         filter:
             drop-shadow(0 0 22px color-mix(in srgb, var(--artifact-aura, var(--pill-accent)) 38%, transparent)) brightness(1.06);
-        transform: translateY(-2px) scale(1.02);
+        transform: translate(-50%, -50%) translateY(-2px) scale(1.02);
     }
 }
 
@@ -5449,10 +5449,13 @@ select.shop-control-input {
 }
 
 .chuong-thien-binh-art__image {
-    inset: -1px;
-    width: calc(100% + 2px);
-    height: calc(100% + 2px);
+    left: 50%;
+    top: 50%;
+    width: 106%;
+    height: auto;
+    max-width: none;
     object-fit: contain;
+    transform: translate(-50%, -50%);
     animation: chuong-thien-binh-image 4.1s ease-in-out infinite;
 }
 
