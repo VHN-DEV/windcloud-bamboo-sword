@@ -5152,12 +5152,12 @@ select.shop-control-input {
 
     .pill-visual__core {
         width: 42px;
-        // height: 42px;
+        height: 42px;
     }
 
     .pill-visual__core--bag {
         width: 44px;
-        // height: 44px;
+        height: 44px;
     }
 
     .pill-visual__item-icon {
@@ -5279,11 +5279,19 @@ select.shop-control-input {
 
     .shop-pagination {
         justify-content: center;
+        align-items: center;
+        row-gap: 8px;
     }
 
     .shop-page-list {
+        flex: 1 1 auto;
         justify-content: center;
-        width: 100%;
+        width: auto;
+        min-width: 0;
+    }
+
+    .btn-shop-page-nav {
+        flex: 0 0 auto;
     }
 }
 
@@ -5446,13 +5454,9 @@ select.shop-control-input {
         font-size: 15px;
     }
 
-    .btn-shop-reset,
     .btn-shop-page-nav {
-        width: 100%;
-    }
-
-    .btn-shop-page-nav {
-        min-width: 0;
+        min-width: 72px;
+        width: auto;
     }
 
     .shop-page-status {
