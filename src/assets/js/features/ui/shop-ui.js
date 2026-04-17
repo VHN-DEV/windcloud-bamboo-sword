@@ -147,7 +147,6 @@ ShopUI = {
                 title="Trang trước"
             ><span aria-hidden="true">&lt;</span></button>
             <div class="shop-page-list">${pageButtons.join('')}</div>
-            <div class="shop-page-status">Trang ${this.currentPage}/${totalPages}</div>
             <button
                 type="button"
                 class="btn-shop-page btn-shop-page-nav"
