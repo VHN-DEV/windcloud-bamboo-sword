@@ -132,10 +132,12 @@ function buildAlchemyRecipeVisualMarkup(item) {
     return `
         <div class="alchemy-recipe-art alchemy-recipe-art--${qualityClass}" aria-hidden="true">
             <span class="alchemy-recipe-art__book"></span>
+            <span class="alchemy-recipe-art__spine"></span>
             <span class="alchemy-recipe-art__seal"></span>
+            <span class="alchemy-recipe-art__leaf alchemy-recipe-art__leaf--left"></span>
+            <span class="alchemy-recipe-art__leaf alchemy-recipe-art__leaf--right"></span>
             <span class="alchemy-recipe-art__rune alchemy-recipe-art__rune--1"></span>
             <span class="alchemy-recipe-art__rune alchemy-recipe-art__rune--2"></span>
-            <span class="alchemy-recipe-art__rune alchemy-recipe-art__rune--3"></span>
         </div>
     `;
 }
@@ -144,10 +146,12 @@ function buildAlchemyFurnaceVisualMarkup(item) {
     const qualityClass = String(item?.quality || 'LOW').toLowerCase();
     return `
         <div class="alchemy-furnace-art alchemy-furnace-art--${qualityClass}" aria-hidden="true">
+            <span class="alchemy-furnace-art__halo"></span>
             <span class="alchemy-furnace-art__body"></span>
             <span class="alchemy-furnace-art__lid"></span>
             <span class="alchemy-furnace-art__leg alchemy-furnace-art__leg--left"></span>
             <span class="alchemy-furnace-art__leg alchemy-furnace-art__leg--right"></span>
+            <span class="alchemy-furnace-art__ring"></span>
             <span class="alchemy-furnace-art__flame"></span>
         </div>
     `;
@@ -282,10 +286,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         : visual.className === 'is-material'
             ? buildMaterialArtMarkup(item.materialKey, item)
         : visual.className === 'is-alchemy-recipe'
-            ? `
-                <span class="pill-visual__core pill-visual__core--book"></span>
-                <span class="pill-visual__cover-seal pill-visual__cover-seal--herb"></span>
-            `
+            ? buildAlchemyRecipeVisualMarkup(item)
         : visual.className === 'is-alchemy-furnace'
             ? buildAlchemyFurnaceVisualMarkup(item)
         : visual.isBagLike

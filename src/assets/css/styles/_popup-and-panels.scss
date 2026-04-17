@@ -4296,35 +4296,76 @@ select.shop-control-input {
 }
 
 .alchemy-recipe-art {
-    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--pill-accent) 28%, transparent));
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--pill-accent) 30%, transparent));
 
     &__book {
         position: absolute;
-        inset: 8px 11px 9px;
-        border-radius: 8px;
+        inset: 6px 12px 8px;
+        border-radius: 10px;
         background:
-            linear-gradient(180deg, color-mix(in srgb, #f7fffc 42%, var(--pill-accent)), color-mix(in srgb, var(--pill-accent) 70%, rgba(13, 23, 36, 0.86)));
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 12px rgba(0, 0, 0, 0.24);
+            linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0 15%, transparent 15% 100%),
+            linear-gradient(180deg, color-mix(in srgb, #f7fffc 46%, var(--pill-accent)), color-mix(in srgb, var(--pill-accent) 72%, rgba(10, 18, 30, 0.9)));
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 -10px 14px rgba(0, 0, 0, 0.2),
+            0 7px 14px rgba(0, 0, 0, 0.26);
+    }
+
+    &__spine {
+        position: absolute;
+        left: 18px;
+        top: 9px;
+        bottom: 12px;
+        width: 6px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.56), color-mix(in srgb, var(--pill-accent) 74%, rgba(12, 20, 31, 0.9)));
+        box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.34);
     }
 
     &__seal {
         position: absolute;
         left: 50%;
-        top: 22px;
-        width: 20px;
-        height: 20px;
+        top: 50%;
+        width: 18px;
+        height: 18px;
         transform: translateX(-50%);
         border-radius: 50%;
-        border: 2px solid rgba(255, 255, 255, 0.72);
-        box-shadow: 0 0 10px color-mix(in srgb, var(--pill-accent) 40%, transparent);
+        border: 1px solid rgba(224, 255, 224, 0.88);
+        background:
+            radial-gradient(circle at 32% 32%, rgba(247, 255, 245, 0.92), rgba(155, 239, 178, 0.26) 56%, transparent 90%);
+        box-shadow:
+            0 0 10px color-mix(in srgb, #9df4be 44%, transparent),
+            inset 0 -4px 6px rgba(0, 0, 0, 0.16);
+    }
+
+    &__leaf {
+        position: absolute;
+        top: 50%;
+        width: 9px;
+        height: 13px;
+        border-radius: 10px 10px 10px 2px;
+        border: 1px solid rgba(220, 255, 225, 0.85);
+        background: linear-gradient(180deg, rgba(205, 255, 210, 0.9), rgba(87, 211, 146, 0.22));
+        box-shadow: 0 0 6px rgba(121, 235, 172, 0.28);
+
+        &--left {
+            left: 31px;
+            transform: translate(-50%, -50%) rotate(-28deg);
+        }
+
+        &--right {
+            left: 38px;
+            transform: translate(-50%, -50%) rotate(28deg) scaleX(-1);
+        }
     }
 
     &__rune {
         position: absolute;
-        width: 7px;
-        height: 7px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 0 8px rgba(221, 255, 231, 0.4);
 
         &--1 {
             left: 14px;
@@ -4333,45 +4374,54 @@ select.shop-control-input {
 
         &--2 {
             right: 14px;
-            top: 32px;
-        }
-
-        &--3 {
-            left: 29px;
-            bottom: 13px;
+            bottom: 14px;
         }
     }
 }
 
 .alchemy-furnace-art {
-    filter: drop-shadow(0 0 12px color-mix(in srgb, #ffba79 32%, transparent));
+    filter: drop-shadow(0 0 12px color-mix(in srgb, #ffba79 34%, transparent));
 
+    &__halo,
     &__body,
     &__lid,
     &__leg,
+    &__ring,
     &__flame {
         position: absolute;
         display: block;
     }
 
+    &__halo {
+        inset: 9px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 50%, rgba(255, 210, 149, 0.24), transparent 68%);
+        box-shadow: 0 0 16px rgba(255, 171, 96, 0.24);
+    }
+
     &__body {
-        left: 16px;
-        right: 16px;
+        left: 15px;
+        right: 15px;
         top: 18px;
-        bottom: 16px;
-        border-radius: 44% 44% 38% 38% / 26% 26% 46% 46%;
+        bottom: 15px;
+        border-radius: 42% 42% 36% 36% / 24% 24% 46% 46%;
         background:
-            linear-gradient(180deg, color-mix(in srgb, #ffe3bb 44%, var(--pill-accent)), color-mix(in srgb, var(--pill-accent) 78%, rgba(16, 18, 27, 0.92)));
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34), 0 8px 12px rgba(0, 0, 0, 0.26);
+            radial-gradient(circle at 50% 28%, rgba(255, 243, 219, 0.62), transparent 44%),
+            linear-gradient(180deg, color-mix(in srgb, #ffe1b8 52%, var(--pill-accent)), color-mix(in srgb, var(--pill-accent) 82%, rgba(13, 16, 25, 0.94)));
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.38),
+            inset 0 -8px 10px rgba(0, 0, 0, 0.24),
+            0 8px 14px rgba(0, 0, 0, 0.3);
     }
 
     &__lid {
-        left: 20px;
-        right: 20px;
+        left: 19px;
+        right: 19px;
         top: 9px;
-        height: 12px;
+        height: 11px;
         border-radius: 999px;
-        background: color-mix(in srgb, #ffe7c7 48%, var(--pill-accent));
+        background: linear-gradient(180deg, color-mix(in srgb, #ffe7c7 54%, var(--pill-accent)), color-mix(in srgb, var(--pill-accent) 78%, rgba(15, 18, 28, 0.86)));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
     &__leg {
@@ -4390,15 +4440,25 @@ select.shop-control-input {
         }
     }
 
+    &__ring {
+        left: 22px;
+        right: 22px;
+        top: 26px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255, 236, 204, 0.86);
+        box-shadow: 0 0 8px rgba(255, 207, 140, 0.34);
+    }
+
     &__flame {
         left: 50%;
         bottom: 8px;
-        width: 14px;
-        height: 16px;
+        width: 15px;
+        height: 17px;
         transform: translateX(-50%);
         clip-path: polygon(50% 0, 84% 30%, 100% 74%, 62% 100%, 22% 84%, 0 40%);
         background: linear-gradient(180deg, #fff0bf, #ff9f51 68%, #ff6d45);
-        box-shadow: 0 0 10px rgba(255, 169, 84, 0.44);
+        box-shadow: 0 0 12px rgba(255, 169, 84, 0.5);
     }
 }
 
