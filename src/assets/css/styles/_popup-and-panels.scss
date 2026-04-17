@@ -1366,7 +1366,7 @@ select.shop-control-input {
 
     .attack-skill-card__summary {
         display: grid;
-        grid-template-columns: 44px minmax(0, 1fr);
+        grid-template-columns: auto minmax(0, 1fr);
         grid-template-rows: auto auto;
         column-gap: 10px;
         row-gap: 2px;
@@ -1414,16 +1414,22 @@ select.shop-control-input {
 }
 
 .attack-skill-card__avatar--pill {
+    width: 84px;
+    height: 84px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
     padding: 0;
 
     .pill-visual {
-        width: 42px;
-        min-width: 42px;
-        height: 42px;
+        width: 84px;
+        min-width: 84px;
+        height: 84px;
         margin: 0;
-        transform: scale(0.56);
-        transform-origin: center;
-        filter: none;
+        transform: none;
+        filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.28));
     }
 }
 
