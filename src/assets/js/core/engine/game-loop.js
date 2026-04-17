@@ -210,25 +210,32 @@ attackBtn.addEventListener('pointerdown', (e) => {
     startAttack(e);
 });
 
+const shouldKeepTapAttackState = () => {
+    const isUnarmedTap = typeof Input.isUnarmedAttackMode === 'function' && Input.isUnarmedAttackMode();
+    const isSingleSwordTap = Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady();
+    return isUnarmedTap || isSingleSwordTap;
+};
+
 attackBtn.addEventListener('pointerup', (e) => {
-    if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
     if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
         attackBtn.releasePointerCapture(e.pointerId);
     }
+    if (shouldKeepTapAttackState()) return;
 
     stopAttack(e);
 });
 
 attackBtn.addEventListener('pointercancel', (e) => {
-    if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
     if (attackBtn.hasPointerCapture && attackBtn.hasPointerCapture(e.pointerId)) {
         attackBtn.releasePointerCapture(e.pointerId);
     }
+    if (shouldKeepTapAttackState()) return;
 
     stopAttack(e);
 });
 
 attackBtn.addEventListener('lostpointercapture', () => {
+    if (shouldKeepTapAttackState()) return;
     if (Input.isSingleSwordUltimateReady()) {
         Input.releaseSingleSwordUltimateShot();
         return;
@@ -237,7 +244,7 @@ attackBtn.addEventListener('lostpointercapture', () => {
 });
 
 attackBtn.addEventListener('pointerleave', (e) => {
-    if (Input.isSingleSwordTapAttackMode() && !Input.isSingleSwordUltimateReady()) return;
+    if (shouldKeepTapAttackState()) return;
     if (Input.isTouchDevice && e.pointerType !== 'mouse') return;
     stopAttack(e);
 }); // Khi kéo ngón tay ra khỏi nút
