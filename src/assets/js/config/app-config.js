@@ -729,6 +729,7 @@ const CONFIG = {
             HA_PHAM_DAN_LO: {
                 name: "Thanh Đồng Đan Lô",
                 quality: "LOW",
+                color: "#c98a4a",
                 buyPriceLowStone: 2400,
                 brewTimeMultiplier: 1.2,
                 successRate: 0.76,
@@ -737,6 +738,7 @@ const CONFIG = {
             TRUNG_PHAM_DAN_LO: {
                 name: "Tử Kim Đan Lô",
                 quality: "MEDIUM",
+                color: "#b889ff",
                 buyPriceLowStone: 5800,
                 brewTimeMultiplier: 1,
                 successRate: 0.84,
@@ -745,6 +747,7 @@ const CONFIG = {
             THUONG_PHAM_DAN_LO: {
                 name: "Thái Huyền Đan Lô",
                 quality: "HIGH",
+                color: "#77d6ff",
                 buyPriceLowStone: 12800,
                 brewTimeMultiplier: 0.82,
                 successRate: 0.9,
@@ -753,6 +756,7 @@ const CONFIG = {
             CUC_PHAM_DAN_LO: {
                 name: "Cửu Khiếu Đan Lô",
                 quality: "SUPREME",
+                color: "#ffd36e",
                 buyPriceLowStone: 24800,
                 brewTimeMultiplier: 0.66,
                 successRate: 0.95,
@@ -764,6 +768,7 @@ const CONFIG = {
                 name: "Tụ Khí Đan Phương",
                 formulaQuality: "LOW",
                 realmTier: "Phàm đan",
+                color: "#69f0cb",
                 buyPriceLowStone: 420,
                 brewTimeMs: 18000,
                 output: { category: "EXP", quality: "MEDIUM", count: 1 },
@@ -777,6 +782,7 @@ const CONFIG = {
                 name: "Hồi Linh Đan Phương",
                 formulaQuality: "MEDIUM",
                 realmTier: "Linh đan",
+                color: "#6de0ff",
                 buyPriceLowStone: 960,
                 brewTimeMs: 26000,
                 output: { category: "MANA", quality: "HIGH", count: 1 },
@@ -791,6 +797,7 @@ const CONFIG = {
                 name: "Khai Hải Đan Phương",
                 formulaQuality: "HIGH",
                 realmTier: "Huyền đan",
+                color: "#9c88ff",
                 buyPriceLowStone: 1880,
                 brewTimeMs: 34000,
                 output: { category: "MAX_MANA", quality: "HIGH", count: 1 },
@@ -805,6 +812,7 @@ const CONFIG = {
                 name: "Thái Huyền Tru Ma Phương",
                 formulaQuality: "SUPREME",
                 realmTier: "Địa đan",
+                color: "#ff9f43",
                 buyPriceLowStone: 3600,
                 brewTimeMs: 52000,
                 output: { category: "ATTACK", quality: "SUPREME", count: 1 },

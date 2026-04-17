@@ -186,6 +186,13 @@ ShopUI = {
             const stockText = isLimitedStock
                 ? `Tồn kho: ${formatNumber(item.shopStockRemaining)}/${formatNumber(item.shopStockMax)}${restockCountdown > 0 ? ` • Làm mới sau ${formatNumber(restockCountdown)}s` : ''}`
                 : '';
+            const purchasableText = this.getPurchasableStockText(item, {
+                isLimitedStock,
+                isOwnedUnique,
+                canStoreOrUpgrade,
+                hasDedicatedHabitat,
+                hasRainbowHabitat
+            });
 
             return `
                 <article class="shop-card has-pill-art" style="--slot-accent:${qualityConfig.color}">
@@ -199,6 +206,7 @@ ShopUI = {
                         ${priceMarkup}
                     </div>
                     ${stockText ? `<div class="slot-meta">${escapeHtml(stockText)}</div>` : ''}
+                    ${purchasableText ? `<div class="slot-meta">${escapeHtml(purchasableText)}</div>` : ''}
                     <button class="btn-slot-action" data-shop-id="${escapeHtml(item.id)}" ${canAfford ? '' : 'disabled'}>${escapeHtml(actionLabel)}</button>
                 </article>
             `;
@@ -262,6 +270,34 @@ ShopUI.canStoreOrUpgrade = function (item, isOwnedUnique) {
     }
 
     return !isOwnedUnique && Input.hasInventorySpaceForSpec(item);
+};
+
+ShopUI.getPurchasableStockText = function (item, options = {}) {
+    const {
+        isLimitedStock = false,
+        isOwnedUnique = false,
+        canStoreOrUpgrade = false,
+        hasDedicatedHabitat = false,
+        hasRainbowHabitat = false
+    } = options;
+
+    if (isLimitedStock) {
+        return `Có thể mua: ${formatNumber(Math.max(0, Math.floor(Number(item.shopStockRemaining) || 0)))} món`;
+    }
+
+    if (item.isOneTime) {
+        return `Có thể mua: ${isOwnedUnique ? '0' : '1'} món`;
+    }
+
+    if (item.category === 'SPIRIT_HABITAT' && hasRainbowHabitat) {
+        return 'Có thể mua: 0 món';
+    }
+
+    if (item.category === 'SPIRIT_HABITAT' && !hasDedicatedHabitat) {
+        return 'Có thể mua: vô hạn';
+    }
+
+    return canStoreOrUpgrade ? 'Có thể mua: vô hạn' : 'Có thể mua: 0 món';
 };
 
 ShopUI.getActionLabel = function (item, options = {}) {
