@@ -1828,7 +1828,13 @@ Object.assign(Input, {
     getItemDescriptionMarkup(item) {
         const description = repairLegacyText(this.getItemDescription(item)).trim();
         const contentMarkup = buildItemDescriptionContentMarkup(description);
-        const shouldCollapse = description.length > ITEM_DESCRIPTION_COLLAPSE_THRESHOLD || description.includes('Tác dụng phụ:');
+        const isMobileViewport = typeof window !== 'undefined'
+            && typeof window.matchMedia === 'function'
+            && window.matchMedia('(max-width: 768px)').matches;
+        const collapseThreshold = isMobileViewport
+            ? Math.max(80, Math.floor(ITEM_DESCRIPTION_COLLAPSE_THRESHOLD * 0.7))
+            : ITEM_DESCRIPTION_COLLAPSE_THRESHOLD;
+        const shouldCollapse = description.length > collapseThreshold || description.includes('Tác dụng phụ:');
 
         if (!shouldCollapse) {
             return `<div class="item-description__body">${contentMarkup}</div>`;
