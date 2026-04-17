@@ -518,6 +518,11 @@ ProfileUI = {
         const attackModeLabel = Input.getAttackModeDisplayName();
         const swordMetricLabel = Input.attackMode === 'SWORD' ? 'Kiếm trận' : 'Bản mệnh kiếm';
         const swordProgress = Input.getSwordFormationProgress();
+        const expTarget = Math.max(1, rank?.exp || 1);
+        const expProgressPercent = Math.min(100, Math.round((Math.max(0, Input.exp) / expTarget) * 100));
+        const activeSwordRate = swordStats.total > 0
+            ? Math.round((swordStats.alive / swordStats.total) * 100)
+            : 0;
         const combatPillCount = (inventorySummary.categories.ATTACK || 0)
             + (inventorySummary.categories.SHIELD_BREAK || 0)
             + (inventorySummary.categories.BERSERK || 0)
@@ -530,6 +535,10 @@ ProfileUI = {
             + (inventorySummary.categories.INSIGHT || 0)
             + (inventorySummary.categories.EXP || 0);
         const beastSummary = Input.getBeastSummary();
+        const beastCapacity = Math.max(1, beastSummary.capacity || 1);
+        const beastUsageRate = Math.min(100, Math.round((beastSummary.totalBeasts / beastCapacity) * 100));
+        const inventoryCapacity = Math.max(1, inventorySummary.capacity || 1);
+        const inventoryUsageRate = Math.min(100, Math.round((inventorySummary.uniqueCount / inventoryCapacity) * 100));
 
         this.btnOpen.setAttribute('title', `${displayName} - ${rank?.name || 'Chưa nhập đạo'}`);
         this.btnOpen.setAttribute('aria-label', `Mở hồ sơ của ${displayName}`);
@@ -548,9 +557,10 @@ ProfileUI = {
                 </div>
                 <div class="profile-hero__chips">
                     <span class="profile-chip">Tu vi<strong>${formatNumber(Input.exp)}/${formatNumber(rank?.exp || 0)}</strong></span>
+                    <span class="profile-chip">Tiến độ<strong>${expProgressPercent}%</strong></span>
                     <span class="profile-chip">Đột phá<strong>${Math.round(breakthroughChance * 100)}%</strong></span>
-                    <span class="profile-chip">${escapeHtml(swordMetricLabel)}<strong>${swordStats.alive}/${swordStats.total}</strong></span>
-                    <span class="profile-chip">Linh trùng<strong>${formatNumber(beastSummary.totalBeasts)}</strong></span>
+                    <span class="profile-chip">${escapeHtml(swordMetricLabel)}<strong>${swordStats.alive}/${swordStats.total} (${activeSwordRate}%)</strong></span>
+                    <span class="profile-chip">Sức chứa linh trùng<strong>${beastUsageRate}%</strong></span>
                 </div>
             </article>
             <article class="profile-hero__card">
@@ -560,6 +570,7 @@ ProfileUI = {
                     <span class="profile-chip is-soft">${escapeHtml(rageLabel)}<strong>${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}</strong></span>
                     <span class="profile-chip is-soft">Sát thương<strong>${formatNumber(Input.getEffectiveAttackDamage())}</strong></span>
                     <span class="profile-chip is-soft">Linh thạch<strong>${formatNumber(Input.getSpiritStoneTotalValue())}</strong></span>
+                    <span class="profile-chip is-soft">Túi trữ vật<strong>${inventoryUsageRate}%</strong></span>
                     <span class="profile-chip is-soft">Bí pháp<strong>${escapeHtml(attackModeLabel)}</strong></span>
                     <span class="profile-chip is-soft">Thần thức<strong>${formatNumber(swordProgress.consciousness)}</strong></span>
                 </div>
@@ -567,9 +578,11 @@ ProfileUI = {
         `;
 
         const stats = [
-            { label: 'Cảnh giới', value: rank?.name || 'Chưa nhập đạo' },
             { label: 'Đại cảnh giới', value: majorRealm?.name || 'Phàm giới' },
+            { label: 'Cảnh giới', value: rank?.name || 'Chưa nhập đạo' },
             { label: 'Tu vi', value: `${formatNumber(Input.exp)}/${formatNumber(rank?.exp || 0)}` },
+            { label: 'Tiến độ cảnh giới', value: `${expProgressPercent}%` },
+            { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
             { label: 'Linh lực', value: `${formatNumber(Input.mana)}/${formatNumber(Input.maxMana)}` },
             { label: rageLabel, value: `${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}` },
             { label: 'Sát thương', value: `≈ ${formatNumber(Input.getEffectiveAttackDamage())}` },
@@ -578,16 +591,14 @@ ProfileUI = {
             { label: 'Tốc độ', value: formatBoostPercent(Input.getSpeedMultiplier()) },
             { label: 'Hồi linh', value: formatBoostPercent(Input.getManaRegenMultiplier()) },
             { label: 'Vận khí', value: formatBoostPercent(Input.getDropRateMultiplier()) },
+            { label: 'Bí pháp đang vận chuyển', value: attackModeLabel },
             { label: 'Thần thức', value: `${formatNumber(swordProgress.consciousness)}` },
             { label: 'Giới hạn kiếm hộ thân', value: `${formatNumber(swordProgress.capacity)}` },
-            { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
-            { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total}` },
-            { label: 'Kiếm hỏng', value: `${swordStats.broken}` },
+            { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total} (${activeSwordRate}%)` },
             { label: 'Linh trùng', value: `${formatNumber(beastSummary.totalBeasts)}/${formatNumber(beastSummary.capacity)}` },
-            { label: 'Trứng noãn', value: `${formatNumber(beastSummary.totalEggs)}` },
             { label: 'Kỳ trùng đã mở', value: `${formatNumber(beastSummary.discoveredCount)}/${formatNumber(beastSummary.speciesTotal)}` },
             { label: 'Túi trữ vật', value: `${formatNumber(inventorySummary.uniqueCount)}/${formatNumber(inventorySummary.capacity)} ô` },
-            { label: 'Ô trống', value: `${formatNumber(inventorySummary.freeSlots)}` }
+            { label: 'Mức sử dụng túi', value: `${inventoryUsageRate}% (${formatNumber(inventorySummary.freeSlots)} ô trống)` }
         ];
 
         this.statsGrid.innerHTML = stats.map(stat => `
