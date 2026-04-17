@@ -3455,6 +3455,15 @@ Object.assign(Input, {
         // LOGIC MỚI: Nếu là mobile, chạm màn hình KHÔNG kích hoạt tấn công
         if (this.isTouchDevice) return;
 
+        this.screenX = e.clientX;
+        this.screenY = e.clientY;
+
+        if (this.isUnarmedAttackMode()) {
+            e.preventDefault();
+            this.triggerUnarmedTapAttack(260, Camera.screenToWorld(e.clientX, e.clientY));
+            return;
+        }
+
         if (this.isSingleSwordTapAttackMode()) {
             e.preventDefault();
             if (this.beginSingleSwordUltimateCharge()) return;
@@ -3483,6 +3492,9 @@ Object.assign(Input, {
         }
         // Chỉ xử lý handleUp cho chuột trên desktop
         if (!this.isTouchDevice) {
+            if (this.isUnarmedAttackMode()) {
+                return;
+            }
             if (this.isSingleSwordTapAttackMode()) {
                 if (this.isSingleSwordUltimateReady()) {
                     this.releaseSingleSwordUltimateShot();

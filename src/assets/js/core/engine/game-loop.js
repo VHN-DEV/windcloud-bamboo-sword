@@ -134,6 +134,9 @@ const startAttack = (e) => {
 
     // 1. Kiểm tra xem còn thanh kiếm nào còn sống (hp > 0) không
     const hasAliveSword = swords.some(s => !s.isDead);
+    const canUseUnarmedAttack = typeof Input.isUnarmedAttackMode === 'function'
+        ? Input.isUnarmedAttackMode()
+        : !hasAliveSword;
 
     // 2. Nếu đang dùng Khu Trùng Thuật thì chỉ cần còn mana
     if (Input.isInsectSwarmActive() && Input.mana <= 0) {
@@ -142,9 +145,14 @@ const startAttack = (e) => {
     }
 
     // 3. Nếu mana = 0 VÀ không còn kiếm nào sống
-    if (!Input.isInsectSwarmActive() && Input.mana <= 0 && !hasAliveSword) {
+    if (!Input.isInsectSwarmActive() && Input.mana <= 0 && !hasAliveSword && !canUseUnarmedAttack) {
         Input.triggerManaShake();
         return false;
+    }
+
+    if (canUseUnarmedAttack) {
+        Input.triggerUnarmedTapAttack();
+        return true;
     }
 
     if (Input.isSingleSwordTapAttackMode()) {
