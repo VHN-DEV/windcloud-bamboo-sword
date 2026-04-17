@@ -1103,7 +1103,36 @@ Object.assign(SkillsUI, {
     renderShopProductAvatarMarkup(productKey) {
         if (!productKey || typeof buildPillVisualMarkup !== 'function') return '';
         const shopItems = typeof Input?.getShopItems === 'function' ? Input.getShopItems() : [];
-        const matchedItem = shopItems.find(item => item?.uniqueKey === productKey);
+        let matchedItem = shopItems.find(item => item?.uniqueKey === productKey);
+
+        if (!matchedItem) {
+            if (CONFIG.SWORD?.ARTIFACT_ITEM?.uniqueKey === productKey) {
+                matchedItem = {
+                    category: 'SWORD_ARTIFACT',
+                    quality: CONFIG.SWORD.ARTIFACT_ITEM.quality || 'HIGH',
+                    uniqueKey: productKey
+                };
+            } else if (CONFIG.ARTIFACTS?.[productKey]) {
+                matchedItem = {
+                    category: 'ARTIFACT',
+                    quality: CONFIG.ARTIFACTS[productKey].quality || 'SUPREME',
+                    uniqueKey: productKey
+                };
+            } else if (CONFIG.SECRET_ARTS?.[productKey]) {
+                matchedItem = {
+                    category: SWORD_SECRET_ART_KEYS.includes(productKey) ? 'SWORD_ART' : 'FLAME_ART',
+                    quality: CONFIG.SECRET_ARTS[productKey].quality || 'SUPREME',
+                    uniqueKey: productKey
+                };
+            } else if (CONFIG.INSECT?.UNIQUE_ITEMS?.[productKey]) {
+                matchedItem = {
+                    category: productKey === 'KHU_TRUNG_THUAT' ? 'INSECT_SKILL' : 'INSECT_ARTIFACT',
+                    quality: CONFIG.INSECT.UNIQUE_ITEMS[productKey].quality || 'HIGH',
+                    uniqueKey: productKey
+                };
+            }
+        }
+
         if (!matchedItem) return '';
         const qualityConfig = typeof Input?.getItemQualityConfig === 'function'
             ? Input.getItemQualityConfig(matchedItem)
