@@ -77,7 +77,7 @@ const IMAGE_PATHS = {
         THAI_AT_THANH_QUANG_CUC_SON: imagePath("artifacts/thai-at-thanh-quang-cuc-son.svg"),
         AM_DUONG_DAI_NGU_HANH_CUC_SON: imagePath("artifacts/am-duong-dai-ngu-hanh-cuc-son.svg"),
         HAO_AM_HAN_PHACH_CUC_SON: imagePath("artifacts/hao-am-han-phach-cuc-son.svg"),
-        BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/bac-cuc-nguyen-quang-cuc-son.svg"),
+        BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/bac-cuc-nguyen-quang-cuc-son.png"),
         NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/nguyen-hop-ngu-cuc-son.svg")
     },
     ABERRATIONS: {
