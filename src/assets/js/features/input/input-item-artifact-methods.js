@@ -310,6 +310,10 @@ Object.assign(Input, {
         }
 
         if (unlocked) {
+            const consciousnessCost = this.getArtifactConsciousnessCost(uniqueKey);
+            if (consciousnessCost > 0) {
+                return `Đã luyện hóa, triển khai sẽ tiêu hao ${formatNumber(consciousnessCost)} thần thức.`;
+            }
             return 'Đã luyện hóa, có thể triển khai hoặc thu hồi bất kỳ lúc nào.';
         }
 
@@ -348,6 +352,33 @@ Object.assign(Input, {
         return nextActive
             ? `${artifactConfig.fullName || uniqueKey} đã khai triển bên tâm ấn.`
             : `${artifactConfig.fullName || uniqueKey} đã thu vào thần hải.`;
+    },
+
+    getArtifactConsciousnessCost(uniqueKey) {
+        const artifactConfig = this.getArtifactConfig(uniqueKey) || {};
+        if (!artifactConfig.deployLabel && !artifactConfig.stowLabel) return 0;
+
+        const configuredCost = Number(artifactConfig.consciousnessCost);
+        if (Number.isFinite(configuredCost)) {
+            return Math.max(0, Math.floor(configuredCost));
+        }
+
+        return 1;
+    },
+
+    getDeployedArtifactConsciousnessUsage({ excludeKey = null } = {}) {
+        if (!this.activeArtifacts) return 0;
+
+        return Object.entries(this.activeArtifacts).reduce((total, [artifactKey, isActive]) => {
+            if (!isActive || artifactKey === excludeKey) return total;
+            return total + this.getArtifactConsciousnessCost(artifactKey);
+        }, 0);
+    },
+
+    getAvailableConsciousnessForArtifacts({ excludeKey = null } = {}) {
+        const baseConsciousness = Math.max(0, Math.floor(Number(this.getSwordConsciousnessStat?.()) || 0));
+        const usedConsciousness = this.getDeployedArtifactConsciousnessUsage({ excludeKey });
+        return Math.max(0, baseConsciousness - usedConsciousness);
     },
 
     hasArtifactPurchased(uniqueKey) {
@@ -758,6 +789,19 @@ Object.assign(Input, {
         if (this.isNguCucSonComposite(uniqueKey) && normalized && !this.isNguCucSonCombined()) {
             showNotify('Hãy kết hợp đủ ngũ cực sơn trước khi triển khai pháp bảo hợp thể.', artifactConfig.color || '#ffd76a');
             return false;
+        }
+        if (normalized) {
+            const consciousnessCost = this.getArtifactConsciousnessCost(uniqueKey);
+            if (consciousnessCost > 0) {
+                const availableConsciousness = this.getAvailableConsciousnessForArtifacts({ excludeKey: uniqueKey });
+                if (availableConsciousness < consciousnessCost) {
+                    showNotify(
+                        `Thần thức còn ${formatNumber(availableConsciousness)} không đủ để triển khai ${artifactConfig.fullName || uniqueKey} (cần ${formatNumber(consciousnessCost)}).`,
+                        artifactConfig.color || '#9fe8ff'
+                    );
+                    return false;
+                }
+            }
         }
 
         if (this.isNguCucSonComposite(uniqueKey) && normalized) {

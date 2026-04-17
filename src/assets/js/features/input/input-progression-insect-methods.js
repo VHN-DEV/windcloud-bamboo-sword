@@ -1626,9 +1626,15 @@ Object.assign(Input, {
 
         // Thần thức là tài nguyên tiêu hao để trang bị pháp bảo.
         // Với Thanh Trúc kiếm, mỗi thanh chiếm 1 điểm thần thức.
+        const artifactConsciousnessUsage = Math.max(
+            0,
+            Math.floor(Number(this.getDeployedArtifactConsciousnessUsage?.()) || 0)
+        );
+        const usableConsciousness = Math.max(0, this.getSwordConsciousnessStat() - artifactConsciousnessUsage);
+
         return Math.max(1, Math.min(
             getConfiguredSwordCount(),
-            this.getSwordConsciousnessStat()
+            usableConsciousness
         ));
     },
 
