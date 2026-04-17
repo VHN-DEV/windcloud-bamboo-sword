@@ -1364,6 +1364,21 @@ select.shop-control-input {
 .attack-skill-card__head {
     margin-bottom: 12px;
 
+    .attack-skill-card__summary {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        column-gap: 10px;
+        row-gap: 2px;
+        align-items: center;
+        min-width: 0;
+    }
+
+    .attack-skill-card__summary h4,
+    .attack-skill-card__summary p {
+        grid-column: 2;
+    }
+
     h4 {
         margin: 0 0 6px;
     }
@@ -1373,6 +1388,28 @@ select.shop-control-input {
         color: rgba(240, 255, 249, 0.72);
         font-size: 12px;
         line-height: 1.55;
+    }
+}
+
+.attack-skill-card__avatar {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--skill-accent) 48%, rgba(255, 255, 255, 0.2));
+    background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.16), rgba(8, 14, 24, 0.94));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 18px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+        filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
     }
 }
 
