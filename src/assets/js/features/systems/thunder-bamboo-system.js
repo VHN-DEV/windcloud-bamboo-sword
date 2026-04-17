@@ -390,6 +390,10 @@
         if (!this.isKimLoiTrucRootItem(item) || !this.canRefineKimLoiTrucRoot(item)) {
             return false;
         }
+        if (!this.hasCultivationArt('THANH_LINH_KIEM_QUYET')) {
+            showNotify('Cần lĩnh ngộ Thanh Linh Kiếm Quyết mới có thể luyện Thanh Trúc Phong Vân Kiếm.', '#ffd36b');
+            return false;
+        }
 
         const nurtureYears = this.getKimLoiTrucNurtureYears(item);
         const powerRating = this.getRefinedThanhTrucSwordPower(nurtureYears);
@@ -1277,10 +1281,11 @@
             });
 
             if (this.canRefineKimLoiTrucRoot(item)) {
+                const canRefineSword = this.hasCultivationArt('THANH_LINH_KIEM_QUYET');
                 actions.push({
                     type: 'special',
-                    label: 'Luyện kiếm',
-                    disabled: false,
+                    label: canRefineSword ? 'Luyện kiếm' : 'Cần Thanh Linh Kiếm Quyết',
+                    disabled: !canRefineSword,
                     variant: 'secondary'
                 });
             }
