@@ -1382,6 +1382,13 @@ select.shop-control-input {
     font-size: 12px;
 }
 
+.attack-skill-card__actions {
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .attack-skill-card__tag {
     padding: 6px 10px;
     border-radius: 999px;

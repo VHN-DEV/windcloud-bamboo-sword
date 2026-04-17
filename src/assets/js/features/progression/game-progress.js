@@ -248,6 +248,7 @@ const GameProgress = {
             uniquePurchases: Input.uniquePurchases,
             cultivationArts: Input.cultivationArts,
             activeArtifacts: Input.activeArtifacts,
+            nguCucSonCombined: Boolean(Input.nguCucSonCombined),
             phongLoiBlinkEnabled: Boolean(Input.phongLoiBlink?.enabled),
             specialAuraMode: Input.specialAuraExpiresAt === Number.POSITIVE_INFINITY ? Input.specialAuraMode : null,
             insectEggs: Input.insectEggs,
@@ -372,6 +373,7 @@ const GameProgress = {
             Input.uniquePurchases = this.getDefaultUniquePurchases();
             Input.cultivationArts = this.getDefaultCultivationArts();
             Input.activeArtifacts = this.getDefaultActiveArtifacts();
+            Input.nguCucSonCombined = false;
             Input.phongLoiBlink = this.getDefaultPhongLoiBlinkState();
             Input.insectEggs = {};
             Input.tamedInsects = {};
@@ -501,6 +503,7 @@ const GameProgress = {
             Input.cultivationArts = this.sanitizeBooleanMap(parsed.cultivationArts, this.getDefaultCultivationArts());
             Input.restorePendingSecretArts();
             Input.activeArtifacts = this.sanitizeBooleanMap(parsed.activeArtifacts, this.getDefaultActiveArtifacts());
+            Input.nguCucSonCombined = Boolean(parsed.nguCucSonCombined);
             Input.phongLoiBlink = this.getDefaultPhongLoiBlinkState();
             Input.insectEggs = this.sanitizeNumberMap(parsed.insectEggs);
             Input.tamedInsects = this.sanitizeNumberMap(parsed.tamedInsects);
@@ -595,6 +598,12 @@ const GameProgress = {
                     Input.activeArtifacts[uniqueKey] = false;
                 }
             });
+            if (!Input.hasAllNguCucSonUnlocked?.()) {
+                Input.nguCucSonCombined = false;
+            }
+            if (!Input.nguCucSonCombined) {
+                Input.activeArtifacts.NGUYEN_HOP_NGU_CUC_SON = false;
+            }
 
             Input.phongLoiBlink.enabled = Boolean(parsed.phongLoiBlinkEnabled) && Input.isArtifactDeployed('PHONG_LOI_SI');
             Input.ensureValidBeastBagTab();

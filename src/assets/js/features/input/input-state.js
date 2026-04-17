@@ -55,6 +55,7 @@ const INPUT_INITIAL_STATE = {
         CAN_LAM_BANG_DIEM: false,
         ...getDefaultActiveArtifacts()
     },
+    nguCucSonCombined: false,
     enemyMeleeStrikes: [],
     canLamProjectiles: [],
     singleSwordUltimateProjectiles: [],

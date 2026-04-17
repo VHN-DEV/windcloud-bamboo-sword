@@ -6,6 +6,54 @@ Object.assign(Input, {
         return uniqueKey === 'NGUYEN_HOP_NGU_CUC_SON';
     },
 
+    isNguCucSonComponent(uniqueKey) {
+        return this.getNguCucSonComponentKeys().includes(uniqueKey);
+    },
+
+    isNguCucSonCombined() {
+        return Boolean(this.nguCucSonCombined) && this.hasAllNguCucSonUnlocked();
+    },
+
+    setNguCucSonCombined(nextCombined, { silent = false, skipRefresh = false } = {}) {
+        if (!this.hasAllNguCucSonUnlocked()) {
+            if (!silent) showNotify('Cần luyện hóa đủ cả năm cực sơn mới có thể kết hợp.', '#ffd76a');
+            return false;
+        }
+        if (!this.activeArtifacts) this.activeArtifacts = {};
+
+        const normalized = Boolean(nextCombined);
+        if (this.isNguCucSonCombined() === normalized) return false;
+
+        this.nguCucSonCombined = normalized;
+        if (normalized) {
+            this.getNguCucSonComponentKeys().forEach(componentKey => {
+                this.activeArtifacts[componentKey] = false;
+            });
+        } else {
+            this.activeArtifacts.NGUYEN_HOP_NGU_CUC_SON = false;
+        }
+
+        if (!silent) {
+            showNotify(
+                normalized
+                    ? 'Ngũ cực sơn đã kết hợp thành Nguyên Hợp Ngũ Cực Sơn.'
+                    : 'Nguyên Hợp Ngũ Cực Sơn đã tách rời về năm cực sơn.',
+                this.getArtifactConfig('NGUYEN_HOP_NGU_CUC_SON')?.color || '#ffd76a'
+            );
+        }
+
+        if (skipRefresh) {
+            this.renderAttackModeUI();
+        } else {
+            this.refreshResourceUI();
+        }
+        return true;
+    },
+
+    toggleNguCucSonCombined() {
+        return this.setNguCucSonCombined(!this.isNguCucSonCombined());
+    },
+
     getNguCucSonComponentKeys() {
         const componentKeys = this.getArtifactConfig('NGUYEN_HOP_NGU_CUC_SON')?.componentKeys;
         return Array.isArray(componentKeys) ? componentKeys : [];
@@ -252,10 +300,12 @@ Object.assign(Input, {
                 return `Ngũ sắc cực sơn đang hộ thể (${formatNumber(Math.max(0, shieldState.currentCapacity))}/${formatNumber(Math.max(1, shieldState.maxCapacity))}), có thể nứt vỡ khi chịu quá nhiều sát thương.`;
             }
             if (unlocked) {
-                return 'Đã luyện hóa đủ năm cực sơn, có thể kết hợp hoặc tách rời tùy ý.';
+                return this.isNguCucSonCombined()
+                    ? 'Đã kết hợp thành công, có thể triển khai hoặc thu hồi như một pháp bảo hoàn chỉnh.'
+                    : 'Đã luyện hóa đủ năm cực sơn, nhấn Kết hợp để hợp thành pháp bảo hoàn chỉnh.';
             }
             if (purchased) {
-                return 'Đã mua đủ ngũ cực sơn, hãy luyện hóa đủ cả năm để mở kết hợp.';
+                return 'Đã mua đủ ngũ cực sơn, hãy luyện hóa đủ cả năm để mở nút Kết hợp.';
             }
         }
 
@@ -291,8 +341,8 @@ Object.assign(Input, {
         }
         if (this.isNguCucSonComposite(uniqueKey)) {
             return nextActive
-                ? `${artifactConfig.fullName} đã hợp thành ngũ sắc sơn ảnh.`
-                : `${artifactConfig.fullName} đã tách rời về năm cực sơn độc lập.`;
+                ? `${artifactConfig.fullName} đã triển khai ngũ sắc sơn ảnh hộ thể.`
+                : `${artifactConfig.fullName} đã thu vào thần hải.`;
         }
 
         return nextActive
@@ -309,7 +359,7 @@ Object.assign(Input, {
 
     hasArtifactUnlocked(uniqueKey) {
         if (this.isNguCucSonComposite(uniqueKey)) {
-            return this.hasAllNguCucSonPurchased();
+            return this.hasAllNguCucSonUnlocked();
         }
         return Boolean(uniqueKey && this.hasCultivationArt(uniqueKey));
     },
@@ -701,6 +751,15 @@ Object.assign(Input, {
             }
         }
 
+        if (this.isNguCucSonComponent(uniqueKey) && normalized && this.isNguCucSonCombined()) {
+            showNotify('Ngũ cực sơn đang ở trạng thái kết hợp, hãy tách rời trước khi triển khai từng núi con.', artifactConfig.color || '#ffd76a');
+            return false;
+        }
+        if (this.isNguCucSonComposite(uniqueKey) && normalized && !this.isNguCucSonCombined()) {
+            showNotify('Hãy kết hợp đủ ngũ cực sơn trước khi triển khai pháp bảo hợp thể.', artifactConfig.color || '#ffd76a');
+            return false;
+        }
+
         if (this.isNguCucSonComposite(uniqueKey) && normalized) {
             this.getNguCucSonComponentKeys().forEach(componentKey => {
                 this.activeArtifacts[componentKey] = false;
@@ -764,7 +823,7 @@ Object.assign(Input, {
     getArtifactSkillList() {
         return Object.entries(CONFIG.ARTIFACTS || {}).map(([uniqueKey, artifactConfig]) => {
             const isComposite = this.isNguCucSonComposite(uniqueKey);
-            if (isComposite && !this.hasAllNguCucSonPurchased() && !this.hasArtifactUnlocked(uniqueKey) && !this.isArtifactDeployed(uniqueKey)) {
+            if (isComposite && !this.hasAllNguCucSonUnlocked() && !this.isArtifactDeployed(uniqueKey)) {
                 return null;
             }
             const purchased = this.hasArtifactPurchased(uniqueKey);
@@ -780,6 +839,7 @@ Object.assign(Input, {
                 unlocked,
                 active,
                 ready: unlocked,
+                combined: isComposite ? this.isNguCucSonCombined() : false,
                 accent: artifactConfig.color || '#9fe8ff',
                 note: this.getArtifactStatusNote(uniqueKey, { active, unlocked, purchased })
             };
