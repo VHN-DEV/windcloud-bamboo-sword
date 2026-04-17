@@ -922,7 +922,13 @@ Object.assign(SkillsUI, {
     },
 
     getVisibleArtifactEntries() {
-        return Input.getArtifactSkillList().filter(artifact => artifact.purchased || artifact.unlocked);
+        const visibleArtifacts = Input.getArtifactSkillList().filter(artifact => artifact.purchased || artifact.unlocked);
+        if (!Input.isArtifactDeployed('NGUYEN_HOP_NGU_CUC_SON')) {
+            return visibleArtifacts;
+        }
+
+        const nguCucSonChildren = new Set(Input.getNguCucSonComponentKeys());
+        return visibleArtifacts.filter(artifact => !nguCucSonChildren.has(artifact.uniqueKey));
     },
 
     shouldShowSwordArtifactCard() {
