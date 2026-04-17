@@ -5573,26 +5573,90 @@ Object.assign(Input, {
         ctx.arc(0, 0, width * 2.2, 0, Math.PI * 2);
         ctx.fill();
 
-        const mountainGrad = ctx.createLinearGradient(0, -height, 0, height);
-        mountainGrad.addColorStop(0, withAlpha(secondaryColor, 0.95));
-        mountainGrad.addColorStop(0.22, withAlpha('#ffd36b', 0.9));
-        mountainGrad.addColorStop(0.42, withAlpha('#2ecc71', 0.88));
-        mountainGrad.addColorStop(0.64, withAlpha('#e74c3c', 0.85));
-        mountainGrad.addColorStop(0.82, withAlpha('#3498db', 0.83));
-        mountainGrad.addColorStop(1, withAlpha('#8e44ad', 0.82));
+        const layeredColors = [secondaryColor, '#ffd36b', '#2ecc71', '#3498db', '#8e44ad'];
+        const apexY = -height * 1.16;
+        const leftX = -width * 0.92;
+        const rightX = width * 0.92;
+        const baseY = height * 0.95;
 
-        ctx.fillStyle = mountainGrad;
-        ctx.strokeStyle = withAlpha(secondaryColor, 0.78);
-        ctx.lineWidth = Math.max(1.2, 1.6 * scaleFactor);
+        ctx.lineWidth = Math.max(1.1, 1.45 * scaleFactor);
         ctx.shadowBlur = 16 * scaleFactor;
-        ctx.shadowColor = withAlpha(primaryColor, 0.48);
+        ctx.shadowColor = withAlpha(primaryColor, 0.46);
+
         ctx.beginPath();
-        ctx.moveTo(0, -height * 1.16);
-        ctx.lineTo(width * 0.92, height * 0.95);
-        ctx.lineTo(-width * 0.92, height * 0.95);
+        ctx.moveTo(0, apexY);
+        ctx.lineTo(rightX, baseY);
+        ctx.lineTo(leftX, baseY);
         ctx.closePath();
+        ctx.fillStyle = withAlpha(layeredColors[0], 0.88);
         ctx.fill();
+        ctx.strokeStyle = withAlpha(secondaryColor, 0.8);
         ctx.stroke();
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(0, apexY);
+        ctx.lineTo(rightX, baseY);
+        ctx.lineTo(leftX, baseY);
+        ctx.closePath();
+        ctx.clip();
+
+        const colorPatches = [
+            {
+                color: layeredColors[1],
+                alpha: 0.82,
+                points: [
+                    [width * 0.08, apexY + (height * 0.18)],
+                    [rightX * 0.7, apexY + (height * 0.7)],
+                    [width * 0.24, baseY - (height * 0.1)],
+                    [width * 0.02, apexY + (height * 0.54)]
+                ]
+            },
+            {
+                color: layeredColors[2],
+                alpha: 0.8,
+                points: [
+                    [-width * 0.1, apexY + (height * 0.34)],
+                    [width * 0.18, apexY + (height * 0.74)],
+                    [-width * 0.16, baseY - (height * 0.06)],
+                    [-width * 0.34, apexY + (height * 0.62)]
+                ]
+            },
+            {
+                color: layeredColors[3],
+                alpha: 0.78,
+                points: [
+                    [width * 0.16, apexY + (height * 0.86)],
+                    [rightX * 0.9, baseY - (height * 0.02)],
+                    [width * 0.36, baseY + (height * 0.02)],
+                    [width * 0.04, apexY + (height * 1.04)]
+                ]
+            },
+            {
+                color: layeredColors[4],
+                alpha: 0.76,
+                points: [
+                    [-width * 0.42, apexY + (height * 0.78)],
+                    [-width * 0.02, apexY + (height * 0.92)],
+                    [-width * 0.18, baseY + (height * 0.02)],
+                    [leftX * 0.96, baseY - (height * 0.02)]
+                ]
+            }
+        ];
+
+        colorPatches.forEach((patch) => {
+            const [firstPoint, ...restPoints] = patch.points;
+            ctx.beginPath();
+            ctx.moveTo(firstPoint[0], firstPoint[1]);
+            restPoints.forEach(([x, y]) => ctx.lineTo(x, y));
+            ctx.closePath();
+            ctx.fillStyle = withAlpha(patch.color, patch.alpha);
+            ctx.fill();
+            ctx.strokeStyle = withAlpha(secondaryColor, 0.2);
+            ctx.stroke();
+        });
+
+        ctx.restore();
 
         if (crackLevel > 0.08) {
             ctx.strokeStyle = withAlpha('#2f2132', 0.2 + (crackLevel * 0.48));
