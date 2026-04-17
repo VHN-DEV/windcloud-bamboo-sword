@@ -2929,10 +2929,30 @@ Object.assign(Input, {
         const distance = Math.hypot(this.moveJoystick.offsetX, this.moveJoystick.offsetY);
         const maxRadius = Math.max(1, this.moveJoystick.maxRadius || 1);
         const dragRatio = Math.max(0, Math.min(1, distance / maxRadius));
+        const cache = this.moveJoystickVisualCache || {};
+        const roundedX = Math.round(this.moveJoystick.offsetX * 10) / 10;
+        const roundedY = Math.round(this.moveJoystick.offsetY * 10) / 10;
+        const roundedRatio = Math.round(dragRatio * 1000) / 1000;
 
-        button.style.setProperty('--move-stick-x', `${this.moveJoystick.offsetX}px`);
-        button.style.setProperty('--move-stick-y', `${this.moveJoystick.offsetY}px`);
-        button.style.setProperty('--move-drag-ratio', dragRatio.toFixed(3));
+        if (
+            cache.x === roundedX &&
+            cache.y === roundedY &&
+            cache.dragRatio === roundedRatio &&
+            cache.active === this.moveJoystick.active
+        ) {
+            return;
+        }
+
+        this.moveJoystickVisualCache = {
+            x: roundedX,
+            y: roundedY,
+            dragRatio: roundedRatio,
+            active: this.moveJoystick.active
+        };
+
+        button.style.setProperty('--move-stick-x', `${roundedX}px`);
+        button.style.setProperty('--move-stick-y', `${roundedY}px`);
+        button.style.setProperty('--move-drag-ratio', roundedRatio.toFixed(3));
         button.classList.toggle('is-joystick-active', this.moveJoystick.active);
     },
 
@@ -3013,12 +3033,18 @@ Object.assign(Input, {
     },
 
     getTouchHitTarget(target = null, clientX = null, clientY = null) {
-        if (Number.isFinite(clientX) && Number.isFinite(clientY)) {
-            const pointTarget = document.elementFromPoint(clientX, clientY);
-            if (pointTarget instanceof Element) return pointTarget;
+        if (target instanceof Element) {
+            return target;
         }
 
-        return target instanceof Element ? target : null;
+        if (this.isTouchDevice && Number.isFinite(clientX) && Number.isFinite(clientY)) {
+            const pointTarget = document.elementFromPoint(clientX, clientY);
+            if (pointTarget instanceof Element) {
+                return pointTarget;
+            }
+        }
+
+        return null;
     },
 
     isUiInteractionTarget(target) {

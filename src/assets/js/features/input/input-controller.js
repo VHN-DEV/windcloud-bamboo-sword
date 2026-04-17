@@ -16,7 +16,21 @@ window.addEventListener('pointerdown', e => {
         Input.requestLandscapeMode();
     }
 }, { capture: true });
-window.addEventListener('pointermove', e => Input.handleMove(e));
+
+let pendingPointerMoveEvent = null;
+let pointerMoveRafId = 0;
+function flushPointerMove() {
+    pointerMoveRafId = 0;
+    if (!pendingPointerMoveEvent) return;
+    Input.handleMove(pendingPointerMoveEvent);
+    pendingPointerMoveEvent = null;
+}
+
+window.addEventListener('pointermove', e => {
+    pendingPointerMoveEvent = e;
+    if (pointerMoveRafId) return;
+    pointerMoveRafId = requestAnimationFrame(flushPointerMove);
+});
 window.addEventListener('pointerdown', e => Input.handleDown(e));
 window.addEventListener('pointerup', e => Input.handleUp(e));
 window.addEventListener('pointercancel', e => Input.handleUp(e));

@@ -99,6 +99,12 @@ const INPUT_INITIAL_STATE = {
         aimDistance: 180,
         button: null
     },
+    moveJoystickVisualCache: {
+        x: Number.NaN,
+        y: Number.NaN,
+        dragRatio: Number.NaN,
+        active: false
+    },
     touchCursor: {
         active: false,
         pointerId: null
