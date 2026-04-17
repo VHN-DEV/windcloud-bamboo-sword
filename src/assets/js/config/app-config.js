@@ -93,9 +93,7 @@ const CONFIG = {
         BASE_WIDTH: 1920        // Chiều rộng cơ sở để tính toán tỉ lệ scale trên các màn hình khác nhau
     },
     SHOP: {
-        // Thời gian (phút) để làm mới lại số lượng khi vật phẩm limited trong shop đã hết hàng.
-        // Bạn có thể chỉnh giá trị này khi cần cân bằng lại nhịp mua sắm (mặc định: 60 phút).
-        RESTOCK_INTERVAL_MINUTES: 60
+        RESTOCK_INTERVAL_MINUTES: 60, // Thời gian (phút) để làm mới lại số lượng khi vật phẩm limited trong shop đã hết hàng.
     },
     ZOOM: {
         MIN: 0.5,               // Mức thu nhỏ tối đa
