@@ -84,7 +84,9 @@ class StarField {
     }
 
     createParticles() {
-        const pointCount = Math.max(4000, (CONFIG.BG.STAR_COUNT || 8000));
+        const minRenderCount = Math.max(0, Number(CONFIG.BG?.STAR_RENDER_MIN_COUNT) || 4000);
+        const defaultRenderCount = Math.max(minRenderCount, Number(CONFIG.BG?.STAR_RENDER_DEFAULT_COUNT) || 8000);
+        const pointCount = Math.max(minRenderCount, Number(CONFIG.BG?.STAR_COUNT) || defaultRenderCount);
         const bubbleGeo = new THREE.BufferGeometry();
         const bubblePos = new Float32Array(pointCount * 3);
         for (let i = 0; i < pointCount * 3; i++) {

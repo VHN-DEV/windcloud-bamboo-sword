@@ -1243,7 +1243,7 @@ Object.assign(Input, {
     queueEnemyMeleeStrike(enemy, pattern, centerX, centerY, options = {}) {
         if (!enemy) return;
         const strikes = this.ensureEnemyMeleeStrikes();
-        const maxMeleeStrikes = Math.max(20, Number(CONFIG.ENEMY?.MAX_MELEE_STRIKES) || 120);
+        const maxMeleeStrikes = Math.max(20, Number(CONFIG.ENEMY?.MAX_MELEE_STRIKES) || 0);
         if (strikes.length >= maxMeleeStrikes) {
             strikes.shift();
         }
@@ -1367,7 +1367,7 @@ Object.assign(Input, {
 
     castEnemyProjectile(enemy, targetX, targetY, options = {}) {
         const projectiles = this.ensureEnemyHostileProjectiles();
-        const maxProjectiles = Math.max(40, Number(CONFIG.ENEMY?.MAX_HOSTILE_PROJECTILES) || 260);
+        const maxProjectiles = Math.max(40, Number(CONFIG.ENEMY?.MAX_HOSTILE_PROJECTILES) || 0);
         if (projectiles.length >= maxProjectiles) {
             projectiles.shift();
         }
@@ -1491,7 +1491,7 @@ Object.assign(Input, {
     updateIncomingEnemyAttacks(enemies, centerX, centerY, dt = 0.016) {
         if (!Array.isArray(enemies) || this.isVoidCollapsed) return;
         const now = performance.now();
-        const contactRadius = Math.max(20, (CONFIG.ENEMY?.CONTACT_RADIUS || 44) * (Camera.currentZoom || 1));
+        const contactRadius = Math.max(20, Number(CONFIG.ENEMY?.CONTACT_RADIUS || 0) * (Camera.currentZoom || 1));
         const proactiveCfg = CONFIG.ENEMY?.PROACTIVE_ATTACK || {};
 
         for (let i = 0; i < enemies.length; i++) {
