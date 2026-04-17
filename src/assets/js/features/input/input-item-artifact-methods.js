@@ -5573,26 +5573,38 @@ Object.assign(Input, {
         ctx.arc(0, 0, width * 2.2, 0, Math.PI * 2);
         ctx.fill();
 
-        const mountainGrad = ctx.createLinearGradient(0, -height, 0, height);
-        mountainGrad.addColorStop(0, withAlpha(secondaryColor, 0.95));
-        mountainGrad.addColorStop(0.22, withAlpha('#ffd36b', 0.9));
-        mountainGrad.addColorStop(0.42, withAlpha('#2ecc71', 0.88));
-        mountainGrad.addColorStop(0.64, withAlpha('#e74c3c', 0.85));
-        mountainGrad.addColorStop(0.82, withAlpha('#3498db', 0.83));
-        mountainGrad.addColorStop(1, withAlpha('#8e44ad', 0.82));
+        const layeredColors = [
+            secondaryColor,
+            '#ffd36b',
+            '#2ecc71',
+            '#3498db',
+            '#8e44ad'
+        ];
+        const layeredTriangles = [
+            { xOffset: 0, yOffset: 0, heightScale: 1, widthScale: 1 },
+            { xOffset: width * 0.16, yOffset: height * 0.12, heightScale: 0.9, widthScale: 0.92 },
+            { xOffset: -width * 0.18, yOffset: height * 0.24, heightScale: 0.82, widthScale: 0.86 },
+            { xOffset: width * 0.2, yOffset: height * 0.35, heightScale: 0.74, widthScale: 0.8 },
+            { xOffset: -width * 0.22, yOffset: height * 0.45, heightScale: 0.66, widthScale: 0.74 }
+        ];
 
-        ctx.fillStyle = mountainGrad;
-        ctx.strokeStyle = withAlpha(secondaryColor, 0.78);
-        ctx.lineWidth = Math.max(1.2, 1.6 * scaleFactor);
+        ctx.lineWidth = Math.max(1.1, 1.5 * scaleFactor);
         ctx.shadowBlur = 16 * scaleFactor;
-        ctx.shadowColor = withAlpha(primaryColor, 0.48);
-        ctx.beginPath();
-        ctx.moveTo(0, -height * 1.16);
-        ctx.lineTo(width * 0.92, height * 0.95);
-        ctx.lineTo(-width * 0.92, height * 0.95);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+        ctx.shadowColor = withAlpha(primaryColor, 0.46);
+        layeredTriangles.forEach((layer, index) => {
+            const layerWidth = width * layer.widthScale;
+            const layerHeight = height * layer.heightScale;
+            const fillAlpha = 0.76 + ((4 - index) * 0.03);
+            ctx.fillStyle = withAlpha(layeredColors[index], fillAlpha);
+            ctx.strokeStyle = withAlpha(secondaryColor, 0.4 + ((4 - index) * 0.07));
+            ctx.beginPath();
+            ctx.moveTo(layer.xOffset, (-height * 1.16 * layer.heightScale) + layer.yOffset);
+            ctx.lineTo(layer.xOffset + (layerWidth * 0.92), (height * 0.95) + layer.yOffset);
+            ctx.lineTo(layer.xOffset - (layerWidth * 0.92), (height * 0.95) + layer.yOffset);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        });
 
         if (crackLevel > 0.08) {
             ctx.strokeStyle = withAlpha('#2f2132', 0.2 + (crackLevel * 0.48));
