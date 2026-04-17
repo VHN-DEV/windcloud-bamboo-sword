@@ -180,13 +180,7 @@ ShopUI = {
                 hasRainbowHabitat,
                 hasStock
             });
-            const restockCountdown = isLimitedStock && item.shopStockRemaining <= 0 && item.shopRestockAt > Date.now()
-                ? Math.max(1, Math.ceil((item.shopRestockAt - Date.now()) / 1000))
-                : 0;
-            const stockText = isLimitedStock
-                ? `${formatNumber(item.shopStockRemaining)}/${formatNumber(item.shopStockMax)}${restockCountdown > 0 ? ` • ${formatNumber(restockCountdown)}s` : ''}`
-                : '';
-            const purchasableText = this.getPurchasableStockText(item, {
+            const cornerStockText = this.getPurchasableStockText(item, {
                 isLimitedStock,
                 isOwnedUnique,
                 canStoreOrUpgrade,
@@ -200,10 +194,9 @@ ShopUI = {
                     ${buildPillVisualMarkup(item, qualityConfig, { context: 'shop' })}
                     <div class="shop-card-header">
                         <h4>${escapeHtml(Input.getItemDisplayName(item))}</h4>
-                        ${(stockText || purchasableText)
+                        ${cornerStockText
                             ? `<div class="shop-card-corner-meta">
-                                ${stockText ? `<span>${escapeHtml(stockText)}</span>` : ''}
-                                ${purchasableText ? `<span>${escapeHtml(purchasableText)}</span>` : ''}
+                                <span>${escapeHtml(cornerStockText)}</span>
                             </div>`
                             : ''
                         }
@@ -289,11 +282,13 @@ ShopUI.getPurchasableStockText = function (item, options = {}) {
     } = options;
 
     if (isLimitedStock) {
-        return `${formatNumber(Math.max(0, Math.floor(Number(item.shopStockRemaining) || 0)))} món`;
+        const remaining = Math.max(0, Math.floor(Number(item.shopStockRemaining) || 0));
+        const maxStock = Math.max(remaining, Math.floor(Number(item.shopStockMax) || 0));
+        return `${formatNumber(remaining)}/${formatNumber(maxStock)} món`;
     }
 
     if (item.isOneTime) {
-        return `${isOwnedUnique ? '0' : '1'} món`;
+        return `${isOwnedUnique ? '0' : '1'}/1 món`;
     }
 
     if (item.category === 'SPIRIT_HABITAT' && hasRainbowHabitat) {
