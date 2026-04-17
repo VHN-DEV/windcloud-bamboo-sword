@@ -1,7 +1,0 @@
-<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-  <defs><linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ead7ff"/><stop offset="100%" stop-color="#5f2f78"/></linearGradient></defs>
-  <rect width="128" height="128" rx="18" fill="#101521"/>
-  <circle cx="64" cy="66" r="42" fill="#8e44ad" opacity="0.2"/>
-  <polygon points="64,16 108,104 20,104" fill="url(#g5)" stroke="#8e44ad" stroke-width="4"/>
-  <path d="M30 88 L98 46 M28 98 L100 56 M40 106 L102 66" stroke="#f1e4ff" stroke-width="2" opacity="0.75"/>
-</svg>

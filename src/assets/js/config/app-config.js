@@ -73,12 +73,12 @@ const IMAGE_PATHS = {
         PHONG_LOI_SI: imagePath("artifacts/phong-loi-si.svg"),
         HUYET_SAC_PHI_PHONG: imagePath("artifacts/huyet-sac-phi-phong.svg"),
         HU_THIEN_DINH: imagePath("artifacts/hu-thien-dinh.svg"),
-        NGUYEN_TU_CUC_SON: imagePath("artifacts/nguyen-tu-cuc-son.svg"),
-        THAI_AT_THANH_QUANG_CUC_SON: imagePath("artifacts/thai-at-thanh-quang-cuc-son.svg"),
-        AM_DUONG_DAI_NGU_HANH_CUC_SON: imagePath("artifacts/am-duong-dai-ngu-hanh-cuc-son.svg"),
-        HAO_AM_HAN_PHACH_CUC_SON: imagePath("artifacts/hao-am-han-phach-cuc-son.svg"),
-        BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/bac-cuc-nguyen-quang-cuc-son.svg"),
-        NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/nguyen-hop-ngu-cuc-son.svg")
+        NGUYEN_TU_CUC_SON: imagePath("artifacts/chuong-thien-binh.svg"),
+        THAI_AT_THANH_QUANG_CUC_SON: imagePath("artifacts/chuong-thien-binh.svg"),
+        AM_DUONG_DAI_NGU_HANH_CUC_SON: imagePath("artifacts/chuong-thien-binh.svg"),
+        HAO_AM_HAN_PHACH_CUC_SON: imagePath("artifacts/chuong-thien-binh.svg"),
+        BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/chuong-thien-binh.svg"),
+        NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/chuong-thien-binh.svg")
     },
     ABERRATIONS: {
         KIEN_THIEN_TINH: imagePath("aberrations/kien-thien-tinh.svg"),
