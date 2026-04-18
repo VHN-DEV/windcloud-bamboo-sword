@@ -667,8 +667,8 @@ const CONFIG = {
                 quality: "SUPREME",
                 color: "#ff9c74",
                 radius: 5.6,
-                buyPriceLowStone: 420,
-                dropWeight: 0.52,
+                buyPriceLowStone: 1680,
+                dropWeight: 0.26,
                 nutrition: 0,
                 description: "Liên hoa sinh trong địa hỏa, là phụ liệu bồi hỏa lực khi khai đỉnh luyện đan."
             },
@@ -677,10 +677,40 @@ const CONFIG = {
                 quality: "SUPREME",
                 color: "#8bffcf",
                 radius: 5.4,
-                buyPriceLowStone: 520,
-                dropWeight: 0.45,
+                buyPriceLowStone: 1960,
+                dropWeight: 0.22,
                 nutrition: 2,
                 description: "Linh quả hấp thu thiên địa tinh hoa, thường làm quân dược cho cao giai đan phương."
+            },
+            THAI_CO_HUYET_CHI: {
+                fullName: "Thái cổ huyết chi",
+                quality: "SUPREME",
+                color: "#ff6a95",
+                radius: 5.8,
+                buyPriceLowStone: 2280,
+                dropWeight: 0.2,
+                nutrition: 1,
+                description: "Huyết chi mọc trong cổ địa, chứa huyết khí tinh thuần, thường dùng làm chủ dược cho cấm kỵ đan phương."
+            },
+            CUU_U_HON_THAO: {
+                fullName: "Cửu u hồn thảo",
+                quality: "SUPREME",
+                color: "#9a7bff",
+                radius: 5.7,
+                buyPriceLowStone: 2520,
+                dropWeight: 0.16,
+                nutrition: 0,
+                description: "U thảo hấp thu âm linh từ vực sâu, có thể ổn định linh hồn và khóa phản phệ trong luyện đan."
+            },
+            HONG_MONG_TINH_SA: {
+                fullName: "Hồng mông tinh sa",
+                quality: "SUPREME",
+                color: "#ffd27a",
+                radius: 5.6,
+                buyPriceLowStone: 2860,
+                dropWeight: 0.13,
+                nutrition: 0,
+                description: "Tinh sa khai sinh từ cổ thiên thạch, vừa hiếm vừa khó thu thập, thường dùng để luyện cực phẩm đan."
             },
             KIM_LOI_TRUC_ROOT: {
                 fullName: "Kim Lôi Trúc Mẫu",
@@ -707,7 +737,7 @@ const CONFIG = {
                 quality: "HIGH",
                 color: "#ffb47b",
                 radius: 5.1,
-                buyPriceLowStone: 268,
+                buyPriceLowStone: 520,
                 dropWeight: 0.64,
                 nutrition: 0,
                 description: "Tinh thể hỏa mạch ngưng kết dưới lòng đất, dùng để gia cố hỏa lực cho đan lô."
@@ -717,10 +747,50 @@ const CONFIG = {
                 quality: "SUPREME",
                 color: "#95ffc2",
                 radius: 5.4,
-                buyPriceLowStone: 420,
-                dropWeight: 0.4,
+                buyPriceLowStone: 1520,
+                dropWeight: 0.25,
                 nutrition: 2,
                 description: "Linh chi thượng cổ chứa tinh mộc thuần khiết, thường là linh tài phụ trợ cho cao phẩm đan phương."
+            },
+            THANH_HOANG_MOC_TUY: {
+                fullName: "Thanh hoàng mộc tủy",
+                quality: "HIGH",
+                color: "#9ff8b0",
+                radius: 5.2,
+                buyPriceLowStone: 760,
+                dropWeight: 0.42,
+                nutrition: 2,
+                description: "Mộc tủy đọng trong cổ thụ linh mạch, dùng để bổ dược lực và ổn định dược tính khi luyện cao giai đan dược."
+            },
+            THIEN_LOI_NGOC_TUY: {
+                fullName: "Thiên lôi ngọc tủy",
+                quality: "SUPREME",
+                color: "#8bd3ff",
+                radius: 5.7,
+                buyPriceLowStone: 2320,
+                dropWeight: 0.18,
+                nutrition: 0,
+                description: "Ngọc tủy ngưng tụ sau lôi kiếp, là linh tài cực hiếm để cường hóa đan lô và đột phá phẩm cấp đan dược."
+            },
+            HUYEN_BANG_TAM_TUY: {
+                fullName: "Huyền băng tâm tủy",
+                quality: "HIGH",
+                color: "#b3efff",
+                radius: 5.3,
+                buyPriceLowStone: 880,
+                dropWeight: 0.36,
+                nutrition: 1,
+                description: "Tủy băng kết tinh trong hàn vực, dùng để trấn hỏa độc và cân bằng âm dương trong đan phương."
+            },
+            PHONG_VAN_HON_TINH: {
+                fullName: "Phong vân hồn tinh",
+                quality: "HIGH",
+                color: "#d0c6ff",
+                radius: 5.3,
+                buyPriceLowStone: 940,
+                dropWeight: 0.31,
+                nutrition: 1,
+                description: "Tinh thể hội tụ phong linh và vân ý, thường dùng để tăng độ ổn định của các mẻ đan kéo dài."
             }
         },
         MATERIAL_DROP: {

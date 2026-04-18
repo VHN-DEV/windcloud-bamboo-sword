@@ -174,7 +174,12 @@ ShopUI = {
             const canStoreOrUpgrade = this.canStoreOrUpgrade(item, isOwnedUnique);
             const isLimitedStock = Number.isFinite(item.shopStockRemaining);
             const hasStock = !isLimitedStock || item.shopStockRemaining > 0;
-            const canAfford = !Input.isVoidCollapsed && canStoreOrUpgrade && hasStock && Input.canAffordLowStoneCost(item.priceLowStone);
+            const canOpenHuThienAlchemy = item.category === 'ARTIFACT'
+                && item.uniqueKey === 'HU_THIEN_DINH'
+                && Input.hasArtifactUnlocked('HU_THIEN_DINH');
+            const canAfford = canOpenHuThienAlchemy
+                ? !Input.isVoidCollapsed
+                : (!Input.isVoidCollapsed && canStoreOrUpgrade && hasStock && Input.canAffordLowStoneCost(item.priceLowStone));
             const priceMarkup = Input.renderSpiritStoneCostMarkup(item.priceLowStone);
             const actionLabel = this.getActionLabel(item, {
                 canStoreOrUpgrade,
@@ -329,6 +334,9 @@ ShopUI.getActionLabel = function (item, options = {}) {
     }
 
     if (item.category === 'ARTIFACT') {
+        if (item.uniqueKey === 'HU_THIEN_DINH' && Input.hasArtifactUnlocked('HU_THIEN_DINH')) {
+            return 'Mở đan lô';
+        }
         if (isOwnedUnique) return 'Đã mua';
         return canStoreOrUpgrade
             ? (CONFIG.ARTIFACTS?.[item.uniqueKey]?.buttonLabel || 'Mua')
