@@ -703,18 +703,18 @@ Object.assign(Input, {
         const button = document.getElementById('btn-alchemy-lab');
         if (!button) return;
 
-        const hasHuThien = this.hasArtifactPurchased('HU_THIEN_DINH') || this.hasArtifactUnlocked('HU_THIEN_DINH');
+        const hasHuThienRefined = this.hasArtifactUnlocked('HU_THIEN_DINH');
         const hasPurchasedFurnace = Object.values(this.alchemyFurnaces || {}).some(Boolean);
-        const ready = this.hasArtifactUnlocked('HU_THIEN_DINH') && this.isArtifactDeployed('HU_THIEN_DINH');
-        const title = !hasHuThien && !hasPurchasedFurnace
-            ? 'Cần mua Hư Thiên Đỉnh hoặc Đan lư ở Thiên Bảo Các để mở luyện đan'
+        const ready = hasHuThienRefined && this.isArtifactDeployed('HU_THIEN_DINH');
+        const title = !hasHuThienRefined && !hasPurchasedFurnace
+            ? 'Cần mua đan lư hoặc mua rồi luyện hóa Hư Thiên Đỉnh để mở luyện đan'
             : ready
                 ? 'Đan Lô đã sẵn sàng, có thể mở popup luyện đan'
                 : 'Đã có đan lư nhưng chưa triển khai Hư Thiên Đỉnh, vẫn có thể luyện với hiệu quả thấp hơn';
 
-        button.classList.toggle('is-hidden', !hasHuThien && !hasPurchasedFurnace);
+        button.classList.toggle('is-hidden', !hasHuThienRefined && !hasPurchasedFurnace);
         button.classList.toggle('is-active', ready);
-        button.style.display = (hasHuThien || hasPurchasedFurnace) ? 'flex' : 'none';
+        button.style.display = (hasHuThienRefined || hasPurchasedFurnace) ? 'flex' : 'none';
         button.setAttribute('aria-label', title);
         button.setAttribute('title', title);
     },
@@ -1439,9 +1439,9 @@ Object.assign(Input, {
         const formulaLabels = CONFIG.ALCHEMY?.FORMULA_QUALITY_LABELS || {};
         const materialsByQuality = {
             LOW: ['LINH_TY', 'YEU_HUYET', 'TINH_THIT'],
-            MEDIUM: ['NGAN_NAM_HOANG_TINH', 'TUYET_NGOC_THAO', 'YEU_DAN'],
-            HIGH: ['NGUYET_HOA_LO', 'DIA_TAM_HOA_TINH', 'THIEN_LINH_QUA'],
-            SUPREME: ['HUYEN_HOA_LIEN', 'VAN_MOC_CHI', 'LONG_LAN']
+            MEDIUM: ['NGAN_NAM_HOANG_TINH', 'TUYET_NGOC_THAO', 'YEU_DAN', 'NGUYET_HOA_LO'],
+            HIGH: ['DIA_TAM_HOA_TINH', 'THANH_HOANG_MOC_TUY', 'HUYEN_BANG_TAM_TUY', 'PHONG_VAN_HON_TINH'],
+            SUPREME: ['HUYEN_HOA_LIEN', 'VAN_MOC_CHI', 'THIEN_LINH_QUA', 'THIEN_LOI_NGOC_TUY']
         };
         const formulaQualityByPillQuality = {
             LOW: 'LOW',
@@ -1467,9 +1467,10 @@ Object.assign(Input, {
                     brewTimeMs: 12000 + (QUALITY_ORDER.indexOf(quality) * 9000),
                     output: { category, quality, count: 1 },
                     ingredients: [
-                        { materialKey: primaryMaterials[0], count: 1 },
-                        { materialKey: primaryMaterials[1], count: 1 },
-                        { materialKey: primaryMaterials[2], count: quality === 'SUPREME' ? 2 : 1 }
+                        { materialKey: primaryMaterials[0], count: 1 + (quality === 'HIGH' ? 1 : 0) + (quality === 'SUPREME' ? 2 : 0) },
+                        { materialKey: primaryMaterials[1], count: 1 + (quality === 'MEDIUM' ? 1 : 0) + (quality === 'SUPREME' ? 1 : 0) },
+                        { materialKey: primaryMaterials[2], count: 1 + (quality === 'HIGH' ? 1 : 0) + (quality === 'SUPREME' ? 2 : 0) },
+                        ...(primaryMaterials[3] ? [{ materialKey: primaryMaterials[3], count: quality === 'SUPREME' ? 2 : 1 }] : [])
                     ]
                 };
             });
@@ -1504,19 +1505,33 @@ Object.assign(Input, {
             const formulaQuality = formulaQualityByPillQuality[quality] || 'SUPREME';
             const formulaLabel = formulaLabels[formulaQuality] || 'Đan phương';
             const recipeKey = `AUTO:SPECIAL:${specialKey}`;
+            const specialIngredients = specialKey === 'CHUNG_CUC_DAO_NGUYEN_DAN'
+                ? [
+                    { materialKey: 'THIEN_LINH_QUA', count: 6 },
+                    { materialKey: 'THIEN_LOI_NGOC_TUY', count: 4 },
+                    { materialKey: 'HONG_MONG_TINH_SA', count: 3 },
+                    { materialKey: 'CUU_U_HON_THAO', count: 2 },
+                    { materialKey: 'THAI_CO_HUYET_CHI', count: 2 },
+                    { materialKey: 'KIM_LOI_TRUC_ROOT', count: 1 }
+                ]
+                : [
+                    { materialKey: 'HUYEN_HOA_LIEN', count: 4 },
+                    { materialKey: 'VAN_MOC_CHI', count: 3 },
+                    { materialKey: 'CUU_U_HON_THAO', count: 3 },
+                    { materialKey: 'HONG_MONG_TINH_SA', count: 2 },
+                    { materialKey: 'THAI_CO_HUYET_CHI', count: 2 },
+                    { materialKey: 'KIM_LOI_TRUC_ROOT', count: 1 }
+                ];
+
             recipes[recipeKey] = {
                 key: recipeKey,
                 name: `${formulaLabel} ${specialConfig.fullName || specialKey}`,
                 formulaQuality,
                 realmTier: 'Cấm kỵ đan',
-                buyPriceLowStone: Math.max(1800, Math.floor((specialConfig.buyPriceLowStone || 0) * 0.5)),
-                brewTimeMs: 68000,
+                buyPriceLowStone: Math.max(12000, Math.floor((specialConfig.buyPriceLowStone || 0) * 0.72)),
+                brewTimeMs: 98000,
                 output: { category: 'SPECIAL', quality, specialKey, count: 1 },
-                ingredients: [
-                    { materialKey: 'HUYEN_HOA_LIEN', count: 2 },
-                    { materialKey: 'THIEN_LINH_QUA', count: 2 },
-                    { materialKey: 'KIM_LOI_TRUC_ROOT', count: 1 }
-                ]
+                ingredients: specialIngredients
             };
         });
 
@@ -2060,7 +2075,7 @@ Object.assign(Input, {
     },
 
     isShopLimitedStockItem(item) {
-        return ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'SPECIAL'].includes(item?.category);
+        return ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'SPECIAL', 'MATERIAL'].includes(item?.category);
     },
 
     getShopStockKey(item) {
@@ -2080,6 +2095,16 @@ Object.assign(Input, {
         if (!item) return 0;
 
         if (item.category === 'SPECIAL') return 4;
+        if (item.category === 'MATERIAL') {
+            const materialConfig = this.getMaterialConfig(item.materialKey) || {};
+            const quality = materialConfig.quality || item.quality || 'LOW';
+            const rarityBase = { LOW: 24, MEDIUM: 16, HIGH: 10, SUPREME: 5 };
+            const dropWeight = Number(materialConfig.dropWeight);
+            const scarcityPenalty = Number.isFinite(dropWeight)
+                ? Math.max(0, Math.ceil((0.8 - dropWeight) * 6))
+                : 0;
+            return Math.max(1, (rarityBase[quality] || 12) - scarcityPenalty);
+        }
 
         const qualityStockMap = {
             LOW: 30,
@@ -2462,6 +2487,15 @@ Object.assign(Input, {
 
         const item = this.getShopItems().find(entry => entry.id === itemId);
         if (!item) return false;
+
+        if (item.category === 'ARTIFACT' && item.uniqueKey === 'HU_THIEN_DINH' && this.hasArtifactUnlocked('HU_THIEN_DINH')) {
+            if (AlchemyUI && typeof AlchemyUI.open === 'function') {
+                AlchemyUI.open();
+                showNotify('Hư Thiên Đỉnh đã luyện hóa, mở Đan Lô để khai đỉnh luyện đan.', this.getArtifactConfig('HU_THIEN_DINH')?.color || '#93c8d8');
+                return true;
+            }
+        }
+
         const qualityConfig = this.getItemQualityConfig(item);
         const stockInfo = this.getLimitedShopItemStock(item);
 
