@@ -1053,6 +1053,7 @@ Object.assign(SkillsUI, {
                     : 'Lĩnh ngộ',
                 buttonDisabled: nguLoiLearned ? false : !nguLoiItem,
                 inventoryKey: nguLoiItem?.key || null,
+                hideActionButton: nguLoiLearned,
                 roster: []
             });
         }
@@ -1182,6 +1183,10 @@ Object.assign(SkillsUI, {
     },
 
     renderSecretArtActionMarkup(skill) {
+        if (skill.hideActionButton) {
+            return '';
+        }
+
         if (!skill.unlocked && skill.inventoryKey) {
             return `
                 <button class="btn-slot-action" type="button" data-secret-art-use="${escapeHtml(skill.inventoryKey)}" ${skill.buttonDisabled ? 'disabled' : ''}>
