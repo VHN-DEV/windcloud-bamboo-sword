@@ -3723,10 +3723,13 @@ Object.assign(Input, {
 
         this.screenX = e.clientX;
         this.screenY = e.clientY;
+        const worldPos = Camera.screenToWorld(e.clientX, e.clientY);
+
+        this.triggerNguLoiThuatClickEffect?.(worldPos);
 
         if (this.isUnarmedAttackMode()) {
             e.preventDefault();
-            this.triggerUnarmedTapAttack(260, Camera.screenToWorld(e.clientX, e.clientY));
+            this.triggerUnarmedTapAttack(260, worldPos);
             return;
         }
 
