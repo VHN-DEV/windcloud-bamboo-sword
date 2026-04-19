@@ -49,8 +49,12 @@ const MapUI = {
     },
 
     getVisionRadius() {
-        const consciousness = Math.max(0, Number(Input?.getSwordFormationProgress?.().consciousness) || 0);
-        return Math.max(220, 180 + consciousness * 8.5);
+        const rawConsciousness = Number(Input?.getSwordFormationProgress?.().consciousness);
+        const consciousness = Number.isFinite(rawConsciousness)
+            ? Math.max(0, rawConsciousness)
+            : 1_000_000;
+        const scaledRadius = 220 + (Math.log1p(consciousness) * 120);
+        return Math.min(4200, Math.max(220, scaledRadius));
     },
 
     render({ player, enemies }) {
@@ -63,7 +67,8 @@ const MapUI = {
         const centerY = height / 2;
         const visionRadiusWorld = this.getVisionRadius();
         const mapWorldRange = Math.max(visionRadiusWorld * 2.4, 760);
-        const pxPerWorld = (Math.min(width, height) * 0.46) / mapWorldRange;
+        const pxPerWorldRaw = (Math.min(width, height) * 0.46) / mapWorldRange;
+        const pxPerWorld = Number.isFinite(pxPerWorldRaw) && pxPerWorldRaw > 0 ? pxPerWorldRaw : 0.001;
         const visionRadiusPx = visionRadiusWorld * pxPerWorld;
         const monsterCount = Array.isArray(enemies) ? enemies.length : 0;
         let visibleMonsterCount = 0;

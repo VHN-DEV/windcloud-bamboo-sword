@@ -443,7 +443,11 @@ class Enemy {
             performance.now() + Math.max(1200, Number(CONFIG.ENEMY?.BEHAVIOR?.AGGRO_DURATION_MS) || 3200)
         );
         this.setCombatMode('AGGRESSIVE');
-        this.retaliateUntil = performance.now() + 1800;
+        this.retaliateUntil = performance.now() + 4000;
+        this.proactiveAggroUntil = Math.max(
+            Number(this.proactiveAggroUntil) || 0,
+            performance.now() + 4000
+        );
         this.lastRetaliateAt = performance.now();
 
         // --- 4. XỬ LÝ KHIÊN ---
@@ -715,10 +719,8 @@ class Enemy {
         const behaviorCfg = CONFIG.ENEMY?.BEHAVIOR || {};
         const enrageCfg = behaviorCfg.ENRAGE || {};
         const enrageThreshold = Math.max(0.05, Math.min(0.95, Number(enrageCfg.HP_THRESHOLD) || 0.35));
-        const leashDistance = Math.max(80, Number(behaviorCfg.LEASH_DISTANCE) || 320);
         const aggroDurationMs = Math.max(500, Number(behaviorCfg.AGGRO_DURATION_MS) || 3200);
         const calmHealPerSec = Math.max(0, Number(behaviorCfg.CALM_HEAL_PER_SEC) || 0.035);
-        const distToPlayer = Math.hypot((this.x || 0) - playerX, (this.y || 0) - playerY);
         const hpRatio = this.maxHp > 0 ? this.hp / this.maxHp : 1;
 
         if (hpRatio <= enrageThreshold) {
@@ -731,12 +733,6 @@ class Enemy {
         }
 
         if ((this.hostileUntil || 0) > now) {
-            this.setCombatMode('AGGRESSIVE');
-            return;
-        }
-
-        if (distToPlayer <= leashDistance) {
-            this.hostileUntil = now + aggroDurationMs;
             this.setCombatMode('AGGRESSIVE');
             return;
         }
