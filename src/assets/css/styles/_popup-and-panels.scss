@@ -207,7 +207,7 @@
 }
 
 .popup-content-map {
-    max-width: 580px;
+    max-width: 700px;
 }
 
 .popup-content-beast {
@@ -222,12 +222,13 @@
 }
 
 #map-canvas {
-    width: min(92vw, 520px);
-    height: min(92vw, 520px);
+    width: min(94vw, 620px);
+    height: min(94vw, 620px);
     max-height: 65vh;
     border-radius: 10px;
     border: 1px solid rgba($primary-color, 0.34);
     background: rgba(4, 8, 12, 0.95);
+    touch-action: none;
 }
 
 .map-hint {

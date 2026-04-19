@@ -5,6 +5,15 @@ const MapUI = {
     canvas: document.getElementById('map-canvas'),
     hint: document.getElementById('map-hint'),
     ctx: null,
+    zoomLevel: 1,
+    minZoom: 0.65,
+    maxZoom: 2.8,
+    pinchState: {
+        active: false,
+        pointerIds: new Set(),
+        pointerPositions: new Map(),
+        lastDistance: 0
+    },
 
     init() {
         if (!this.overlay || !this.btnOpen || !this.canvas) return;
@@ -34,6 +43,8 @@ const MapUI = {
         if (content) {
             content.addEventListener('pointerdown', (e) => e.stopPropagation());
         }
+
+        this.bindZoomControls();
     },
 
     isOpen() {
@@ -41,11 +52,85 @@ const MapUI = {
     },
 
     open() {
+        this.resetZoom();
         openPopup(this.overlay);
     },
 
     close() {
         closePopup(this.overlay);
+    },
+
+    bindZoomControls() {
+        if (!this.canvas) return;
+
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const step = e.deltaY < 0 ? 0.12 : -0.12;
+            this.adjustZoom(step);
+        }, { passive: false });
+
+        this.canvas.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'touch') return;
+            this.pinchState.pointerIds.add(e.pointerId);
+            this.pinchState.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (this.pinchState.pointerIds.size >= 2) {
+                this.pinchState.active = true;
+                this.pinchState.lastDistance = this.getPinchDistance();
+            }
+        });
+
+        this.canvas.addEventListener('pointermove', (e) => {
+            if (!this.pinchState.pointerIds.has(e.pointerId)) return;
+            this.pinchState.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (!this.pinchState.active) return;
+
+            const currentDistance = this.getPinchDistance();
+            if (!Number.isFinite(currentDistance) || currentDistance <= 0) return;
+            const previousDistance = Number(this.pinchState.lastDistance) || currentDistance;
+            const delta = (currentDistance - previousDistance) / 180;
+            this.adjustZoom(delta);
+            this.pinchState.lastDistance = currentDistance;
+            e.preventDefault();
+            e.stopPropagation();
+        }, { passive: false });
+
+        const stopPinchPointer = (e) => {
+            this.pinchState.pointerIds.delete(e.pointerId);
+            this.pinchState.pointerPositions.delete(e.pointerId);
+            if (this.pinchState.pointerIds.size < 2) {
+                this.pinchState.active = false;
+                this.pinchState.lastDistance = 0;
+            }
+        };
+
+        this.canvas.addEventListener('pointerup', stopPinchPointer);
+        this.canvas.addEventListener('pointercancel', stopPinchPointer);
+        this.canvas.addEventListener('pointerleave', stopPinchPointer);
+    },
+
+    getPinchDistance() {
+        const activePointers = Array.from(this.pinchState.pointerIds);
+        if (activePointers.length < 2) return 0;
+
+        const first = this.pinchState.pointerPositions.get(activePointers[0]);
+        const second = this.pinchState.pointerPositions.get(activePointers[1]);
+        if (!first || !second) return 0;
+
+        return Math.hypot(first.x - second.x, first.y - second.y);
+    },
+
+    adjustZoom(delta) {
+        const nextZoom = this.zoomLevel + (Number(delta) || 0);
+        this.zoomLevel = Math.max(this.minZoom, Math.min(this.maxZoom, nextZoom));
+    },
+
+    resetZoom() {
+        this.zoomLevel = 1;
+        this.pinchState.active = false;
+        this.pinchState.lastDistance = 0;
+        this.pinchState.pointerIds.clear();
+        this.pinchState.pointerPositions.clear();
     },
 
     getVisionRadius() {
@@ -66,7 +151,8 @@ const MapUI = {
         const centerX = width / 2;
         const centerY = height / 2;
         const visionRadiusWorld = this.getVisionRadius();
-        const mapWorldRange = Math.max(visionRadiusWorld * 2.4, 760);
+        const baseMapWorldRange = Math.max(visionRadiusWorld * 2.1, 620);
+        const mapWorldRange = Math.max(220, baseMapWorldRange / Math.max(this.minZoom, this.zoomLevel));
         const pxPerWorldRaw = (Math.min(width, height) * 0.46) / mapWorldRange;
         const pxPerWorld = Number.isFinite(pxPerWorldRaw) && pxPerWorldRaw > 0 ? pxPerWorldRaw : 0.001;
         const visionRadiusPx = visionRadiusWorld * pxPerWorld;
@@ -121,7 +207,7 @@ const MapUI = {
         ctx.shadowBlur = 0;
 
         if (this.hint) {
-            this.hint.textContent = `Thần thức: ${Math.round(visionRadiusWorld)} | Quái hiện: ${visibleMonsterCount}/${monsterCount}`;
+            this.hint.textContent = `Thần thức: ${Math.round(visionRadiusWorld)} | Quái hiện: ${visibleMonsterCount}/${monsterCount} | Zoom: x${this.zoomLevel.toFixed(2)} (lăn hoặc chụm để phóng/thu)`;
         }
     }
 };
