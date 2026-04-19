@@ -1486,6 +1486,10 @@ const CONFIG = {
             trailMaxPoints: 20,
             followFactor: 0.2,
             angleLerp: 0.2,
+            trailColor: "#ffff00",
+            handleColor: "#333333",
+            guardColor: "#eeee33",
+            bladeColor: "#eeeeee",
             description: "Mộc kiếm theo tâm niệm mà động. Khi triển khai sẽ xuất hiện một đạo kiếm ảnh xanh bám theo con trỏ, lưu lại tàn ảnh quét ngang như kiếm thức."
         }
     },

@@ -5682,7 +5682,7 @@ Object.assign(Input, {
 
         let targetAngle = 0;
         if (Math.abs(speedX) >= 0.2 || Math.abs(speedY) >= 0.2) {
-            targetAngle = Math.atan2(speedY, speedX) + (Math.PI / 2);
+            targetAngle = this.calculateMocKiemAngle(speedX, speedY);
             visual.track.push({
                 x: visual.x,
                 y: visual.y,
@@ -5704,6 +5704,12 @@ Object.assign(Input, {
         return visual;
     },
 
+    calculateMocKiemAngle(x, y) {
+        if (x === y) return 0;
+        if (x >= 0) return Math.atan(y / x) + (Math.PI / 2);
+        return Math.PI * 1.5 + Math.atan(y / x);
+    },
+
     clearMocKiemVisualState() {
         if (!this.mocKiemVisual) return;
         this.mocKiemVisual.track = [];
@@ -5713,13 +5719,16 @@ Object.assign(Input, {
         if (!this.isArtifactDeployed('MOC_KIEM')) return;
 
         const artifactConfig = this.getArtifactConfig('MOC_KIEM') || {};
-        const primaryColor = artifactConfig.color || '#73c66d';
-        const secondaryColor = artifactConfig.secondaryColor || '#dcf4cc';
+        const trailColor = artifactConfig.trailColor || '#ffff00';
+        const handleColor = artifactConfig.handleColor || '#333333';
+        const guardColor = artifactConfig.guardColor || '#eeee33';
+        const bladeColor = artifactConfig.bladeColor || '#eeeeee';
         const visual = this.ensureMocKiemVisualState(scaleFactor);
-        const size = Math.max(8, 13.5 * scaleFactor);
+        const normalWh = Math.min(width, height) / 100;
+        const size = Math.max(2.2, normalWh * scaleFactor);
 
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = 'source-over';
 
         for (let i = 0; i < visual.track.length - 1; i++) {
             const curr = visual.track[i];
@@ -5727,14 +5736,14 @@ Object.assign(Input, {
             const alpha = i / Math.max(1, visual.track.length);
             const p1x = curr.x + (Math.cos(curr.angle - Math.PI / 2) * size * 2);
             const p1y = curr.y + (Math.sin(curr.angle - Math.PI / 2) * size * 2);
-            const p2x = curr.x - (Math.cos(curr.angle - Math.PI / 2) * size * 14);
-            const p2y = curr.y - (Math.sin(curr.angle - Math.PI / 2) * size * 14);
-            const p3x = next.x - (Math.cos(next.angle - Math.PI / 2) * size * 14);
-            const p3y = next.y - (Math.sin(next.angle - Math.PI / 2) * size * 14);
+            const p2x = curr.x - (Math.cos(curr.angle - Math.PI / 2) * size * -14);
+            const p2y = curr.y - (Math.sin(curr.angle - Math.PI / 2) * size * -14);
+            const p3x = next.x - (Math.cos(next.angle - Math.PI / 2) * size * -14);
+            const p3y = next.y - (Math.sin(next.angle - Math.PI / 2) * size * -14);
             const p4x = next.x + (Math.cos(next.angle - Math.PI / 2) * size * 2);
             const p4y = next.y + (Math.sin(next.angle - Math.PI / 2) * size * 2);
 
-            ctx.fillStyle = withAlpha(primaryColor, alpha * 0.55);
+            ctx.fillStyle = withAlpha(trailColor, alpha);
             ctx.beginPath();
             ctx.moveTo(p1x, p1y);
             ctx.lineTo(p2x, p2y);
@@ -5748,16 +5757,13 @@ Object.assign(Input, {
         ctx.translate(visual.x, visual.y);
         ctx.rotate(visual.angle);
 
-        ctx.fillStyle = '#50311b';
+        ctx.fillStyle = handleColor;
         ctx.fillRect(size * -1, size * -2, size * 2, size * 4);
 
-        ctx.fillStyle = '#7a4e29';
+        ctx.fillStyle = guardColor;
         ctx.fillRect(size * -2, size * -3, size * 4, size * 2);
 
-        const bladeGradient = ctx.createLinearGradient(0, size * -14, 0, size * -2);
-        bladeGradient.addColorStop(0, withAlpha(secondaryColor, 0.95));
-        bladeGradient.addColorStop(1, withAlpha(primaryColor, 0.8));
-        ctx.fillStyle = bladeGradient;
+        ctx.fillStyle = bladeColor;
         ctx.fillRect(size * -1, size * -14, size * 2, size * 12);
 
         ctx.restore();
