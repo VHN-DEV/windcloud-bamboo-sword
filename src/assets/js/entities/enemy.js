@@ -96,20 +96,16 @@ class Enemy {
         const visibleHalfHeight = window.innerHeight / (2 * zoom);
         const anchorX = Number.isFinite(Camera.centerX) ? Camera.centerX : (window.innerWidth / 2);
         const anchorY = Number.isFinite(Camera.centerY) ? Camera.centerY : (window.innerHeight / 2);
-        const padding = Math.max(20, Number(CONFIG.ENEMY.SPAWN_PADDING) || 20);
-        const minSpawnDistance = Math.max(visibleHalfWidth, visibleHalfHeight) + padding;
-        const extraSpawnDistance = Math.max(
-            80,
-            Number(CONFIG.ENEMY.SPAWN_MAX_EXTRA_DISTANCE) || 160
-        );
-        const maxSpawnDistance = minSpawnDistance + extraSpawnDistance;
-        const spawnAngle = Math.random() * Math.PI * 2;
-        const spawnDistance = random(minSpawnDistance, maxSpawnDistance);
+        const padding = Math.max(12, Number(CONFIG.ENEMY.SPAWN_PADDING) || 20);
+        const minSpawnX = anchorX - visibleHalfWidth + padding;
+        const maxSpawnX = anchorX + visibleHalfWidth - padding;
+        const minSpawnY = anchorY - visibleHalfHeight + padding;
+        const maxSpawnY = anchorY + visibleHalfHeight - padding;
         
         this.lastHitTime = 0;
         this.lastNotifyTime = 0;
-        this.x = anchorX + Math.cos(spawnAngle) * spawnDistance;
-        this.y = anchorY + Math.sin(spawnAngle) * spawnDistance;
+        this.x = random(Math.min(minSpawnX, maxSpawnX), Math.max(minSpawnX, maxSpawnX));
+        this.y = random(Math.min(minSpawnY, maxSpawnY), Math.max(minSpawnY, maxSpawnY));
         this.particles = [];
         this.cracks = [];
         this.shieldLevel = 0;

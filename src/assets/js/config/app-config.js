@@ -266,7 +266,7 @@ const CONFIG = {
         MAX_ACTIVE_BURST_PARTICLES: 200 // Số lượng hạt tấn công tối đa có thể tồn tại cùng lúc để tránh quá tải hiệu ứng
     },
     INPUT: {
-        JOYSTICK_CURSOR_SPEED: 0.2000, // Tăng tốc phản hồi con trỏ khi kéo joystick trên mobile
+        JOYSTICK_CURSOR_SPEED: 0.1400, // Giảm tốc phản hồi con trỏ khi kéo joystick trên mobile để dễ điều khiển hơn
         DOUBLE_TAP_DELAY: 300   // Khoảng cách tối đa giữa 2 lần chạm để tính là double tap
     },
     CURSOR: {

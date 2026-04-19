@@ -133,17 +133,33 @@ const MapUI = {
         this.pinchState.pointerPositions.clear();
     },
 
+    syncCanvasResolution() {
+        if (!this.canvas) return;
+        const rect = this.canvas.getBoundingClientRect();
+        const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        const targetWidth = Math.max(1, Math.round(rect.width * dpr));
+        const targetHeight = Math.max(1, Math.round(rect.height * dpr));
+        if (this.canvas.width === targetWidth && this.canvas.height === targetHeight) return;
+        this.canvas.width = targetWidth;
+        this.canvas.height = targetHeight;
+    },
+
     getVisionRadius() {
-        const rawConsciousness = Number(Input?.getSwordFormationProgress?.().consciousness);
+        const rawConsciousness = Number(
+            Input?.getSwordFormationProgress?.().consciousness
+            ?? Input?.getSwordConsciousnessStat?.()
+            ?? 0
+        );
         const consciousness = Number.isFinite(rawConsciousness)
             ? Math.max(0, rawConsciousness)
-            : 1_000_000;
+            : 0;
         const scaledRadius = 220 + (Math.log1p(consciousness) * 120);
         return Math.min(4200, Math.max(220, scaledRadius));
     },
 
     render({ player, enemies }) {
         if (!this.ctx || !this.isOpen() || !player) return;
+        this.syncCanvasResolution();
 
         const ctx = this.ctx;
         const width = this.canvas.width;

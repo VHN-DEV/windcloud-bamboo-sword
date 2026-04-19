@@ -147,6 +147,13 @@ const startAttack = (e) => {
         return false;
     }
 
+    const currentCursorX = Number(Input?.x);
+    const currentCursorY = Number(Input?.y);
+    const lightningTarget = Number.isFinite(currentCursorX) && Number.isFinite(currentCursorY)
+        ? { x: currentCursorX, y: currentCursorY }
+        : { x: guardCenter.x, y: guardCenter.y };
+    Input.triggerNguLoiThuatClickEffect?.(lightningTarget);
+
     // 1. Kiểm tra xem còn thanh kiếm nào còn sống (hp > 0) không
     const hasAliveSword = swords.some(s => !s.isDead);
     const canUseUnarmedAttack = typeof Input.isUnarmedAttackMode === 'function'
