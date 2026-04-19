@@ -98,7 +98,11 @@ class Enemy {
         const anchorY = Number.isFinite(Camera.centerY) ? Camera.centerY : (window.innerHeight / 2);
         const padding = Math.max(20, Number(CONFIG.ENEMY.SPAWN_PADDING) || 20);
         const minSpawnDistance = Math.max(visibleHalfWidth, visibleHalfHeight) + padding;
-        const maxSpawnDistance = minSpawnDistance + Math.max(240, Math.min(window.innerWidth, window.innerHeight) * 0.9);
+        const extraSpawnDistance = Math.max(
+            80,
+            Number(CONFIG.ENEMY.SPAWN_MAX_EXTRA_DISTANCE) || 160
+        );
+        const maxSpawnDistance = minSpawnDistance + extraSpawnDistance;
         const spawnAngle = Math.random() * Math.PI * 2;
         const spawnDistance = random(minSpawnDistance, maxSpawnDistance);
         

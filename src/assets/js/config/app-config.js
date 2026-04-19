@@ -302,6 +302,7 @@ const CONFIG = {
     ENEMY: {
         SPAWN_COUNT: 10,                  // Số lượng quái xuất hiện cùng lúc
         SPAWN_PADDING: 50,                // Khoảng cách an toàn từ mép màn hình khi quái xuất hiện
+        SPAWN_MAX_EXTRA_DISTANCE: 160,    // Khoảng cách tối đa quái có thể sinh thêm ra ngoài vùng nhìn thấy
         ELITE_MULT: 5, // Hệ số nhân phần thưởng cho quái Tinh Anh
         ELITE_CHANCE: 0.01,               // Tỉ lệ quái tinh anh xuất hiện (1%)
         RUNTIME_MULTIPLIERS: {
