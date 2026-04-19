@@ -357,14 +357,14 @@ Object.assign(Input, {
         if (this.isInsectSwarmActive()) return false;
 
         const swordStats = this.getAliveSwordStats();
-        return swordStats.alive === 1;
+        return swordStats.alive === 1 || (swordStats.alive === 0 && this.isArtifactDeployed?.('BAT_LINH_XICH'));
     },
 
     isUnarmedAttackMode() {
         if (this.isInsectSwarmActive()) return false;
 
         const swordStats = this.getAliveSwordStats();
-        return swordStats.alive === 0;
+        return swordStats.alive === 0 && !this.isArtifactDeployed?.('BAT_LINH_XICH');
     },
 
     isSingleSwordPreThanhLinhState() {
@@ -403,8 +403,10 @@ Object.assign(Input, {
 
     performSingleSwordTapStrike() {
         if (!Array.isArray(enemies) || !enemies.length) return false;
-        if (!this.getAliveSwordStats || this.getAliveSwordStats().alive < 1) return false;
-        const attackRange = 96 * scaleFactor;
+        const swordStats = this.getAliveSwordStats ? this.getAliveSwordStats() : { alive: 0 };
+        const hasBatLinhXichAssist = swordStats.alive === 0 && this.isArtifactDeployed?.('BAT_LINH_XICH');
+        if (swordStats.alive < 1 && !hasBatLinhXichAssist) return false;
+        const attackRange = (hasBatLinhXichAssist ? 108 : 96) * scaleFactor;
         const sourceX = Number.isFinite(this.x) ? this.x : guardCenter.x;
         const sourceY = Number.isFinite(this.y) ? this.y : guardCenter.y;
         let nearestEnemy = null;
@@ -428,7 +430,36 @@ Object.assign(Input, {
         };
         const result = nearestEnemy.hit(slashSource);
         this.createAttackBurst(nearestEnemy.x, nearestEnemy.y, result === 'shielded' ? '#ffb26b' : '#9beeff');
+        if (result !== 'missed') {
+            this.createSingleSwordSlashEffect?.(sourceX, sourceY, nearestEnemy.x, nearestEnemy.y, {
+                color: hasBatLinhXichAssist ? '#8de7a4' : '#9beeff'
+            });
+        }
         return result !== 'missed';
+    },
+
+    createSingleSwordSlashEffect(fromX, fromY, toX, toY, { color = '#9beeff' } = {}) {
+        if (!Array.isArray(visualParticles)) return;
+        const angle = Math.atan2((toY || 0) - (fromY || 0), (toX || 0) - (fromX || 0));
+        const distance = Math.max(24, Math.hypot((toX || 0) - (fromX || 0), (toY || 0) - (fromY || 0)));
+        const arcStart = angle - 0.48;
+        const arcStep = 0.19;
+
+        for (let i = 0; i < 6; i++) {
+            visualParticles.push({
+                type: 'ray',
+                x: toX || fromX,
+                y: toY || fromY,
+                angle: arcStart + (i * arcStep),
+                radius: distance * 0.1,
+                length: distance * (0.18 + (i * 0.045)),
+                lineWidth: 2.6 - (i * 0.22),
+                life: 0.32,
+                decay: 0.065,
+                color: i % 2 === 0 ? color : '#f0feff',
+                glow: 12
+            });
+        }
     },
 
     performUnarmedTapStrike(strikePoint = null) {
