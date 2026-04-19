@@ -1240,12 +1240,48 @@ Object.assign(Input, {
         return chosenKey;
     },
 
-    createRandomInsectEggDropSpec() {
+    getRareDropContext(enemy = null, isElite = false) {
+        const enemyLevel = Math.max(1, Number(enemy?.rankData?.id) || 1);
+        const playerLevel = Math.max(1, Number(this.getCurrentRank?.()?.id) || 1);
+        const levelGap = Math.max(0, enemyLevel - playerLevel);
+        const eliteBonus = isElite ? 0.18 : 0;
+        const levelBonus = Math.min(0.35, levelGap * 0.04);
+        return {
+            enemyLevel,
+            playerLevel,
+            levelGap,
+            rareBoost: eliteBonus + levelBonus
+        };
+    },
+
+    applyRareBoostToQualityRates(qualityRates, rareBoost = 0) {
+        const rates = { ...(qualityRates || {}) };
+        const boost = Math.max(0, Number(rareBoost) || 0);
+        if (boost <= 0) return rates;
+
+        const lowWeight = Math.max(0, Number(rates.LOW) || 0);
+        const lowTransfer = Math.min(lowWeight * 0.5, boost * lowWeight);
+        rates.LOW = Math.max(0.001, lowWeight - lowTransfer);
+        rates.MEDIUM = Math.max(0.001, (Number(rates.MEDIUM) || 0.001) + (lowTransfer * 0.3));
+        rates.HIGH = Math.max(0.001, (Number(rates.HIGH) || 0.001) + (lowTransfer * 0.45));
+        rates.SUPREME = Math.max(0.0001, (Number(rates.SUPREME) || 0.0001) + (lowTransfer * 0.25));
+        return rates;
+    },
+
+    createRandomInsectEggDropSpec(isElite = false, enemy = null) {
         const speciesRates = this.getInsectSpeciesEntries().reduce((rates, [speciesKey, species]) => {
             rates[speciesKey] = Math.max(0.01, species.weight || 1);
             return rates;
         }, {});
-        const speciesKey = pickWeightedKey(speciesRates, this.getInsectSpeciesEntries()[0]?.[0]);
+        const { rareBoost } = this.getRareDropContext(enemy, isElite);
+        const boostedSpeciesRates = Object.entries(speciesRates).reduce((rates, [speciesKey, weight]) => {
+            const species = this.getInsectSpecies(speciesKey);
+            const rarityWeight = Math.max(0, Number(species?.weight) || 1);
+            const rarityFactor = clampNumber((1 / rarityWeight) - 0.2, 0, 4);
+            rates[speciesKey] = Math.max(0.01, weight * (1 + (rareBoost * rarityFactor)));
+            return rates;
+        }, {});
+        const speciesKey = pickWeightedKey(boostedSpeciesRates, this.getInsectSpeciesEntries()[0]?.[0]);
 
         return {
             kind: 'INSECT_EGG',
@@ -1255,10 +1291,13 @@ Object.assign(Input, {
         };
     },
 
-    createRandomMaterialDropSpec(isElite = false) {
+    createRandomMaterialDropSpec(isElite = false, enemy = null) {
         const materialEntries = Object.entries(CONFIG.ITEMS?.MATERIALS || {});
+        const { rareBoost } = this.getRareDropContext(enemy, isElite);
         const materialRates = materialEntries.reduce((rates, [materialKey, materialConfig]) => {
-            rates[materialKey] = Math.max(0.01, Number(materialConfig?.dropWeight) || 1);
+            const dropWeight = Math.max(0.01, Number(materialConfig?.dropWeight) || 1);
+            const rarityFactor = clampNumber((1 / dropWeight) - 0.2, 0, 6);
+            rates[materialKey] = Math.max(0.01, dropWeight * (1 + (rareBoost * rarityFactor)));
             return rates;
         }, {});
         const fallbackKey = materialEntries[0]?.[0] || null;
@@ -1291,9 +1330,17 @@ Object.assign(Input, {
     },
 
     createEnemyMaterialDropSpec(enemy = null, isElite = false) {
+        const { rareBoost } = this.getRareDropContext(enemy, isElite);
         const materialRates = this.getEnemyMaterialDropRates(enemy);
+        const boostedMaterialRates = Object.entries(materialRates).reduce((rates, [materialKey, weight]) => {
+            const materialCfg = this.getMaterialConfig(materialKey);
+            const dropWeight = Math.max(0.01, Number(materialCfg?.dropWeight) || 1);
+            const rarityFactor = clampNumber((1 / dropWeight) - 0.2, 0, 6);
+            rates[materialKey] = Math.max(0.01, Math.max(0.01, Number(weight) || 1) * (1 + (rareBoost * rarityFactor)));
+            return rates;
+        }, {});
         const fallbackKey = Object.keys(materialRates)[0] || 'TINH_THIT';
-        const materialKey = pickWeightedKey(materialRates, fallbackKey);
+        const materialKey = pickWeightedKey(boostedMaterialRates, fallbackKey);
         const materialConfig = this.getMaterialConfig(materialKey);
 
         return {
@@ -2034,9 +2081,10 @@ Object.assign(Input, {
         return Boolean(nextRealm && item.realmKey === nextRealm.key);
     },
 
-    createRandomPillDropSpec(isElite = false) {
+    createRandomPillDropSpec(isElite = false, enemy = null) {
         const categoryRates = CONFIG.PILL.CATEGORY_RATES[isElite ? 'ELITE' : 'NORMAL'];
-        const qualityRates = CONFIG.PILL.QUALITY_RATES[isElite ? 'ELITE' : 'NORMAL'];
+        const { rareBoost } = this.getRareDropContext(enemy, isElite);
+        const qualityRates = this.applyRareBoostToQualityRates(CONFIG.PILL.QUALITY_RATES[isElite ? 'ELITE' : 'NORMAL'], rareBoost);
         let category = pickWeightedKey(categoryRates, 'EXP');
         const quality = pickWeightedKey(qualityRates, 'LOW');
 
@@ -2061,12 +2109,36 @@ Object.assign(Input, {
         };
     },
 
-    createRandomSpiritStoneDropSpec(isElite = false) {
-        const qualityRates = CONFIG.SPIRIT_STONE.QUALITY_RATES[isElite ? 'ELITE' : 'NORMAL'];
+    createRandomSpiritStoneDropSpec(isElite = false, enemy = null) {
+        const { rareBoost } = this.getRareDropContext(enemy, isElite);
+        const qualityRates = this.applyRareBoostToQualityRates(CONFIG.SPIRIT_STONE.QUALITY_RATES[isElite ? 'ELITE' : 'NORMAL'], rareBoost);
         return {
             kind: 'STONE',
             quality: pickWeightedKey(qualityRates, 'LOW')
         };
+    },
+
+    tryIncreaseLimitedShopStockFromSell(item, amount = 1) {
+        if (!item || amount <= 0) return false;
+        const shopItem = this.getShopItems().find(candidate => {
+            if (candidate.category !== item.category) return false;
+            if ((candidate.quality || null) !== (item.quality || null)) return false;
+            if ((candidate.realmKey || null) !== (item.realmKey || null)) return false;
+            if ((candidate.specialKey || null) !== (item.specialKey || null)) return false;
+            if ((candidate.materialKey || null) !== (item.materialKey || null)) return false;
+            return true;
+        });
+        if (!shopItem || !this.isShopLimitedStockItem(shopItem)) return false;
+
+        this.restockLimitedShopItem(shopItem);
+        const stockKey = this.getShopStockKey(shopItem);
+        const maxStock = this.getShopItemMaxStock(shopItem);
+        const currentStock = Math.max(0, Math.floor(Number(this.shopConsumableStock?.[stockKey]) || 0));
+        const nextStock = Math.min(maxStock, currentStock + Math.max(1, Math.floor(amount)));
+        this.shopConsumableStock[stockKey] = nextStock;
+        this.shopConsumableRestockAt[stockKey] = 0;
+        GameProgress.requestSave();
+        return true;
     },
 
     getShopRestockIntervalMs() {
@@ -2691,6 +2763,7 @@ Object.assign(Input, {
 
         item.count--;
         if (item.count <= 0) delete this.inventory[itemKey];
+        this.tryIncreaseLimitedShopStockFromSell(item, 1);
 
         this.setSpiritStoneTotalValue(this.getSpiritStoneTotalValue() + sellPrice);
         showNotify(`Bán ${this.getItemDisplayName(item)}: +${formatNumber(sellPrice)} hạ phẩm linh thạch`, this.getItemQualityConfig(item).color);

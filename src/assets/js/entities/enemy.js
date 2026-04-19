@@ -469,7 +469,7 @@ class Enemy {
 
             if (Math.random() < pillDropChance) {
                 for (let i = 0; i < pillDropCount; i++) {
-                    pills.push(new Pill(this.x, this.y, Input.createRandomPillDropSpec(this.isElite)));
+                    pills.push(new Pill(this.x, this.y, Input.createRandomPillDropSpec(this.isElite, this)));
                 }
             }
 
@@ -478,7 +478,7 @@ class Enemy {
 
             if (Math.random() < stoneDropChance) {
                 for (let i = 0; i < stoneDropCount; i++) {
-                    pills.push(new Pill(this.x, this.y, Input.createRandomSpiritStoneDropSpec(this.isElite)));
+                    pills.push(new Pill(this.x, this.y, Input.createRandomSpiritStoneDropSpec(this.isElite, this)));
                 }
             }
 
@@ -489,7 +489,7 @@ class Enemy {
 
                 if (Math.random() < eggDropChance) {
                     for (let i = 0; i < eggDropCount; i++) {
-                        pills.push(new Pill(this.x, this.y, Input.createRandomInsectEggDropSpec(this.isElite)));
+                        pills.push(new Pill(this.x, this.y, Input.createRandomInsectEggDropSpec(this.isElite, this)));
                     }
                 }
             }
