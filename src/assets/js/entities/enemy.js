@@ -740,12 +740,13 @@ class Enemy {
             ctx.shadowBlur = 8 * scaleFactor;
         }
 
-        const textY = -this.r - (this.hasShield ? 15 : 10) * scaleFactor;
+        const labelOffset = Math.min(this.r * 0.72, 42 * scaleFactor);
+        const textY = -labelOffset - (this.hasShield ? 15 : 10) * scaleFactor;
         ctx.fillText(this.rankName, 0, textY);
         ctx.shadowBlur = 0; 
 
         // 2. VẼ THANH MÁU
-        const barWidth = this.r * 1.5 * scaleFactor;
+        const barWidth = Math.max(26 * scaleFactor, Math.min(this.r * 1.15, 96 * scaleFactor));
         const barHeight = 4 * scaleFactor;
         const barY = textY + 5 * scaleFactor;
 

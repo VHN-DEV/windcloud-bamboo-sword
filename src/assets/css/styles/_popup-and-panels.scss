@@ -695,6 +695,26 @@
     gap: 12px;
 }
 
+.profile-stat-section {
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--profile-accent, #8fffe0) 24%, rgba(255, 255, 255, 0.08));
+    background: linear-gradient(180deg, rgba(11, 20, 28, 0.94), rgba(7, 12, 18, 0.9));
+}
+
+.profile-stat-section + .profile-stat-section {
+    margin-top: 10px;
+}
+
+.profile-stat-section__title {
+    margin: 0 0 10px;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: rgba(240, 255, 249, 0.72);
+}
+
 .profile-stat-card {
     padding: 14px;
     border-radius: 16px;
@@ -707,19 +727,29 @@
 
 .profile-stat-label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: rgba(240, 255, 249, 0.6);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     text-transform: uppercase;
 }
 
 .profile-stat-value {
     display: block;
     color: #f6fffd;
-    font-size: 18px;
-    line-height: 1.35;
+    font-size: 14px;
+    line-height: 1.28;
+}
+
+.profile-stats-grid--compact {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.profile-stat-card--compact {
+    padding: 10px 11px;
+    border-radius: 12px;
 }
 
 .profile-pills {

@@ -584,57 +584,89 @@ ProfileUI = {
             </article>
         `;
 
-        const stats = [
-            { label: 'Đại cảnh giới', value: majorRealm?.name || 'Phàm giới' },
-            { label: 'Cảnh giới', value: rank?.name || 'Chưa nhập đạo' },
-            { label: 'Đạo tầng (LV)', value: `${formatNumber(basicStats.LV)}` },
-            { label: 'Tu vi (EXP)', value: `${formatNumber(basicStats.EXP)}/${formatNumber(rank?.exp || 0)}` },
-            { label: 'Sinh cơ (HP)', value: `${formatNumber(basicStats.HP)}/${formatNumber(basicStats.MAX_HP)}` },
-            { label: 'Linh lực (MP)', value: `${formatNumber(basicStats.MP)}/${formatNumber(basicStats.MAX_MP)}` },
-            { label: 'Khí lực (SP)', value: `${formatNumber(basicStats.SP)}/${formatNumber(basicStats.MAX_SP)}` },
-            { label: 'Tiến độ cảnh giới', value: `${expProgressPercent}%` },
-            { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
-            { label: rageLabel, value: `${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}` },
-            { label: 'Công phạt (ATK)', value: formatNumber(combatStats.ATK) },
-            { label: 'Hộ thể (DEF)', value: formatNumber(combatStats.DEF) },
-            { label: 'Pháp uy (MATK)', value: formatNumber(combatStats.MATK) },
-            { label: 'Pháp hộ (MDEF)', value: formatNumber(combatStats.MDEF) },
-            { label: 'Bạo kích (CRIT)', value: `${Math.round(combatStats.CRIT * 100)}%` },
-            { label: 'Bạo thương (CRIT DMG)', value: `${Math.round(combatStats.CRIT_DMG * 100)}%` },
-            { label: 'Thân pháp (EVA)', value: `${Math.round(combatStats.EVA * 100)}%` },
-            { label: 'Kiếm nhãn (ACC)', value: `${Math.round(combatStats.ACC * 100)}%` },
-            { label: 'Thân tốc (SPD)', value: formatNumber(combatStats.SPD) },
-            { label: 'Cân cốt (STR)', value: formatNumber(attributeStats.STR) },
-            { label: 'Khinh thân (AGI)', value: formatNumber(attributeStats.AGI) },
-            { label: 'Chuẩn thức (DEX)', value: formatNumber(attributeStats.DEX) },
-            { label: 'Thể phách (VIT)', value: formatNumber(attributeStats.VIT) },
-            { label: 'Linh trí (INT)', value: formatNumber(attributeStats.INT) },
-            { label: 'Đạo tâm (WIS)', value: formatNumber(attributeStats.WIS) },
-            { label: 'Cơ duyên (LUK)', value: formatNumber(attributeStats.LUK) },
-            { label: 'Công lực', value: formatBoostPercent(Input.getAttackMultiplier()) },
-            { label: 'Phá khiên', value: formatBoostPercent(Input.getShieldBreakMultiplier()) },
-            { label: 'Bí pháp đang vận chuyển', value: attackModeLabel },
-            { label: 'Thần thức', value: `${formatNumber(swordProgress.consciousness)}` },
-            { label: 'Giới hạn kiếm hộ thân', value: `${formatNumber(swordProgress.capacity)}` },
-            { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total} (${activeSwordRate}%)` },
-            { label: 'Mục tiêu quái', value: targetEnemy?.rankName || 'Chưa phát hiện' },
-            { label: 'Mục tiêu Sinh cơ', value: targetEnemy ? `${formatNumber(targetEnemy.hp)}/${formatNumber(targetEnemy.maxHp)}` : '-' },
-            { label: 'Mục tiêu Công/Hộ', value: targetCombatStats ? `${formatNumber(targetCombatStats.ATK)} / ${formatNumber(targetCombatStats.DEF)}` : '-' },
-            { label: 'Mục tiêu Pháp công/Pháp hộ', value: targetCombatStats ? `${formatNumber(targetCombatStats.MATK)} / ${formatNumber(targetCombatStats.MDEF)}` : '-' },
-            { label: 'Mục tiêu Bạo kích/Thân pháp', value: targetCombatStats ? `${Math.round(targetCombatStats.CRIT * 100)}% / ${Math.round(targetCombatStats.EVA * 100)}%` : '-' },
-            { label: 'Mục tiêu Cân cốt/Khinh thân', value: targetAttributeStats ? `${formatNumber(targetAttributeStats.STR)} / ${formatNumber(targetAttributeStats.AGI)}` : '-' },
-            { label: 'Mục tiêu Chuẩn thức/Thể phách', value: targetAttributeStats ? `${formatNumber(targetAttributeStats.DEX)} / ${formatNumber(targetAttributeStats.VIT)}` : '-' },
-            { label: 'Linh trùng', value: `${formatNumber(beastSummary.totalBeasts)}/${formatNumber(beastSummary.capacity)}` },
-            { label: 'Kỳ trùng đã mở', value: `${formatNumber(beastSummary.discoveredCount)}/${formatNumber(beastSummary.speciesTotal)}` },
-            { label: 'Túi trữ vật', value: `${formatNumber(inventorySummary.uniqueCount)}/${formatNumber(inventorySummary.capacity)} ô` },
-            { label: 'Mức sử dụng túi', value: `${inventoryUsageRate}% (${formatNumber(inventorySummary.freeSlots)} ô trống)` }
+        const statSections = [
+            {
+                title: 'Nền tảng',
+                stats: [
+                    { label: 'Đại cảnh giới', value: majorRealm?.name || 'Phàm giới' },
+                    { label: 'Cảnh giới', value: rank?.name || 'Chưa nhập đạo' },
+                    { label: 'Đạo tầng (LV)', value: `${formatNumber(basicStats.LV)}` },
+                    { label: 'Tu vi (EXP)', value: `${formatNumber(basicStats.EXP)}/${formatNumber(rank?.exp || 0)}` },
+                    { label: 'Sinh cơ (HP)', value: `${formatNumber(basicStats.HP)}/${formatNumber(basicStats.MAX_HP)}` },
+                    { label: 'Linh lực (MP)', value: `${formatNumber(basicStats.MP)}/${formatNumber(basicStats.MAX_MP)}` },
+                    { label: 'Khí lực (SP)', value: `${formatNumber(basicStats.SP)}/${formatNumber(basicStats.MAX_SP)}` },
+                    { label: 'Tiến độ cảnh giới', value: `${expProgressPercent}%` },
+                    { label: 'Tỉ lệ đột phá', value: `${Math.round(breakthroughChance * 100)}%` },
+                    { label: rageLabel, value: `${formatNumber(Input.rage)}/${formatNumber(Input.maxRage)}` }
+                ]
+            },
+            {
+                title: 'Chiến đấu',
+                stats: [
+                    { label: 'Công phạt (ATK)', value: formatNumber(combatStats.ATK) },
+                    { label: 'Hộ thể (DEF)', value: formatNumber(combatStats.DEF) },
+                    { label: 'Pháp uy (MATK)', value: formatNumber(combatStats.MATK) },
+                    { label: 'Pháp hộ (MDEF)', value: formatNumber(combatStats.MDEF) },
+                    { label: 'Bạo kích (CRIT)', value: `${Math.round(combatStats.CRIT * 100)}%` },
+                    { label: 'Bạo thương (CRIT DMG)', value: `${Math.round(combatStats.CRIT_DMG * 100)}%` },
+                    { label: 'Thân pháp (EVA)', value: `${Math.round(combatStats.EVA * 100)}%` },
+                    { label: 'Kiếm nhãn (ACC)', value: `${Math.round(combatStats.ACC * 100)}%` },
+                    { label: 'Thân tốc (SPD)', value: formatNumber(combatStats.SPD) }
+                ]
+            },
+            {
+                title: 'Thuộc tính nhân vật',
+                stats: [
+                    { label: 'Cân cốt (STR)', value: formatNumber(attributeStats.STR) },
+                    { label: 'Khinh thân (AGI)', value: formatNumber(attributeStats.AGI) },
+                    { label: 'Chuẩn thức (DEX)', value: formatNumber(attributeStats.DEX) },
+                    { label: 'Thể phách (VIT)', value: formatNumber(attributeStats.VIT) },
+                    { label: 'Linh trí (INT)', value: formatNumber(attributeStats.INT) },
+                    { label: 'Đạo tâm (WIS)', value: formatNumber(attributeStats.WIS) },
+                    { label: 'Cơ duyên (LUK)', value: formatNumber(attributeStats.LUK) },
+                    { label: 'Công lực', value: formatBoostPercent(Input.getAttackMultiplier()) },
+                    { label: 'Phá khiên', value: formatBoostPercent(Input.getShieldBreakMultiplier()) },
+                    { label: 'Bí pháp đang vận chuyển', value: attackModeLabel },
+                    { label: 'Thần thức', value: `${formatNumber(swordProgress.consciousness)}` },
+                    { label: 'Giới hạn kiếm hộ thân', value: `${formatNumber(swordProgress.capacity)}` },
+                    { label: swordMetricLabel, value: `${swordStats.alive}/${swordStats.total} (${activeSwordRate}%)` }
+                ]
+            },
+            {
+                title: 'Mục tiêu hiện tại',
+                stats: [
+                    { label: 'Mục tiêu quái', value: targetEnemy?.rankName || 'Chưa phát hiện' },
+                    { label: 'Mục tiêu Sinh cơ', value: targetEnemy ? `${formatNumber(targetEnemy.hp)}/${formatNumber(targetEnemy.maxHp)}` : '-' },
+                    { label: 'Mục tiêu Công/Hộ', value: targetCombatStats ? `${formatNumber(targetCombatStats.ATK)} / ${formatNumber(targetCombatStats.DEF)}` : '-' },
+                    { label: 'Mục tiêu Pháp công/Pháp hộ', value: targetCombatStats ? `${formatNumber(targetCombatStats.MATK)} / ${formatNumber(targetCombatStats.MDEF)}` : '-' },
+                    { label: 'Mục tiêu Bạo kích/Thân pháp', value: targetCombatStats ? `${Math.round(targetCombatStats.CRIT * 100)}% / ${Math.round(targetCombatStats.EVA * 100)}%` : '-' },
+                    { label: 'Mục tiêu Cân cốt/Khinh thân', value: targetAttributeStats ? `${formatNumber(targetAttributeStats.STR)} / ${formatNumber(targetAttributeStats.AGI)}` : '-' },
+                    { label: 'Mục tiêu Chuẩn thức/Thể phách', value: targetAttributeStats ? `${formatNumber(targetAttributeStats.DEX)} / ${formatNumber(targetAttributeStats.VIT)}` : '-' }
+                ]
+            },
+            {
+                title: 'Hậu cần',
+                stats: [
+                    { label: 'Linh trùng', value: `${formatNumber(beastSummary.totalBeasts)}/${formatNumber(beastSummary.capacity)}` },
+                    { label: 'Kỳ trùng đã mở', value: `${formatNumber(beastSummary.discoveredCount)}/${formatNumber(beastSummary.speciesTotal)}` },
+                    { label: 'Túi trữ vật', value: `${formatNumber(inventorySummary.uniqueCount)}/${formatNumber(inventorySummary.capacity)} ô` },
+                    { label: 'Mức sử dụng túi', value: `${inventoryUsageRate}% (${formatNumber(inventorySummary.freeSlots)} ô trống)` }
+                ]
+            }
         ];
 
-        this.statsGrid.innerHTML = stats.map(stat => `
-            <article class="profile-stat-card" style="--profile-accent:${accent}">
-                <span class="profile-stat-label">${escapeHtml(stat.label)}</span>
-                <strong class="profile-stat-value">${escapeHtml(stat.value)}</strong>
-            </article>
+        this.statsGrid.innerHTML = statSections.map(section => `
+            <section class="profile-stat-section" style="--profile-accent:${accent}">
+                <h5 class="profile-stat-section__title">${escapeHtml(section.title)}</h5>
+                <div class="profile-stats-grid profile-stats-grid--compact">
+                    ${section.stats.map(stat => `
+                        <article class="profile-stat-card profile-stat-card--compact" style="--profile-accent:${accent}">
+                            <span class="profile-stat-label">${escapeHtml(stat.label)}</span>
+                            <strong class="profile-stat-value">${escapeHtml(stat.value)}</strong>
+                        </article>
+                    `).join('')}
+                </div>
+            </section>
         `).join('');
 
         this.wallet.innerHTML = buildWalletMarkup();

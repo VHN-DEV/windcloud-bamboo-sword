@@ -462,6 +462,32 @@ function startGame() {
     hideStartOverlay();
 }
 
+function clearClientCachesForFreshRun() {
+    try {
+        GameProgress.clearStored?.();
+    } catch (error) {
+        console.warn('[game-loop] Không thể xóa tiến trình đã lưu:', error);
+    }
+
+    try {
+        localStorage.removeItem('thanh_truc_settings');
+    } catch (error) {
+        console.warn('[game-loop] Không thể xóa thiết lập cục bộ:', error);
+    }
+
+    try {
+        sessionStorage.clear();
+    } catch (error) {
+        console.warn('[game-loop] Không thể xóa session storage:', error);
+    }
+
+    if (typeof caches !== 'undefined' && typeof caches.keys === 'function') {
+        caches.keys()
+            .then(cacheNames => Promise.all(cacheNames.map(cacheName => caches.delete(cacheName))))
+            .catch(error => console.warn('[game-loop] Không thể xóa Cache Storage:', error));
+    }
+}
+
 difficultySelect?.addEventListener('click', (event) => {
     const option = event.target?.closest?.('.difficulty-option');
     if (!option) return;
@@ -472,7 +498,9 @@ difficultySelect?.addEventListener('click', (event) => {
 });
 
 window.__onPlayerGameOver = () => {
-    showNotify('Đạo thể trọng thương, thiên địa hồi chuyển ngươi về trạng thái toàn thịnh.', '#ff9f9f');
+    clearClientCachesForFreshRun();
+    GameProgress.applyFreshStart?.();
+    showNotify('Đạo thể tan vỡ, đã thanh tẩy toàn bộ ký ức tu luyện và bắt đầu lại từ đầu.', '#ff9f9f');
     resetRunState();
     gameStarted = true;
 };
