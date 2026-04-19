@@ -1286,6 +1286,20 @@ const CONFIG = {
             thunderSegmentsMin: 20,
             thunderSegmentsRand: 10,
             description: "Bí pháp ngự lôi, sau khi lĩnh ngộ có thể khai/thu tức thì. Mỗi đòn trúng mục tiêu sẽ giáng tia sét bám theo điểm va chạm."
+        },
+        NGU_LONG_THUAT: {
+            fullName: "Ngự Long Thuật",
+            quality: "SUPREME",
+            color: "#71f0d2",
+            imagePath: imagePath("animals/dragon.svg"),
+            secondaryColor: "#f8fffd",
+            glowColor: "#2fd9be",
+            buyPriceLowStone: 960000,
+            buttonLabel: "Mua",
+            inventoryActionLabel: "Lĩnh ngộ",
+            toggleOnLabel: "Khai",
+            toggleOffLabel: "Thu",
+            description: "Bí pháp ngự long mô phỏng long ảnh bám theo tâm ấn như hiệu ứng Dragon Cursor. Sau khi lĩnh ngộ có thể khai/thu tức thì."
         }
     },
     ARTIFACTS: {

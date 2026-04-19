@@ -75,6 +75,8 @@ const INPUT_INITIAL_STATE = {
     phongLoiBlink: getDefaultPhongLoiBlinkState(),
     nguLoiThuatEnabled: false,
     nguLoiThuatEffects: [],
+    nguLongThuatEnabled: false,
+    nguLongThuatTrail: [],
     insectEggs: {},
     tamedInsects: {},
     insectColonies: {},

@@ -5810,6 +5810,92 @@ Object.assign(Input, {
         ctx.restore();
     },
 
+    drawNguLongThuatCursor(ctx, scaleFactor) {
+        if (!this.isNguLongThuatEnabled?.()) {
+            if (Array.isArray(this.nguLongThuatTrail) && this.nguLongThuatTrail.length) {
+                this.nguLongThuatTrail.length = 0;
+            }
+            return;
+        }
+
+        if (!Array.isArray(this.nguLongThuatTrail)) {
+            this.nguLongThuatTrail = [];
+        }
+
+        const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
+        const now = performance.now();
+        this.nguLongThuatTrail.push({ x: this.x, y: this.y, t: now });
+        const maxNodes = 32;
+        if (this.nguLongThuatTrail.length > maxNodes) {
+            this.nguLongThuatTrail.splice(0, this.nguLongThuatTrail.length - maxNodes);
+        }
+
+        const glowColor = cfg.glowColor || '#2fd9be';
+        const bodyColor = cfg.color || '#71f0d2';
+        const headColor = cfg.secondaryColor || '#f8fffd';
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        for (let i = 1; i < this.nguLongThuatTrail.length; i++) {
+            const prev = this.nguLongThuatTrail[i - 1];
+            const node = this.nguLongThuatTrail[i];
+            const ratio = i / Math.max(1, this.nguLongThuatTrail.length - 1);
+            const pulse = 0.72 + (Math.sin((now * 0.008) - (i * 0.56)) * 0.28);
+            ctx.strokeStyle = withAlpha(bodyColor, 0.08 + ((1 - ratio) * 0.42));
+            ctx.lineWidth = Math.max(0.8, ((1 - ratio) * 7.2 + 1.1) * scaleFactor * pulse);
+            ctx.shadowBlur = (14 + ((1 - ratio) * 12)) * scaleFactor;
+            ctx.shadowColor = withAlpha(glowColor, 0.8);
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            const jitterX = Math.sin((now * 0.005) + (i * 0.8)) * (5.5 * scaleFactor * (1 - ratio));
+            const jitterY = Math.cos((now * 0.0055) + (i * 0.72)) * (4.5 * scaleFactor * (1 - ratio));
+            ctx.lineTo(node.x + jitterX, node.y + jitterY);
+            ctx.stroke();
+        }
+
+        const headRadius = Math.max(4, 8 * scaleFactor);
+        const eyeRadius = Math.max(0.8, 1.4 * scaleFactor);
+        const jawOffset = 4.5 * scaleFactor;
+        const hornLength = 9 * scaleFactor;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.shadowBlur = 20 * scaleFactor;
+        ctx.shadowColor = withAlpha(glowColor, 0.9);
+
+        const headGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, headRadius * 2.6);
+        headGradient.addColorStop(0, withAlpha(headColor, 0.96));
+        headGradient.addColorStop(0.45, withAlpha(bodyColor, 0.88));
+        headGradient.addColorStop(1, withAlpha(glowColor, 0));
+        ctx.fillStyle = headGradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, headRadius * 1.9, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = withAlpha('#071815', 0.9);
+        ctx.beginPath();
+        ctx.arc(-headRadius * 0.45, -eyeRadius, eyeRadius, 0, Math.PI * 2);
+        ctx.arc(headRadius * 0.45, -eyeRadius, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = withAlpha(headColor, 0.8);
+        ctx.lineWidth = Math.max(1, 1.2 * scaleFactor);
+        ctx.beginPath();
+        ctx.moveTo(-headRadius * 0.55, -headRadius * 0.7);
+        ctx.lineTo(-headRadius * 0.55 - hornLength, -headRadius * 1.25);
+        ctx.moveTo(headRadius * 0.55, -headRadius * 0.7);
+        ctx.lineTo(headRadius * 0.55 + hornLength, -headRadius * 1.25);
+        ctx.stroke();
+
+        ctx.fillStyle = withAlpha('#ffffff', 0.8);
+        ctx.beginPath();
+        ctx.ellipse(0, jawOffset, headRadius * 0.72, headRadius * 0.34, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.restore();
+    },
+
     drawCursor(ctx, scaleFactor) {
         this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
         this.drawBatLinhXichArtifact(ctx, scaleFactor);
@@ -5822,6 +5908,7 @@ Object.assign(Input, {
             this.drawCursorSeed(ctx, scaleFactor);
         }
 
+        this.drawNguLongThuatCursor(ctx, scaleFactor);
         this.drawPhongLoiArtifact(ctx, scaleFactor);
         this.drawHuThienDinhShield(ctx, scaleFactor);
         this.drawCursorDamageFeedback(ctx, scaleFactor);

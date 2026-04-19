@@ -1919,6 +1919,37 @@ Object.assign(Input, {
         return this.setNguLoiThuatEnabled(!this.isNguLoiThuatEnabled());
     },
 
+    hasNguLongThuatUnlocked() {
+        return this.hasCultivationArt('NGU_LONG_THUAT');
+    },
+
+    isNguLongThuatEnabled() {
+        return this.hasNguLongThuatUnlocked() && Boolean(this.nguLongThuatEnabled);
+    },
+
+    setNguLongThuatEnabled(nextEnabled, { silent = false } = {}) {
+        if (!this.hasNguLongThuatUnlocked()) return false;
+        const normalized = Boolean(nextEnabled);
+        if (Boolean(this.nguLongThuatEnabled) === normalized) return false;
+        this.nguLongThuatEnabled = normalized;
+        if (!normalized && Array.isArray(this.nguLongThuatTrail)) {
+            this.nguLongThuatTrail.length = 0;
+        }
+
+        if (!silent) {
+            const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
+            const label = normalized ? (cfg.toggleOnLabel || 'Khai') : (cfg.toggleOffLabel || 'Thu');
+            showNotify(`Ngự Long Thuật: ${label}.`, cfg.color || '#71f0d2');
+        }
+
+        this.renderAttackModeUI?.();
+        return true;
+    },
+
+    toggleNguLongThuat() {
+        return this.setNguLongThuatEnabled(!this.isNguLongThuatEnabled());
+    },
+
     triggerNguLoiThuatHitEffect(target, hitType = 'normal', { force = false } = {}) {
         if (!this.isNguLoiThuatEnabled()) return false;
         if (!target) return false;

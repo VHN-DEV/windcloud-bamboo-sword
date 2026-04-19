@@ -251,6 +251,7 @@ const GameProgress = {
             nguCucSonCombined: Boolean(Input.nguCucSonCombined),
             phongLoiBlinkEnabled: Boolean(Input.phongLoiBlink?.enabled),
             nguLoiThuatEnabled: Boolean(Input.nguLoiThuatEnabled),
+            nguLongThuatEnabled: Boolean(Input.nguLongThuatEnabled),
             specialAuraMode: Input.specialAuraExpiresAt === Number.POSITIVE_INFINITY ? Input.specialAuraMode : null,
             insectEggs: Input.insectEggs,
             tamedInsects: Input.tamedInsects,
@@ -378,6 +379,8 @@ const GameProgress = {
             Input.phongLoiBlink = this.getDefaultPhongLoiBlinkState();
             Input.nguLoiThuatEnabled = false;
             Input.nguLoiThuatEffects = [];
+            Input.nguLongThuatEnabled = false;
+            Input.nguLongThuatTrail = [];
             Input.insectEggs = {};
             Input.tamedInsects = {};
             Input.insectColonies = {};
@@ -510,6 +513,8 @@ const GameProgress = {
             Input.phongLoiBlink = this.getDefaultPhongLoiBlinkState();
             Input.nguLoiThuatEnabled = Boolean(parsed.nguLoiThuatEnabled);
             Input.nguLoiThuatEffects = [];
+            Input.nguLongThuatEnabled = Boolean(parsed.nguLongThuatEnabled);
+            Input.nguLongThuatTrail = [];
             Input.insectEggs = this.sanitizeNumberMap(parsed.insectEggs);
             Input.tamedInsects = this.sanitizeNumberMap(parsed.tamedInsects);
             Input.insectColonies = this.sanitizeInsectColonies(parsed.insectColonies);
@@ -612,6 +617,7 @@ const GameProgress = {
 
             Input.phongLoiBlink.enabled = Boolean(parsed.phongLoiBlinkEnabled) && Input.isArtifactDeployed('PHONG_LOI_SI');
             Input.nguLoiThuatEnabled = Boolean(Input.nguLoiThuatEnabled) && Boolean(Input.hasNguLoiThuatUnlocked?.());
+            Input.nguLongThuatEnabled = Boolean(Input.nguLongThuatEnabled) && Boolean(Input.hasNguLongThuatUnlocked?.());
             Input.ensureValidBeastBagTab();
             return true;
         } catch (error) {
