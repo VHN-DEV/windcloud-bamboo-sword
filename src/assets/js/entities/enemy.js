@@ -122,6 +122,8 @@ class Enemy {
         this.hostileUntil = 0;
         this.leftCombatAt = 0;
         this.enragedAt = 0;
+        this.enragedPattern = null;
+        this.nextEnragedPatternRollAt = 0;
 
         // 1. KIỂM TRA SỐ LƯỢNG QUÁI VỪA SỨC HIỆN CÓ
         const playerRank = Input.rankIndex || 0;

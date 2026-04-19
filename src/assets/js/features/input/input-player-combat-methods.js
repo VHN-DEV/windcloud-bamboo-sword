@@ -1235,8 +1235,24 @@ Object.assign(Input, {
     },
 
     getEnemyAttackPattern(enemy) {
-        if (enemy?.attackPattern) return enemy.attackPattern;
+        if (enemy?.combatMode === 'ENRAGED') {
+            const now = performance.now();
+            const enragedPatterns = ['BITE', 'CLAW', 'BEAM', 'ARC_MISSILE', 'SPIKE_RING'];
+            if (!enemy.enragedPattern || now >= (enemy.nextEnragedPatternRollAt || 0)) {
+                const currentIndex = enragedPatterns.indexOf(enemy.enragedPattern);
+                let nextIndex = Math.floor(Math.random() * enragedPatterns.length);
+                if (currentIndex >= 0 && enragedPatterns.length > 1 && nextIndex === currentIndex) {
+                    nextIndex = (nextIndex + 1) % enragedPatterns.length;
+                }
+                enemy.enragedPattern = enragedPatterns[nextIndex];
+                enemy.nextEnragedPatternRollAt = now + random(1200, 2600);
+            }
+            return enemy.enragedPattern;
+        }
+
+        enemy.enragedPattern = null;
         const patterns = ['CHARGE', 'BITE', 'CLAW', 'ORB', 'BEAM', 'ARC_MISSILE', 'SPIKE_RING'];
+        if (enemy?.attackPattern) return enemy.attackPattern;
         const rankId = Number(enemy?.rankData?.id) || 1;
         enemy.attackPattern = patterns[(rankId + Math.floor((enemy?.floatOffset || 0) * 0.01)) % patterns.length];
         return enemy.attackPattern;
