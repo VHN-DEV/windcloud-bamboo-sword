@@ -1095,24 +1095,27 @@ const CONFIG = {
             BREAKTHROUGH: 2, // Loại thưởng BREAKTHROUGH
             ATTACK: 3, // Loại thưởng ATTACK
             SHIELD_BREAK: 4, // Loại thưởng SHIELD_BREAK
-            BERSERK: 5, // Loại thưởng BERSERK
-            RAGE: 6, // Loại thưởng RAGE
-            MANA: 7, // Loại thưởng MANA
-            MAX_MANA: 8, // Loại thưởng MAX_MANA
-            REGEN: 9, // Loại thưởng REGEN
-            SPEED: 10, // Loại thưởng SPEED
-            FORTUNE: 11, // Loại thưởng FORTUNE
-            SWORD_ART: 12, // Loại thưởng SWORD_ART
-            FLAME_ART: 13, // Loại thưởng FLAME_ART
-            SWORD_ARTIFACT: 14, // Loại thưởng SWORD_ARTIFACT
-            ARTIFACT: 15, // Loại thưởng ARTIFACT
-            INSECT_SKILL: 16, // Loại thưởng INSECT_SKILL
-            INSECT_ARTIFACT: 17, // Loại thưởng INSECT_ARTIFACT
-            SPECIAL: 18 // Loại thưởng SPECIAL
+            BATTLE_AURA: 5, // Loại thưởng BATTLE_AURA
+            BODY_TECHNIQUE: 6, // Loại thưởng BODY_TECHNIQUE
+            SENSE: 7, // Loại thưởng SENSE
+            BERSERK: 8, // Loại thưởng BERSERK
+            RAGE: 9, // Loại thưởng RAGE
+            MANA: 10, // Loại thưởng MANA
+            MAX_MANA: 11, // Loại thưởng MAX_MANA
+            REGEN: 12, // Loại thưởng REGEN
+            SPEED: 13, // Loại thưởng SPEED
+            FORTUNE: 14, // Loại thưởng FORTUNE
+            SWORD_ART: 15, // Loại thưởng SWORD_ART
+            FLAME_ART: 16, // Loại thưởng FLAME_ART
+            SWORD_ARTIFACT: 17, // Loại thưởng SWORD_ARTIFACT
+            ARTIFACT: 18, // Loại thưởng ARTIFACT
+            INSECT_SKILL: 19, // Loại thưởng INSECT_SKILL
+            INSECT_ARTIFACT: 20, // Loại thưởng INSECT_ARTIFACT
+            SPECIAL: 21 // Loại thưởng SPECIAL
         },
         CATEGORY_RATES: {
-            NORMAL: { EXP: 0.17, INSIGHT: 0.07, BREAKTHROUGH: 0.10, ATTACK: 0.12, SHIELD_BREAK: 0.05, BERSERK: 0.06, RAGE: 0.09, MANA: 0.08, MAX_MANA: 0.07, REGEN: 0.06, SPEED: 0.08, FORTUNE: 0.05 },
-            ELITE: { EXP: 0.12, INSIGHT: 0.05, BREAKTHROUGH: 0.14, ATTACK: 0.14, SHIELD_BREAK: 0.08, BERSERK: 0.10, RAGE: 0.08, MANA: 0.07, MAX_MANA: 0.06, REGEN: 0.06, SPEED: 0.07, FORTUNE: 0.03 }
+            NORMAL: { EXP: 0.16, INSIGHT: 0.07, BREAKTHROUGH: 0.10, ATTACK: 0.11, SHIELD_BREAK: 0.05, BATTLE_AURA: 0.06, BODY_TECHNIQUE: 0.05, SENSE: 0.05, BERSERK: 0.06, RAGE: 0.08, MANA: 0.07, MAX_MANA: 0.06, REGEN: 0.05, SPEED: 0.07, FORTUNE: 0.04 },
+            ELITE: { EXP: 0.10, INSIGHT: 0.05, BREAKTHROUGH: 0.14, ATTACK: 0.12, SHIELD_BREAK: 0.08, BATTLE_AURA: 0.08, BODY_TECHNIQUE: 0.07, SENSE: 0.07, BERSERK: 0.10, RAGE: 0.06, MANA: 0.05, MAX_MANA: 0.04, REGEN: 0.04, SPEED: 0.06, FORTUNE: 0.04 }
         },
         QUALITY_RATES: {
             NORMAL: { LOW: 0.72, MEDIUM: 0.20, HIGH: 0.07, SUPREME: 0.01 },
@@ -1147,6 +1150,24 @@ const CONFIG = {
             MEDIUM: { fullName: "Liệt Khiên Xuyên Mạch Đan", shieldBreakPct: 0.34, color: "#6ad7ff", buyPriceLowStone: 480 },
             HIGH: { fullName: "Thiên Sát Toái Thuẫn Đan", shieldBreakPct: 0.58, color: "#5ca8ff", buyPriceLowStone: 2500 },
             SUPREME: { fullName: "Hư Không Phá Giới Đan", shieldBreakPct: 0.90, color: "#7f8cff", buyPriceLowStone: 15000 }
+        }),
+        BATTLE_AURA_QUALITIES: createRadiusQualityConfig({
+            LOW: { fullName: "Phong Mang Trấn Chiến Đan", critPct: 0.02, critDmgPct: 0.05, color: "#ff9ad5", buyPriceLowStone: 120 },
+            MEDIUM: { fullName: "Liệt Tinh Trảm Hồn Đan", critPct: 0.04, critDmgPct: 0.11, color: "#ff7ac6", buyPriceLowStone: 560 },
+            HIGH: { fullName: "Tinh Vẫn Đoạn Không Đan", critPct: 0.07, critDmgPct: 0.19, color: "#ff5db6", buyPriceLowStone: 2800 },
+            SUPREME: { fullName: "Thiên Mệnh Tuyệt Sát Đan", critPct: 0.11, critDmgPct: 0.30, color: "#ff3da6", buyPriceLowStone: 16000 }
+        }),
+        BODY_TECHNIQUE_QUALITIES: createRadiusQualityConfig({
+            LOW: { fullName: "Khinh Vân Hộ Thể Đan", evaPct: 0.02, defensePct: 0.06, color: "#7ef3a9", buyPriceLowStone: 110 },
+            MEDIUM: { fullName: "Huyền Bộ Trấn Mạch Đan", evaPct: 0.04, defensePct: 0.12, color: "#58e08c", buyPriceLowStone: 530 },
+            HIGH: { fullName: "Vô Ảnh Hộ Tâm Đan", evaPct: 0.06, defensePct: 0.20, color: "#34d071", buyPriceLowStone: 2600 },
+            SUPREME: { fullName: "Thái Hư Bất Hoại Đan", evaPct: 0.09, defensePct: 0.32, color: "#16bf5a", buyPriceLowStone: 14800 }
+        }),
+        SENSE_QUALITIES: createRadiusQualityConfig({
+            LOW: { fullName: "Minh Tâm Quan Vi Đan", accPct: 0.02, matkPct: 0.06, mdefPct: 0.05, color: "#9fc6ff", buyPriceLowStone: 115 },
+            MEDIUM: { fullName: "Thần Niệm Khai Khiếu Đan", accPct: 0.04, matkPct: 0.12, mdefPct: 0.10, color: "#7aa8ff", buyPriceLowStone: 540 },
+            HIGH: { fullName: "Hư Cảnh Động Thần Đan", accPct: 0.06, matkPct: 0.20, mdefPct: 0.16, color: "#5a8cff", buyPriceLowStone: 2700 },
+            SUPREME: { fullName: "Động Thiên Thông Huyền Đan", accPct: 0.09, matkPct: 0.32, mdefPct: 0.24, color: "#3f74ff", buyPriceLowStone: 15400 }
         }),
         BERSERK_QUALITIES: createRadiusQualityConfig({
             LOW: { fullName: "Nhiên Huyết Cuồng Sát Đan", attackPct: 1.2, durationMs: 12000, auraMode: "berserk", sideManaLoss: 25, color: "#ff6b6b", radius: 5.2, buyPriceLowStone: 260 },

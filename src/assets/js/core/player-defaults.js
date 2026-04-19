@@ -38,6 +38,13 @@ function getDefaultActiveArtifacts() {
 function getDefaultBonusStats() {
     return {
         attackPct: 0,
+        defensePct: 0,
+        matkPct: 0,
+        mdefPct: 0,
+        critPct: 0,
+        critDmgPct: 0,
+        evaPct: 0,
+        accPct: 0,
         maxManaFlat: 0,
         speedPct: 0,
         expGainPct: 0,

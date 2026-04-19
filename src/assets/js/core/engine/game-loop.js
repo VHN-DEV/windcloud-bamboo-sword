@@ -255,6 +255,7 @@ window.starField = null;
 const guardCenter = { x: width / 2, y: height / 2, vx: 0, vy: 0 };
 let gameInitialized = false;
 let gameStarted = false;
+let isHandlingGameOver = false;
 
 const startOverlay = document.getElementById('start-overlay');
 const startTitle = document.getElementById('start-title');
@@ -498,11 +499,17 @@ difficultySelect?.addEventListener('click', (event) => {
 });
 
 window.__onPlayerGameOver = () => {
+    if (isHandlingGameOver) return;
+    isHandlingGameOver = true;
+
     clearClientCachesForFreshRun();
-    GameProgress.applyFreshStart?.();
-    showNotify('Đạo thể tan vỡ, đã thanh tẩy toàn bộ ký ức tu luyện và bắt đầu lại từ đầu.', '#ff9f9f');
-    resetRunState();
-    gameStarted = true;
+    setTimeout(() => {
+        GameProgress.applyFreshStart?.();
+        showNotify('Đạo thể tan vỡ, đã thanh tẩy toàn bộ ký ức tu luyện và bắt đầu lại từ đầu.', '#ff9f9f');
+        resetRunState();
+        gameStarted = true;
+        isHandlingGameOver = false;
+    }, 0);
 };
 
 document.addEventListener('fullscreenchange', () => Input.syncLandscapeMode());

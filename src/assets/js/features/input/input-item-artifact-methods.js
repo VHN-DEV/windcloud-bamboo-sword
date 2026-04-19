@@ -1549,6 +1549,9 @@ Object.assign(Input, {
             BREAKTHROUGH: CONFIG.PILL.BREAKTHROUGH_QUALITIES,
             ATTACK: CONFIG.PILL.ATTACK_QUALITIES,
             SHIELD_BREAK: CONFIG.PILL.SHIELD_BREAK_QUALITIES,
+            BATTLE_AURA: CONFIG.PILL.BATTLE_AURA_QUALITIES,
+            BODY_TECHNIQUE: CONFIG.PILL.BODY_TECHNIQUE_QUALITIES,
+            SENSE: CONFIG.PILL.SENSE_QUALITIES,
             BERSERK: CONFIG.PILL.BERSERK_QUALITIES,
             RAGE: CONFIG.PILL.RAGE_QUALITIES,
             MANA: CONFIG.PILL.MANA_QUALITIES,
@@ -1689,6 +1692,9 @@ Object.assign(Input, {
             BREAKTHROUGH: 'Đột phá',
             ATTACK: 'Công phạt',
             SHIELD_BREAK: 'Phá khiên',
+            BATTLE_AURA: 'Chiến ý',
+            BODY_TECHNIQUE: 'Luyện thể',
+            SENSE: 'Thần niệm',
             BERSERK: 'Cuồng bạo',
             RAGE: 'Nộ',
             MANA: 'Hồi linh',
@@ -1894,6 +1900,9 @@ Object.assign(Input, {
             BREAKTHROUGH: 'Đột phá',
             ATTACK: 'Công phạt',
             SHIELD_BREAK: 'Phá khiên',
+            BATTLE_AURA: 'Chiến ý',
+            BODY_TECHNIQUE: 'Luyện thể',
+            SENSE: 'Thần niệm',
             BERSERK: 'Cuồng bạo',
             RAGE: 'Nộ',
             MANA: 'Hồi linh',
@@ -2075,7 +2084,7 @@ Object.assign(Input, {
     },
 
     isShopLimitedStockItem(item) {
-        return ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'SPECIAL', 'MATERIAL'].includes(item?.category);
+        return ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BATTLE_AURA', 'BODY_TECHNIQUE', 'SENSE', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE', 'BREAKTHROUGH', 'SPECIAL', 'MATERIAL'].includes(item?.category);
     },
 
     getShopStockKey(item) {
@@ -2180,7 +2189,7 @@ Object.assign(Input, {
     },
 
     getShopItems() {
-        const shopCategories = ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE'];
+        const shopCategories = ['EXP', 'INSIGHT', 'ATTACK', 'SHIELD_BREAK', 'BATTLE_AURA', 'BODY_TECHNIQUE', 'SENSE', 'BERSERK', 'RAGE', 'MANA', 'MAX_MANA', 'REGEN', 'SPEED', 'FORTUNE'];
         const items = [];
         const craftablePillBuyMultiplier = 1.35;
         const swordArtifactBuyMultiplier = 1.6;
@@ -2819,6 +2828,41 @@ Object.assign(Input, {
                 this.bonusStats.shieldBreakPct += qualityConfig.shieldBreakPct || 0;
                 showNotify(`Dùng ${this.getItemDisplayName(item)}: +${Math.round((qualityConfig.shieldBreakPct || 0) * 100)}% phá khiên`, qualityConfig.color);
                 break;
+            case 'BATTLE_AURA': {
+                const critBonus = qualityConfig.critPct || 0;
+                const critDmgBonus = qualityConfig.critDmgPct || 0;
+                this.bonusStats.critPct += critBonus;
+                this.bonusStats.critDmgPct += critDmgBonus;
+                showNotify(
+                    `Dùng ${this.getItemDisplayName(item)}: +${Math.round(critBonus * 100)}% bạo kích, +${Math.round(critDmgBonus * 100)}% bạo thương`,
+                    qualityConfig.color
+                );
+                break;
+            }
+            case 'BODY_TECHNIQUE': {
+                const evaBonus = qualityConfig.evaPct || 0;
+                const defBonus = qualityConfig.defensePct || 0;
+                this.bonusStats.evaPct += evaBonus;
+                this.bonusStats.defensePct += defBonus;
+                showNotify(
+                    `Dùng ${this.getItemDisplayName(item)}: +${Math.round(evaBonus * 100)}% thân pháp, +${Math.round(defBonus * 100)}% phòng ngự`,
+                    qualityConfig.color
+                );
+                break;
+            }
+            case 'SENSE': {
+                const accBonus = qualityConfig.accPct || 0;
+                const matkBonus = qualityConfig.matkPct || 0;
+                const mdefBonus = qualityConfig.mdefPct || 0;
+                this.bonusStats.accPct += accBonus;
+                this.bonusStats.matkPct += matkBonus;
+                this.bonusStats.mdefPct += mdefBonus;
+                showNotify(
+                    `Dùng ${this.getItemDisplayName(item)}: +${Math.round(accBonus * 100)}% chính xác, +${Math.round(matkBonus * 100)}% pháp công, +${Math.round(mdefBonus * 100)}% pháp phòng`,
+                    qualityConfig.color
+                );
+                break;
+            }
             case 'BERSERK':
                 this.consumeBerserkPill(item, qualityConfig);
                 break;

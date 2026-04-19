@@ -2611,15 +2611,16 @@ Object.assign(Input, {
         const atkMult = this.getAttackMultiplier();
         const speedMult = this.getMovementSpeedMultiplier();
         const shieldBreakMult = this.getShieldBreakMultiplier();
+        const statBonus = this.bonusStats || {};
 
         const atk = Math.max(1, Math.round(attrs.STR * atkMult * 1.8));
-        const def = Math.max(1, Math.round((attrs.VIT * 0.55) + (attrs.STR * 0.16)));
-        const matk = Math.max(1, Math.round((attrs.INT * 1.45) + (attrs.WIS * 0.35)));
-        const mdef = Math.max(1, Math.round((attrs.WIS * 0.7) + (attrs.VIT * 0.25)));
-        const critRate = Math.max(0, Math.min(0.75, 0.03 + (attrs.DEX * 0.0012) + (attrs.LUK * 0.0009)));
-        const critDmg = Math.max(1.25, Math.min(3.6, 1.55 + (attrs.STR * 0.0045) + (attrs.LUK * 0.0022)));
-        const eva = Math.max(0, Math.min(0.72, 0.02 + (attrs.AGI * 0.0014) + (attrs.LUK * 0.0005)));
-        const acc = Math.max(0.15, Math.min(0.98, 0.78 + (attrs.DEX * 0.0013) + (attrs.WIS * 0.0005)));
+        const def = Math.max(1, Math.round(((attrs.VIT * 0.55) + (attrs.STR * 0.16)) * (1 + (Number(statBonus.defensePct) || 0))));
+        const matk = Math.max(1, Math.round(((attrs.INT * 1.45) + (attrs.WIS * 0.35)) * (1 + (Number(statBonus.matkPct) || 0))));
+        const mdef = Math.max(1, Math.round(((attrs.WIS * 0.7) + (attrs.VIT * 0.25)) * (1 + (Number(statBonus.mdefPct) || 0))));
+        const critRate = Math.max(0, Math.min(0.75, 0.03 + (attrs.DEX * 0.0012) + (attrs.LUK * 0.0009) + (Number(statBonus.critPct) || 0)));
+        const critDmg = Math.max(1.25, Math.min(3.6, (1.55 + (attrs.STR * 0.0045) + (attrs.LUK * 0.0022)) * (1 + (Number(statBonus.critDmgPct) || 0))));
+        const eva = Math.max(0, Math.min(0.72, 0.02 + (attrs.AGI * 0.0014) + (attrs.LUK * 0.0005) + (Number(statBonus.evaPct) || 0)));
+        const acc = Math.max(0.15, Math.min(0.98, 0.78 + (attrs.DEX * 0.0013) + (attrs.WIS * 0.0005) + (Number(statBonus.accPct) || 0)));
         const spd = Math.max(1, Math.round(attrs.AGI * speedMult));
 
         return {
