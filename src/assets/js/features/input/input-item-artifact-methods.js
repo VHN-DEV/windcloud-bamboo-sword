@@ -5810,6 +5810,108 @@ Object.assign(Input, {
         ctx.restore();
     },
 
+    drawNguLongThuatCursor(ctx, scaleFactor) {
+        if (!this.isNguLongThuatEnabled?.()) {
+            if (Array.isArray(this.nguLongThuatTrail) && this.nguLongThuatTrail.length) {
+                this.nguLongThuatTrail.length = 0;
+            }
+            this.nguLongThuatVisual = null;
+            return;
+        }
+
+        if (!this.nguLongThuatVisual || !Array.isArray(this.nguLongThuatVisual.segments)) {
+            this.nguLongThuatVisual = {
+                segments: Array.from({ length: 28 }).map(() => ({ x: this.x, y: this.y })),
+                swaySeed: Math.random() * Math.PI * 2
+            };
+        }
+        const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
+        const segments = this.nguLongThuatVisual.segments;
+        const now = performance.now() * 0.001;
+        const glowColor = cfg.glowColor || '#27d8c5';
+        const bodyColor = cfg.color || '#71f0d2';
+        const headColor = cfg.secondaryColor || '#f8fffd';
+        const swaySeed = this.nguLongThuatVisual.swaySeed || 0;
+
+        const lead = segments[0];
+        lead.x += (this.x - lead.x) * 0.42;
+        lead.y += (this.y - lead.y) * 0.42;
+
+        for (let i = 1; i < segments.length; i++) {
+            const prev = segments[i - 1];
+            const seg = segments[i];
+            const follow = 0.34 - Math.min(0.2, i * 0.004);
+            const wave = (1 - (i / segments.length));
+            const sway = Math.sin((now * 5.4) + swaySeed + (i * 0.72)) * (6.2 * scaleFactor * wave);
+            seg.x += ((prev.x - seg.x) * follow) + (Math.cos(now * 3.1 + (i * 0.18)) * 0.08 * scaleFactor);
+            seg.y += ((prev.y - seg.y) * follow) + (sway * 0.05);
+        }
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (let i = segments.length - 1; i >= 0; i--) {
+            const seg = segments[i];
+            const ratio = i / Math.max(1, segments.length - 1);
+            const size = Math.max(1.2, ((1 - ratio) * 14 + 2.4) * scaleFactor);
+            const aura = size * 2.2;
+            const alpha = 0.12 + ((1 - ratio) * 0.5);
+
+            const glowGradient = ctx.createRadialGradient(seg.x, seg.y, 0, seg.x, seg.y, aura);
+            glowGradient.addColorStop(0, withAlpha(headColor, alpha));
+            glowGradient.addColorStop(0.35, withAlpha(bodyColor, alpha * 0.9));
+            glowGradient.addColorStop(1, withAlpha(glowColor, 0));
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(seg.x, seg.y, aura, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = withAlpha(bodyColor, 0.2 + ((1 - ratio) * 0.7));
+            ctx.beginPath();
+            ctx.arc(seg.x, seg.y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        const head = segments[0];
+        const neck = segments[2] || head;
+        const angle = Math.atan2(head.y - neck.y, head.x - neck.x);
+        const headRadius = Math.max(6, 10 * scaleFactor);
+        const eyeRadius = Math.max(1, 1.6 * scaleFactor);
+        const hornLength = 9 * scaleFactor;
+
+        ctx.save();
+        ctx.translate(head.x, head.y);
+        ctx.rotate(angle);
+        ctx.shadowBlur = 18 * scaleFactor;
+        ctx.shadowColor = withAlpha(glowColor, 0.92);
+
+        ctx.fillStyle = withAlpha(headColor, 0.95);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, headRadius * 1.12, headRadius * 0.92, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = withAlpha('#ffffff', 0.95);
+        ctx.lineWidth = Math.max(1, 1.3 * scaleFactor);
+        ctx.beginPath();
+        ctx.moveTo(-headRadius * 0.35, -headRadius * 0.3);
+        ctx.lineTo(-headRadius * 0.35 - hornLength, -headRadius * 0.95);
+        ctx.moveTo(headRadius * 0.35, -headRadius * 0.3);
+        ctx.lineTo(headRadius * 0.35 + hornLength, -headRadius * 0.95);
+        ctx.stroke();
+
+        ctx.fillStyle = '#051f1a';
+        ctx.beginPath();
+        ctx.arc(-headRadius * 0.35, -eyeRadius * 0.2, eyeRadius, 0, Math.PI * 2);
+        ctx.arc(headRadius * 0.35, -eyeRadius * 0.2, eyeRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = withAlpha('#ffffff', 0.9);
+        ctx.beginPath();
+        ctx.ellipse(0, headRadius * 0.35, headRadius * 0.56, headRadius * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.restore();
+    },
+
     drawCursor(ctx, scaleFactor) {
         this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
         this.drawBatLinhXichArtifact(ctx, scaleFactor);
@@ -5822,6 +5924,7 @@ Object.assign(Input, {
             this.drawCursorSeed(ctx, scaleFactor);
         }
 
+        this.drawNguLongThuatCursor(ctx, scaleFactor);
         this.drawPhongLoiArtifact(ctx, scaleFactor);
         this.drawHuThienDinhShield(ctx, scaleFactor);
         this.drawCursorDamageFeedback(ctx, scaleFactor);

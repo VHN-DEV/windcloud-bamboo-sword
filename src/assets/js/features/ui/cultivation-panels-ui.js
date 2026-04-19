@@ -832,6 +832,8 @@ Object.assign(SkillsUI, {
                 const toggleKey = secretArtToggleBtn.getAttribute('data-secret-art-toggle');
                 if (toggleKey === 'NGU_LOI_THUAT' && typeof Input.toggleNguLoiThuat === 'function' && Input.toggleNguLoiThuat()) {
                     this.render();
+                } else if (toggleKey === 'NGU_LONG_THUAT' && typeof Input.toggleNguLongThuat === 'function' && Input.toggleNguLongThuat()) {
+                    this.render();
                 }
                 return;
             }
@@ -1054,6 +1056,37 @@ Object.assign(SkillsUI, {
                 buttonDisabled: nguLoiLearned ? false : !nguLoiItem,
                 inventoryKey: nguLoiItem?.key || null,
                 hideActionButton: nguLoiLearned,
+                roster: []
+            });
+        }
+
+        const nguLongItem = Input.getInventoryEntryByUniqueKey('NGU_LONG_THUAT', ['FLAME_ART']);
+        const nguLongLearned = typeof Input.hasNguLongThuatUnlocked === 'function' && Input.hasNguLongThuatUnlocked();
+        const nguLongEnabled = typeof Input.isNguLongThuatEnabled === 'function' && Input.isNguLongThuatEnabled();
+        if (nguLongLearned || nguLongItem || Input.hasUniquePurchase('NGU_LONG_THUAT')) {
+            secretArts.push({
+                key: 'NGU_LONG_THUAT',
+                name: CONFIG.SECRET_ARTS?.NGU_LONG_THUAT?.fullName || 'Ngự Long Thuật',
+                description: 'Khai/thu long ảnh bám theo tâm ấn với hiệu ứng Dragon Cursor.',
+                unlocked: nguLongLearned,
+                active: nguLongEnabled,
+                ready: nguLongLearned,
+                accent: CONFIG.SECRET_ARTS?.NGU_LONG_THUAT?.color || '#71f0d2',
+                productKey: 'NGU_LONG_THUAT',
+                statusLabel: nguLongLearned ? 'Đã lĩnh ngộ' : nguLongItem ? 'Chờ lĩnh ngộ' : 'Đã mua',
+                note: nguLongLearned
+                    ? (nguLongEnabled ? 'Long ảnh đang khai mở, hộ thể theo từng chuyển động.' : 'Long ảnh đang thu liễm.')
+                    : 'Cần lĩnh ngộ bí pháp trong túi trước khi có thể khai mở long ảnh.',
+                modeKey: null,
+                toggleActionKey: nguLongLearned ? 'NGU_LONG_THUAT' : null,
+                buttonLabel: nguLongLearned
+                    ? (nguLongEnabled
+                        ? (CONFIG.SECRET_ARTS?.NGU_LONG_THUAT?.toggleOffLabel || 'Thu')
+                        : (CONFIG.SECRET_ARTS?.NGU_LONG_THUAT?.toggleOnLabel || 'Khai'))
+                    : 'Lĩnh ngộ',
+                buttonDisabled: nguLongLearned ? false : !nguLongItem,
+                inventoryKey: nguLongItem?.key || null,
+                hideActionButton: nguLongLearned,
                 roster: []
             });
         }
