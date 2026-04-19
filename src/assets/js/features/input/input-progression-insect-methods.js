@@ -1919,20 +1919,21 @@ Object.assign(Input, {
         return this.setNguLoiThuatEnabled(!this.isNguLoiThuatEnabled());
     },
 
-    triggerNguLoiThuatHitEffect(enemy, hitType = 'normal') {
+    triggerNguLoiThuatHitEffect(target, hitType = 'normal', { force = false } = {}) {
         if (!this.isNguLoiThuatEnabled()) return false;
-        if (!enemy) return false;
+        if (!target) return false;
 
         const cfg = CONFIG.SECRET_ARTS?.NGU_LOI_THUAT || {};
         const strikeChance = Math.max(0, Math.min(1, Number(cfg.strikeChance) || 1));
-        if (Math.random() > strikeChance) return false;
+        if (!force && Math.random() > strikeChance) return false;
 
         if (!Array.isArray(this.nguLoiThuatEffects)) {
             this.nguLoiThuatEffects = [];
         }
 
-        const x = Number(enemy.x) || 0;
-        const y = Number(enemy.y) || 0;
+        const x = Number(target.x);
+        const y = Number(target.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
         const lifespan = Math.max(6, Math.round(Math.random() * (Number(cfg.thunderLifespanRand) || 10) + (Number(cfg.thunderLifespanMin) || 10)));
         const segCount = Math.max(8, Math.round(Math.random() * (Number(cfg.thunderSegmentsRand) || 10) + (Number(cfg.thunderSegmentsMin) || 20)));
         const direct = Math.random() * Math.PI * 2;
@@ -1986,6 +1987,11 @@ Object.assign(Input, {
             this.nguLoiThuatEffects.splice(0, this.nguLoiThuatEffects.length - 24);
         }
         return true;
+    },
+
+    triggerNguLoiThuatClickEffect(worldPos) {
+        if (!worldPos) return false;
+        return this.triggerNguLoiThuatHitEffect(worldPos, 'click', { force: true });
     },
 
     drawNguLoiThuatEffects(ctx) {
