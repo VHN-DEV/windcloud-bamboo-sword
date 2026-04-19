@@ -633,6 +633,69 @@ body.is-touch-device {
         }
     }
 
+    .btn-ngu-loi {
+        width: 46px;
+        height: 46px;
+        right: 145px;
+        bottom: -5px;
+        overflow: hidden;
+        isolation: isolate;
+        background:
+            radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.26), transparent 28%),
+            linear-gradient(160deg, rgba(152, 189, 255, 0.32), rgba(74, 102, 255, 0.2) 52%, rgba(10, 18, 30, 0.94) 100%);
+        border: 1px solid rgba(#94b7ff, 0.48);
+        box-shadow: 0 4px 0 rgba(0, 0, 0, 0.44), 0 0 16px rgba(#5f79ff, 0.2);
+
+        &.is-hidden {
+            display: none !important;
+        }
+
+        .icon-ngu-loi {
+            position: relative;
+            z-index: 1;
+            width: 54%;
+            height: 54%;
+            filter: drop-shadow(0 0 6px rgba(#c9d7ff, 0.85)) drop-shadow(0 0 14px rgba(#5c78ff, 0.5));
+            opacity: 0.9;
+            transition: transform 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+        }
+
+        .ngu-loi-toggle__state {
+            position: absolute;
+            left: 50%;
+            bottom: 4px;
+            transform: translateX(-50%);
+            z-index: 2;
+            min-width: 24px;
+            padding: 1px 5px;
+            border-radius: 999px;
+            background: rgba(7, 16, 27, 0.84);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(229, 242, 255, 0.72);
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            line-height: 1.25;
+            text-transform: uppercase;
+        }
+
+        &.is-active {
+            border-color: rgba(#d2ddff, 0.84);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(#8da9ff, 0.32), 0 0 30px rgba(#5f79ff, 0.24);
+        }
+
+        &.is-active .icon-ngu-loi {
+            opacity: 1;
+            transform: scale(1.08);
+        }
+
+        &.is-active .ngu-loi-toggle__state {
+            color: #f4f7ff;
+            border-color: rgba(#d2ddff, 0.48);
+            background: linear-gradient(180deg, rgba(141, 169, 255, 0.34), rgba(44, 67, 143, 0.42));
+        }
+    }
+
     .btn-can-lam-cast {
         width: 46px;
         height: 46px;

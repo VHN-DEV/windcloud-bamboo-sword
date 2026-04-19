@@ -89,6 +89,21 @@ if (canLamCastBtn) {
     });
 }
 
+const nguLoiBtn = document.getElementById('btn-ngu-loi');
+if (nguLoiBtn) {
+    nguLoiBtn.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (Input.isVoidCollapsed) {
+            showNotify('Thân thể đã tan vào hư vô, cần tải lại giới vực để hồi phục', '#a778ff');
+            return;
+        }
+
+        Input.toggleNguLoiThuat?.();
+    });
+}
+
 const moveBtn = document.getElementById('btn-move');
 const attackBtn = document.getElementById('btn-attack');
 

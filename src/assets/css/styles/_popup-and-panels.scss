@@ -3396,6 +3396,20 @@ select.shop-control-input {
     }
 }
 
+
+.pill-visual.is-flame-art-ngu-loi {
+    .pill-visual__core--book {
+        background: radial-gradient(circle at 48% 34%, rgba(215, 227, 255, 0.26), rgba(40, 56, 118, 0.92) 68%);
+        border-color: rgba(151, 175, 255, 0.6);
+    }
+
+    .pill-visual__item-icon--skill {
+        width: 44%;
+        height: 44%;
+        filter: drop-shadow(0 0 6px rgba(220, 230, 255, 0.84)) drop-shadow(0 0 12px rgba(90, 116, 255, 0.5));
+    }
+}
+
 .pill-visual.is-artifact-phong-loi {
     filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.34));
 
@@ -5718,6 +5732,11 @@ select.shop-control-input {
 
     body.is-mobile-landscape .attack-group .btn-phong-loi-blink {
         right: 96px;
+        bottom: 108px;
+    }
+
+    body.is-mobile-landscape .attack-group .btn-ngu-loi {
+        right: 142px;
         bottom: 108px;
     }
 

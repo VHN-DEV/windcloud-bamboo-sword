@@ -361,6 +361,11 @@ class Enemy {
     }
 
     hit(sword) {
+        if (this.hp <= 0) {
+            this.respawn();
+            return "killed";
+        }
+
         const playerRankIndex = Input.rankIndex || 0;
         const enemyRankIndex = Number.isInteger(this.rankIndex)
             ? this.rankIndex

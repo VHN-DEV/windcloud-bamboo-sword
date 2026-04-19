@@ -689,6 +689,33 @@ Object.assign(Input, {
         button.setAttribute('aria-label', title);
     },
 
+    renderNguLoiThuatButton() {
+        const button = document.getElementById('btn-ngu-loi');
+        if (!button) return;
+
+        const label = button.querySelector('.ngu-loi-toggle__state');
+        const available = this.hasNguLoiThuatUnlocked?.() || false;
+        const enabled = available && this.isNguLoiThuatEnabled?.();
+        const cfg = CONFIG.SECRET_ARTS?.NGU_LOI_THUAT || {};
+
+        button.classList.toggle('is-hidden', !available);
+        button.classList.toggle('is-active', enabled);
+        button.style.display = available ? 'flex' : 'none';
+        button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+
+        if (label) {
+            label.textContent = enabled
+                ? (cfg.toggleOnLabel || 'Khai').toUpperCase()
+                : (cfg.toggleOffLabel || 'Thu').toUpperCase();
+        }
+
+        const title = available
+            ? (enabled ? 'Ngự Lôi Thuật đang khai mở, đòn trúng sẽ kéo theo tia sét.' : 'Ngự Lôi Thuật đang thu liễm, nhấn để khai mở lôi thức.')
+            : 'Chưa lĩnh ngộ Ngự Lôi Thuật';
+        button.title = title;
+        button.setAttribute('aria-label', title);
+    },
+
     renderCanLamCastButton() {
         const button = document.getElementById('btn-can-lam-cast');
         if (!button) return;
@@ -788,11 +815,10 @@ Object.assign(Input, {
         const normalized = Boolean(nextActive);
         if (Boolean(this.activeArtifacts[uniqueKey]) === normalized) return false;
         if (uniqueKey === 'PHONG_LOI_SI' && normalized) {
-            const equippedSwordCount = Array.isArray(this.getEquippedSwordArtifacts?.())
-                ? this.getEquippedSwordArtifacts().length
-                : 0;
-            if (equippedSwordCount < 1) {
-                showNotify('Cần trang bị ít nhất 1 Thanh Trúc Phong Vân Kiếm mới có thể triển khai Phong Lôi Sí.', artifactConfig.color || '#9fe8ff');
+            const hasNguLoiThuat = Boolean(this.hasNguLoiThuatUnlocked?.());
+            const hasRefinedThanhTruc = Boolean(this.hasKnownSwordArtifact?.());
+            if (!hasNguLoiThuat && !hasRefinedThanhTruc) {
+                showNotify('Cần lĩnh ngộ Ngự Lôi Thuật hoặc luyện hóa Thanh Trúc Phong Vân Kiếm trước khi triển khai Phong Lôi Sí.', artifactConfig.color || '#9fe8ff');
                 return false;
             }
         }
@@ -1034,6 +1060,7 @@ Object.assign(Input, {
         }
 
         this.renderPhongLoiBlinkButton();
+        this.renderNguLoiThuatButton();
         this.renderAlchemyLabButton();
 
         GameProgress.requestSave();

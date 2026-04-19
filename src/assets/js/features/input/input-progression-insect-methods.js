@@ -1921,7 +1921,7 @@ Object.assign(Input, {
 
     triggerNguLoiThuatHitEffect(enemy, hitType = 'normal') {
         if (!this.isNguLoiThuatEnabled()) return false;
-        if (!enemy || enemy.hp <= 0) return false;
+        if (!enemy) return false;
 
         const cfg = CONFIG.SECRET_ARTS?.NGU_LOI_THUAT || {};
         const strikeChance = Math.max(0, Math.min(1, Number(cfg.strikeChance) || 1));

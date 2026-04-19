@@ -224,6 +224,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             ? (CONFIG.SWORD?.ARTIFACT_ITEM || null)
             : null;
     const isCanLamFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'CAN_LAM_BANG_DIEM';
+    const isNguLoiFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'NGU_LOI_THUAT';
     const isPhongLoiArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'PHONG_LOI_SI';
     const isChuongThienBinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CHUONG_THIEN_BINH';
     const isHuyetSacArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'HUYET_SAC_PHI_PHONG';
@@ -239,6 +240,9 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         ? (CONFIG.IMAGES?.BAGS?.TREASURE || '')
         : (CONFIG.IMAGES?.BAGS?.STORAGE || '');
 
+    if (isNguLoiFlameArt) {
+        visualClasses.push('is-flame-art-ngu-loi');
+    }
     if (isPhongLoiArtifact) {
         visualClasses.push('is-artifact-phong-loi');
     }
@@ -265,6 +269,11 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         ? buildPhongLoiArtifactVisualMarkup()
         : isChuongThienBinhArtifact
         ? buildChuongThienBinhVisualMarkup()
+        : isNguLoiFlameArt && uniqueConfig?.imagePath
+        ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+            coreClass: 'pill-visual__core--book',
+            imageClass: 'pill-visual__item-icon--skill'
+        })
         : isCanLamFlameArt && uniqueConfig?.imagePath
         ? buildStaticArtifactImageVisualMarkup(uniqueConfig.imagePath, 'is-can-lam')
         : isCanLamArtifact && artifactConfig?.imagePath
@@ -355,6 +364,9 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         styleVars.push(`--artifact-aura:${artifactConfig.auraColor}`);
     }
 
+    if (isNguLoiFlameArt) {
+        visualClasses.push('is-flame-art-ngu-loi');
+    }
     if (isPhongLoiArtifact) {
         styleVars.push(`--artifact-lightning-light:${CONFIG.COLORS?.SWORD_GOLD_LIGHT || '#FFF2C2'}`);
         styleVars.push(`--artifact-lightning-mid:${CONFIG.COLORS?.SWORD_GOLD_MID || '#E6C87A'}`);

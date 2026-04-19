@@ -61,7 +61,8 @@ function imagePath(imageName) {
 
 const IMAGE_PATHS = {
     UI: {
-        PROFILE_SWORD: imagePath("sword-light.svg")
+        PROFILE_SWORD: imagePath("sword-light.svg"),
+        LIGHTNING: imagePath("lightning.svg")
     },
     BAGS: {
         STORAGE: imagePath("bag.svg"),
@@ -79,7 +80,7 @@ const IMAGE_PATHS = {
         HAO_AM_HAN_PHACH_CUC_SON: imagePath("artifacts/hao-am-han-phach-cuc-son.svg"),
         BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/bac-cuc-nguyen-quang-cuc-son.png"),
         NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/nguyen-hop-ngu-cuc-son.svg"),
-        MOC_KIEM: imagePath("sword.svg")
+        MOC_KIEM: imagePath("artifacts/bat-linh-xich.svg")
     },
     ABERRATIONS: {
         KIEN_THIEN_TINH: imagePath("aberrations/kien-thien-tinh.svg"),
@@ -1269,6 +1270,7 @@ const CONFIG = {
             fullName: "Ngự Lôi Thuật",
             quality: "SUPREME",
             color: "#7aa8ff",
+            imagePath: IMAGE_PATHS.UI.LIGHTNING,
             secondaryColor: "#fefefe",
             glowColor: "#2323fe",
             sparkColor: "#feca32",
@@ -1490,11 +1492,11 @@ const CONFIG = {
             description: "Bảo vật hậu huyền thiên chi bảo hợp từ ngũ cực sơn. Khi đủ năm cực sơn và đã luyện hóa hoàn chỉnh có thể kết hợp/tách rời tùy ý."
         },
         MOC_KIEM: {
-            fullName: "Mộc Kiếm",
+            fullName: "Bát Linh Xích",
             quality: "HIGH",
-            color: "#73c66d",
-            secondaryColor: "#dcf4cc",
-            auraColor: "#3f7a36",
+            color: "#256432",
+            secondaryColor: "#8de7a4",
+            auraColor: "#256432",
             buyPriceLowStone: 520000,
             buttonLabel: "Mua",
             inventoryActionLabel: "Luyện hóa",
@@ -1505,11 +1507,11 @@ const CONFIG = {
             trailMaxPoints: 20,
             followFactor: 0.2,
             angleLerp: 0.2,
-            trailColor: "#ffff00",
+            trailColor: "#256432",
             handleColor: "#333333",
-            guardColor: "#eeee33",
-            bladeColor: "#eeeeee",
-            description: "Mộc kiếm theo tâm niệm mà động. Khi triển khai sẽ xuất hiện một đạo kiếm ảnh xanh bám theo con trỏ, lưu lại tàn ảnh quét ngang như kiếm thức."
+            guardColor: "#6fdc8c",
+            bladeColor: "#c5ffd5",
+            description: "Bát Linh Xích theo tâm niệm mà động. Khi triển khai sẽ xuất hiện một đạo xích ảnh xanh ngọc bám theo con trỏ, lưu lại tàn ảnh quét ngang như linh thức."
         }
     },
     INSECT: {

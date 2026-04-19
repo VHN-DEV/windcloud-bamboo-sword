@@ -21,6 +21,7 @@ const UI_TEXT = Object.freeze({
         CHARGING: 'TỤ'
     }),
     PHONG_LOI_SI_RESTING: 'Phong Lôi Sí đang thu liễm',
+    NGU_LOI_THUAT_RESTING: 'Ngự Lôi Thuật đang thu liễm',
     SHOP_RESET_FILTERS: 'Tẩy tuyển điều kiện',
     SHOP_EMPTY: 'Thiên Bảo Các tạm thời không có bảo vật hợp điều kiện đã định.',
     BEAST_FOOD_SELECT_HINT: 'Hãy chọn linh liệu tương hợp.',
@@ -52,6 +53,7 @@ const UI_TEXT = Object.freeze({
         ULTIMATE: 'Tuyệt kỹ',
         FORM: 'Đổi kiếm thức',
         PHONG_LOI_SI: 'Phong Lôi Sí',
+        NGU_LOI_THUAT: 'Ngự Lôi Thuật',
         SKILL_LIST: 'Bảng bí pháp',
         ATTACK: 'Xuất kiếm',
         ALCHEMY: 'Đan lô Hư Thiên Đỉnh'
@@ -281,7 +283,8 @@ function repairLegacyUiText() {
         ['#profile-popup .popup-header h3', UI_TEXT.POPUP_TITLES.PROFILE],
         ['#alchemy-popup .popup-header h3', UI_TEXT.POPUP_TITLES.ALCHEMY],
         ['#inventory-panel-items h4', UI_TEXT.INVENTORY_TABS.ITEMS],
-        ['#btn-phong-loi-blink .phong-loi-toggle__state', UI_TEXT.PHONG_LOI_SI_STATES.INACTIVE]
+        ['#btn-phong-loi-blink .phong-loi-toggle__state', UI_TEXT.PHONG_LOI_SI_STATES.INACTIVE],
+        ['#btn-ngu-loi .ngu-loi-toggle__state', UI_TEXT.PHONG_LOI_SI_STATES.INACTIVE]
     ].forEach(([selector, text]) => setTextIfPresent(selector, text));
 
     [
@@ -297,6 +300,9 @@ function repairLegacyUiText() {
         ['#btn-phong-loi-blink', 'title', UI_TEXT.PHONG_LOI_SI_RESTING],
         ['#btn-phong-loi-blink', 'aria-label', UI_TEXT.PHONG_LOI_SI_RESTING],
         ['#btn-phong-loi-blink img', 'alt', UI_TEXT.ARIA.PHONG_LOI_SI],
+        ['#btn-ngu-loi', 'title', UI_TEXT.NGU_LOI_THUAT_RESTING],
+        ['#btn-ngu-loi', 'aria-label', UI_TEXT.NGU_LOI_THUAT_RESTING],
+        ['#btn-ngu-loi img', 'alt', UI_TEXT.ARIA.NGU_LOI_THUAT],
         ['#btn-can-lam-cast', 'title', 'Càn Lam Băng Diễm chưa triển khai'],
         ['#btn-can-lam-cast', 'aria-label', 'Càn Lam Băng Diễm chưa triển khai'],
         ['#btn-can-lam-cast img', 'alt', 'Càn Lam Băng Diễm'],
