@@ -7,6 +7,7 @@ function getDefaultUniquePurchases() {
         KHU_TRUNG_THUAT: false,
         PHONG_LOI_SI: false,
         HUYET_SAC_PHI_PHONG: false,
+        MOC_KIEM: false,
         HU_THIEN_DINH: false,
         KY_TRUNG_BANG: false,
         LINH_THU_DAI: false,
@@ -23,6 +24,7 @@ function getDefaultCultivationArts() {
         KHU_TRUNG_THUAT: false,
         PHONG_LOI_SI: false,
         HUYET_SAC_PHI_PHONG: false,
+        MOC_KIEM: false,
         HU_THIEN_DINH: false
     };
 }
@@ -31,6 +33,7 @@ function getDefaultActiveArtifacts() {
     return {
         PHONG_LOI_SI: false,
         HUYET_SAC_PHI_PHONG: false,
+        MOC_KIEM: false,
         HU_THIEN_DINH: false
     };
 }

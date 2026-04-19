@@ -266,6 +266,9 @@ Object.assign(Input, {
             const maxShield = Math.max(1, Math.floor(Number(artifactConfig.shield?.MAX_CAPACITY) || 280));
             return `đỉnh ảnh đã kết thành hộ thuẫn, có thể hấp thụ tối đa ${formatNumber(maxShield)} sát thương trước khi nứt vỡ.`;
         }
+        if (uniqueKey === 'MOC_KIEM') {
+            return 'mộc kiếm đã bám theo tâm niệm, sẵn sàng lưu lại kiếm ảnh truy phong.';
+        }
         return 'pháp bảo đã hiện bên tâm ấn.';
     },
 
@@ -293,6 +296,13 @@ Object.assign(Input, {
             }
             if (unlocked) {
                 return 'Đã luyện hóa, có thể triển khai Đỉnh ảnh để tạo lá chắn hộ thể cực mạnh.';
+            }
+        } else if (uniqueKey === 'MOC_KIEM') {
+            if (active) {
+                return 'Mộc kiếm đang lướt theo con trỏ và để lại tàn ảnh kiếm quang màu lục.';
+            }
+            if (unlocked) {
+                return 'Đã luyện hóa, có thể triển khai mộc kiếm bám theo tâm niệm.';
             }
         } else if (this.isNguCucSonComposite(uniqueKey)) {
             const shieldState = this.ensureNguCucSonCompositeShieldState();
@@ -341,6 +351,11 @@ Object.assign(Input, {
         if (uniqueKey === 'HU_THIEN_DINH') {
             return nextActive
                 ? `${artifactConfig.fullName} đã dựng Đỉnh ảnh hộ thể.`
+                : `${artifactConfig.fullName} đã thu vào thần hải.`;
+        }
+        if (uniqueKey === 'MOC_KIEM') {
+            return nextActive
+                ? `${artifactConfig.fullName} đã bám theo tâm niệm.`
                 : `${artifactConfig.fullName} đã thu vào thần hải.`;
         }
         if (this.isNguCucSonComposite(uniqueKey)) {
@@ -828,6 +843,9 @@ Object.assign(Input, {
             if (normalized) {
                 this.resetHuThienDinhShieldCapacity();
             }
+        }
+        if (uniqueKey === 'MOC_KIEM' && !normalized) {
+            this.clearMocKiemVisualState();
         }
         if (uniqueKey === 'NGUYEN_HOP_NGU_CUC_SON' && normalized) {
             this.resetNguCucSonCompositeShieldCapacity();
@@ -5639,8 +5657,116 @@ Object.assign(Input, {
         }
     },
 
+    ensureMocKiemVisualState(scaleFactor = 1) {
+        if (!this.mocKiemVisual) {
+            this.mocKiemVisual = {
+                x: Number.isFinite(this.x) ? this.x : (width / 2),
+                y: Number.isFinite(this.y) ? this.y : (height / 2),
+                angle: 0,
+                track: []
+            };
+        }
+
+        const visual = this.mocKiemVisual;
+        const artifactConfig = this.getArtifactConfig('MOC_KIEM') || {};
+        const followFactor = clampNumber(Number(artifactConfig.followFactor) || 0.2, 0.08, 0.48);
+        const angleLerp = clampNumber(Number(artifactConfig.angleLerp) || 0.2, 0.08, 0.48);
+        const maxTrackPoints = Math.max(8, Math.floor(Number(artifactConfig.trailMaxPoints) || 20));
+        const targetX = Number.isFinite(this.x) ? this.x : visual.x;
+        const targetY = Number.isFinite(this.y) ? this.y : visual.y;
+        const speedX = (targetX - visual.x) * followFactor;
+        const speedY = (targetY - visual.y) * followFactor;
+
+        visual.x += speedX;
+        visual.y += speedY;
+
+        let targetAngle = 0;
+        if (Math.abs(speedX) >= 0.2 || Math.abs(speedY) >= 0.2) {
+            targetAngle = Math.atan2(speedY, speedX) + (Math.PI / 2);
+            visual.track.push({
+                x: visual.x,
+                y: visual.y,
+                angle: visual.angle
+            });
+            if (visual.track.length > maxTrackPoints) {
+                visual.track.shift();
+            }
+        } else if (visual.track.length > 0) {
+            visual.track.shift();
+        }
+
+        let deltaAngle = targetAngle - visual.angle;
+        if (deltaAngle > Math.PI) deltaAngle -= Math.PI * 2;
+        if (deltaAngle < -Math.PI) deltaAngle += Math.PI * 2;
+        visual.angle += deltaAngle * angleLerp;
+        visual.lastScaleFactor = scaleFactor;
+
+        return visual;
+    },
+
+    clearMocKiemVisualState() {
+        if (!this.mocKiemVisual) return;
+        this.mocKiemVisual.track = [];
+    },
+
+    drawMocKiemArtifact(ctx, scaleFactor) {
+        if (!this.isArtifactDeployed('MOC_KIEM')) return;
+
+        const artifactConfig = this.getArtifactConfig('MOC_KIEM') || {};
+        const primaryColor = artifactConfig.color || '#73c66d';
+        const secondaryColor = artifactConfig.secondaryColor || '#dcf4cc';
+        const visual = this.ensureMocKiemVisualState(scaleFactor);
+        const size = Math.max(8, 13.5 * scaleFactor);
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+
+        for (let i = 0; i < visual.track.length - 1; i++) {
+            const curr = visual.track[i];
+            const next = visual.track[i + 1];
+            const alpha = i / Math.max(1, visual.track.length);
+            const p1x = curr.x + (Math.cos(curr.angle - Math.PI / 2) * size * 2);
+            const p1y = curr.y + (Math.sin(curr.angle - Math.PI / 2) * size * 2);
+            const p2x = curr.x - (Math.cos(curr.angle - Math.PI / 2) * size * 14);
+            const p2y = curr.y - (Math.sin(curr.angle - Math.PI / 2) * size * 14);
+            const p3x = next.x - (Math.cos(next.angle - Math.PI / 2) * size * 14);
+            const p3y = next.y - (Math.sin(next.angle - Math.PI / 2) * size * 14);
+            const p4x = next.x + (Math.cos(next.angle - Math.PI / 2) * size * 2);
+            const p4y = next.y + (Math.sin(next.angle - Math.PI / 2) * size * 2);
+
+            ctx.fillStyle = withAlpha(primaryColor, alpha * 0.55);
+            ctx.beginPath();
+            ctx.moveTo(p1x, p1y);
+            ctx.lineTo(p2x, p2y);
+            ctx.lineTo(p3x, p3y);
+            ctx.lineTo(p4x, p4y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        ctx.save();
+        ctx.translate(visual.x, visual.y);
+        ctx.rotate(visual.angle);
+
+        ctx.fillStyle = '#50311b';
+        ctx.fillRect(size * -1, size * -2, size * 2, size * 4);
+
+        ctx.fillStyle = '#7a4e29';
+        ctx.fillRect(size * -2, size * -3, size * 4, size * 2);
+
+        const bladeGradient = ctx.createLinearGradient(0, size * -14, 0, size * -2);
+        bladeGradient.addColorStop(0, withAlpha(secondaryColor, 0.95));
+        bladeGradient.addColorStop(1, withAlpha(primaryColor, 0.8));
+        ctx.fillStyle = bladeGradient;
+        ctx.fillRect(size * -1, size * -14, size * 2, size * 12);
+
+        ctx.restore();
+        ctx.restore();
+    },
+
     drawCursor(ctx, scaleFactor) {
         this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
+        this.drawMocKiemArtifact(ctx, scaleFactor);
         this.drawNguCucSonOrbit(ctx, scaleFactor);
         this.drawNguCucSonCompositeShield(ctx, scaleFactor);
         this.drawHuThienDinhShield(ctx, scaleFactor);

@@ -78,7 +78,8 @@ const IMAGE_PATHS = {
         AM_DUONG_DAI_NGU_HANH_CUC_SON: imagePath("artifacts/am-duong-dai-ngu-hanh-cuc-son.svg"),
         HAO_AM_HAN_PHACH_CUC_SON: imagePath("artifacts/hao-am-han-phach-cuc-son.svg"),
         BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/bac-cuc-nguyen-quang-cuc-son.png"),
-        NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/nguyen-hop-ngu-cuc-son.svg")
+        NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/nguyen-hop-ngu-cuc-son.svg"),
+        MOC_KIEM: imagePath("sword.svg")
     },
     ABERRATIONS: {
         KIEN_THIEN_TINH: imagePath("aberrations/kien-thien-tinh.svg"),
@@ -1468,6 +1469,24 @@ const CONFIG = {
                 CRACK_RECOVER_PER_SEC: 0.13
             },
             description: "Bảo vật hậu huyền thiên chi bảo hợp từ ngũ cực sơn. Khi đủ năm cực sơn và đã luyện hóa hoàn chỉnh có thể kết hợp/tách rời tùy ý."
+        },
+        MOC_KIEM: {
+            fullName: "Mộc Kiếm",
+            quality: "HIGH",
+            color: "#73c66d",
+            secondaryColor: "#dcf4cc",
+            auraColor: "#3f7a36",
+            buyPriceLowStone: 520000,
+            buttonLabel: "Mua",
+            inventoryActionLabel: "Luyện hóa",
+            deployLabel: "Triển khai",
+            stowLabel: "Thu hồi",
+            imagePath: IMAGE_PATHS.ARTIFACTS.MOC_KIEM,
+            consciousnessCost: 12,
+            trailMaxPoints: 20,
+            followFactor: 0.2,
+            angleLerp: 0.2,
+            description: "Mộc kiếm theo tâm niệm mà động. Khi triển khai sẽ xuất hiện một đạo kiếm ảnh xanh bám theo con trỏ, lưu lại tàn ảnh quét ngang như kiếm thức."
         }
     },
     INSECT: {
