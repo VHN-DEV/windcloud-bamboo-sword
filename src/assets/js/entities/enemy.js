@@ -94,8 +94,12 @@ class Enemy {
         const zoom = Math.max(0.001, Number(Camera.currentZoom) || 1);
         const visibleHalfWidth = window.innerWidth / (2 * zoom);
         const visibleHalfHeight = window.innerHeight / (2 * zoom);
-        const anchorX = Number.isFinite(Camera.centerX) ? Camera.centerX : (window.innerWidth / 2);
-        const anchorY = Number.isFinite(Camera.centerY) ? Camera.centerY : (window.innerHeight / 2);
+        const anchorX = Number.isFinite(Input?.x)
+            ? Input.x
+            : (Number.isFinite(Camera.centerX) ? Camera.centerX : (window.innerWidth / 2));
+        const anchorY = Number.isFinite(Input?.y)
+            ? Input.y
+            : (Number.isFinite(Camera.centerY) ? Camera.centerY : (window.innerHeight / 2));
         const padding = Math.max(12, Number(CONFIG.ENEMY.SPAWN_PADDING) || 20);
         const minSpawnX = anchorX - visibleHalfWidth + padding;
         const maxSpawnX = anchorX + visibleHalfWidth - padding;

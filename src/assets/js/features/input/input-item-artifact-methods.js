@@ -3661,8 +3661,11 @@ Object.assign(Input, {
             this.x = worldPos.x;
             this.y = worldPos.y;
         } else if (this.isTouchDevice) {
-            this.x = guardCenter.x;
-            this.y = guardCenter.y;
+            // Trên mobile, giữ nguyên điểm ngắm cuối cùng khi không còn ngón tay chạm màn hình.
+            // Điều này giúp các kỹ năng (ví dụ Ngự Lôi Thuật) vẫn giáng xuống đúng vị trí con trỏ đã chọn
+            // khi người chơi chỉ bấm nút tấn công.
+            this.x = Number.isFinite(this.x) ? this.x : guardCenter.x;
+            this.y = Number.isFinite(this.y) ? this.y : guardCenter.y;
         } else {
             const worldPos = Camera.screenToWorld(this.screenX, this.screenY);
             this.x = worldPos.x;
