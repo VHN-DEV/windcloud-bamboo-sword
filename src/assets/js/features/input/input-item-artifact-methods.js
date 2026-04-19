@@ -266,8 +266,8 @@ Object.assign(Input, {
             const maxShield = Math.max(1, Math.floor(Number(artifactConfig.shield?.MAX_CAPACITY) || 280));
             return `đỉnh ảnh đã kết thành hộ thuẫn, có thể hấp thụ tối đa ${formatNumber(maxShield)} sát thương trước khi nứt vỡ.`;
         }
-        if (uniqueKey === 'MOC_KIEM') {
-            return 'mộc kiếm đã bám theo tâm niệm, sẵn sàng lưu lại kiếm ảnh truy phong.';
+        if (uniqueKey === 'BAT_LINH_XICH') {
+            return 'Bát Linh Xích đã bám theo tâm niệm, sẵn sàng lưu lại kiếm ảnh truy phong.';
         }
         return 'pháp bảo đã hiện bên tâm ấn.';
     },
@@ -297,12 +297,12 @@ Object.assign(Input, {
             if (unlocked) {
                 return 'Đã luyện hóa, có thể triển khai Đỉnh ảnh để tạo lá chắn hộ thể cực mạnh.';
             }
-        } else if (uniqueKey === 'MOC_KIEM') {
+        } else if (uniqueKey === 'BAT_LINH_XICH') {
             if (active) {
-                return 'Mộc kiếm đang lướt theo con trỏ và để lại tàn ảnh kiếm quang màu lục.';
+                return 'Bát Linh Xích đang lướt theo con trỏ và để lại tàn ảnh kiếm quang màu lục.';
             }
             if (unlocked) {
-                return 'Đã luyện hóa, có thể triển khai mộc kiếm bám theo tâm niệm.';
+                return 'Đã luyện hóa, có thể triển khai Bát Linh Xích bám theo tâm niệm.';
             }
         } else if (this.isNguCucSonComposite(uniqueKey)) {
             const shieldState = this.ensureNguCucSonCompositeShieldState();
@@ -353,7 +353,7 @@ Object.assign(Input, {
                 ? `${artifactConfig.fullName} đã dựng Đỉnh ảnh hộ thể.`
                 : `${artifactConfig.fullName} đã thu vào thần hải.`;
         }
-        if (uniqueKey === 'MOC_KIEM') {
+        if (uniqueKey === 'BAT_LINH_XICH') {
             return nextActive
                 ? `${artifactConfig.fullName} đã bám theo tâm niệm.`
                 : `${artifactConfig.fullName} đã thu vào thần hải.`;
@@ -870,8 +870,8 @@ Object.assign(Input, {
                 this.resetHuThienDinhShieldCapacity();
             }
         }
-        if (uniqueKey === 'MOC_KIEM' && !normalized) {
-            this.clearMocKiemVisualState();
+        if (uniqueKey === 'BAT_LINH_XICH' && !normalized) {
+            this.clearBatLinhXichVisualState();
         }
         if (uniqueKey === 'NGUYEN_HOP_NGU_CUC_SON' && normalized) {
             this.resetNguCucSonCompositeShieldCapacity();
@@ -5689,9 +5689,9 @@ Object.assign(Input, {
         }
     },
 
-    ensureMocKiemVisualState(scaleFactor = 1) {
-        if (!this.mocKiemVisual) {
-            this.mocKiemVisual = {
+    ensureBatLinhXichVisualState(scaleFactor = 1) {
+        if (!this.batLinhXichVisual) {
+            this.batLinhXichVisual = {
                 x: Number.isFinite(this.x) ? this.x : (width / 2),
                 y: Number.isFinite(this.y) ? this.y : (height / 2),
                 angle: 0,
@@ -5699,8 +5699,8 @@ Object.assign(Input, {
             };
         }
 
-        const visual = this.mocKiemVisual;
-        const artifactConfig = this.getArtifactConfig('MOC_KIEM') || {};
+        const visual = this.batLinhXichVisual;
+        const artifactConfig = this.getArtifactConfig('BAT_LINH_XICH') || {};
         const followFactor = clampNumber(Number(artifactConfig.followFactor) || 0.2, 0.08, 0.48);
         const angleLerp = clampNumber(Number(artifactConfig.angleLerp) || 0.2, 0.08, 0.48);
         const maxTrackPoints = Math.max(8, Math.floor(Number(artifactConfig.trailMaxPoints) || 20));
@@ -5713,7 +5713,7 @@ Object.assign(Input, {
         visual.y += speedY;
 
         const isMoving = Math.abs(speedX) >= 0.2 || Math.abs(speedY) >= 0.2;
-        const targetAngle = isMoving ? this.calculateMocKiemAngle(speedX, speedY) : 0;
+        const targetAngle = isMoving ? this.calculateBatLinhXichAngle(speedX, speedY) : 0;
 
         let deltaAngle = targetAngle - visual.angle;
         if (deltaAngle > Math.PI) deltaAngle -= Math.PI * 2;
@@ -5738,26 +5738,26 @@ Object.assign(Input, {
         return visual;
     },
 
-    calculateMocKiemAngle(x, y) {
+    calculateBatLinhXichAngle(x, y) {
         if (x === y) return 0;
         if (x >= 0) return Math.atan(y / x) + (Math.PI / 2);
         return Math.PI * 1.5 + Math.atan(y / x);
     },
 
-    clearMocKiemVisualState() {
-        if (!this.mocKiemVisual) return;
-        this.mocKiemVisual.track = [];
+    clearBatLinhXichVisualState() {
+        if (!this.batLinhXichVisual) return;
+        this.batLinhXichVisual.track = [];
     },
 
-    drawMocKiemArtifact(ctx, scaleFactor) {
-        if (!this.isArtifactDeployed('MOC_KIEM')) return;
+    drawBatLinhXichArtifact(ctx, scaleFactor) {
+        if (!this.isArtifactDeployed('BAT_LINH_XICH')) return;
 
-        const artifactConfig = this.getArtifactConfig('MOC_KIEM') || {};
+        const artifactConfig = this.getArtifactConfig('BAT_LINH_XICH') || {};
         const trailColor = artifactConfig.trailColor || '#ffff00';
         const handleColor = artifactConfig.handleColor || '#333333';
         const guardColor = artifactConfig.guardColor || '#eeee33';
         const bladeColor = artifactConfig.bladeColor || '#eeeeee';
-        const visual = this.ensureMocKiemVisualState(scaleFactor);
+        const visual = this.ensureBatLinhXichVisualState(scaleFactor);
         const normalWh = Math.min(width, height) / 100;
         const size = Math.max(2.2, normalWh * scaleFactor);
 
@@ -5806,7 +5806,7 @@ Object.assign(Input, {
 
     drawCursor(ctx, scaleFactor) {
         this.drawHuyetSacPhiPhongCloak(ctx, scaleFactor);
-        this.drawMocKiemArtifact(ctx, scaleFactor);
+        this.drawBatLinhXichArtifact(ctx, scaleFactor);
         this.drawNguCucSonOrbit(ctx, scaleFactor);
         this.drawNguCucSonCompositeShield(ctx, scaleFactor);
         this.drawHuThienDinhShield(ctx, scaleFactor);

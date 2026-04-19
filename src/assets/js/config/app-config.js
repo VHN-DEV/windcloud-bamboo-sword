@@ -80,7 +80,7 @@ const IMAGE_PATHS = {
         HAO_AM_HAN_PHACH_CUC_SON: imagePath("artifacts/hao-am-han-phach-cuc-son.svg"),
         BAC_CUC_NGUYEN_QUANG_CUC_SON: imagePath("artifacts/bac-cuc-nguyen-quang-cuc-son.png"),
         NGUYEN_HOP_NGU_CUC_SON: imagePath("artifacts/nguyen-hop-ngu-cuc-son.svg"),
-        MOC_KIEM: imagePath("artifacts/bat-linh-xich.svg")
+        BAT_LINH_XICH: imagePath("artifacts/bat-linh-xich.svg")
     },
     ABERRATIONS: {
         KIEN_THIEN_TINH: imagePath("aberrations/kien-thien-tinh.svg"),
@@ -1491,7 +1491,7 @@ const CONFIG = {
             },
             description: "Bảo vật hậu huyền thiên chi bảo hợp từ ngũ cực sơn. Khi đủ năm cực sơn và đã luyện hóa hoàn chỉnh có thể kết hợp/tách rời tùy ý."
         },
-        MOC_KIEM: {
+        BAT_LINH_XICH: {
             fullName: "Bát Linh Xích",
             quality: "HIGH",
             color: "#256432",
@@ -1502,7 +1502,7 @@ const CONFIG = {
             inventoryActionLabel: "Luyện hóa",
             deployLabel: "Triển khai",
             stowLabel: "Thu hồi",
-            imagePath: IMAGE_PATHS.ARTIFACTS.MOC_KIEM,
+            imagePath: IMAGE_PATHS.ARTIFACTS.BAT_LINH_XICH,
             consciousnessCost: 12,
             trailMaxPoints: 20,
             followFactor: 0.2,

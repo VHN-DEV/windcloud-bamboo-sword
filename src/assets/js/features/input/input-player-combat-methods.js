@@ -357,14 +357,14 @@ Object.assign(Input, {
         if (this.isInsectSwarmActive()) return false;
 
         const swordStats = this.getAliveSwordStats();
-        return swordStats.alive === 1 || (swordStats.alive === 0 && this.isArtifactDeployed?.('MOC_KIEM'));
+        return swordStats.alive === 1 || (swordStats.alive === 0 && this.isArtifactDeployed?.('BAT_LINH_XICH'));
     },
 
     isUnarmedAttackMode() {
         if (this.isInsectSwarmActive()) return false;
 
         const swordStats = this.getAliveSwordStats();
-        return swordStats.alive === 0 && !this.isArtifactDeployed?.('MOC_KIEM');
+        return swordStats.alive === 0 && !this.isArtifactDeployed?.('BAT_LINH_XICH');
     },
 
     isSingleSwordPreThanhLinhState() {
@@ -404,9 +404,9 @@ Object.assign(Input, {
     performSingleSwordTapStrike() {
         if (!Array.isArray(enemies) || !enemies.length) return false;
         const swordStats = this.getAliveSwordStats ? this.getAliveSwordStats() : { alive: 0 };
-        const hasMocKiemAssist = swordStats.alive === 0 && this.isArtifactDeployed?.('MOC_KIEM');
-        if (swordStats.alive < 1 && !hasMocKiemAssist) return false;
-        const attackRange = (hasMocKiemAssist ? 108 : 96) * scaleFactor;
+        const hasBatLinhXichAssist = swordStats.alive === 0 && this.isArtifactDeployed?.('BAT_LINH_XICH');
+        if (swordStats.alive < 1 && !hasBatLinhXichAssist) return false;
+        const attackRange = (hasBatLinhXichAssist ? 108 : 96) * scaleFactor;
         const sourceX = Number.isFinite(this.x) ? this.x : guardCenter.x;
         const sourceY = Number.isFinite(this.y) ? this.y : guardCenter.y;
         let nearestEnemy = null;
@@ -432,7 +432,7 @@ Object.assign(Input, {
         this.createAttackBurst(nearestEnemy.x, nearestEnemy.y, result === 'shielded' ? '#ffb26b' : '#9beeff');
         if (result !== 'missed') {
             this.createSingleSwordSlashEffect?.(sourceX, sourceY, nearestEnemy.x, nearestEnemy.y, {
-                color: hasMocKiemAssist ? '#8de7a4' : '#9beeff'
+                color: hasBatLinhXichAssist ? '#8de7a4' : '#9beeff'
             });
         }
         return result !== 'missed';
