@@ -26,7 +26,10 @@ const INPUT_INITIAL_STATE = {
         brokenBone: { stacks: 0, until: 0 },
         blind: { stacks: 0, until: 0 },
         poison: { stacks: 0, until: 0 },
-        qiBurn: { stacks: 0, until: 0 }
+        qiBurn: { stacks: 0, until: 0 },
+        rooted: { stacks: 0, until: 0 },
+        frozen: { stacks: 0, until: 0 },
+        sluggish: { stacks: 0, until: 0 }
     },
     lastManaRegenTick: performance.now(),
     initialPinchDist: 0,
