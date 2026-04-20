@@ -1,0 +1,17 @@
+/* Local placeholder to avoid external Font Awesome dependency. */
+i[class^="fa"],
+i[class*=" fa-"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  min-width: 1em;
+  font-style: normal;
+}
+
+i[class^="fa"]::before,
+i[class*=" fa-"]::before {
+  content: "✦";
+  font-size: 0.85em;
+  line-height: 1;
+}
