@@ -13,5 +13,19 @@
     "gulp-sass": "^5.1.0",
     "gulp-terser": "^2.1.0",
     "sass": "^1.77.0"
-  }
+  },
+  "description": "Demo game tu tiên hành động 2D viết bằng `HTML5 Canvas`, nơi người chơi điều khiển tâm trận để vận hành kiếm trận, săn yêu thú, tích lũy tu vi, đột phá cảnh giới và mở khóa nhiều hệ thống như kỳ trùng, đan dược, vật liệu, túi trữ vật và tuyệt kỹ `Vạn Kiếm Quy Tông`.",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "axios": "^1.15.1",
+    "cheerio": "^1.2.0",
+    "fs-extra": "^11.3.4",
+    "path": "^0.12.7",
+    "webpack": "^5.104.1",
+    "yallist": "^3.1.1",
+    "yocto-queue": "^0.1.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
