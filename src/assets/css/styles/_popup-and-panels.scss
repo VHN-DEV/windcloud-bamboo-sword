@@ -3410,6 +3410,19 @@ select.shop-control-input {
     }
 }
 
+.pill-visual.is-flame-art-ngu-long {
+    .pill-visual__core--book {
+        background: radial-gradient(circle at 48% 34%, rgba(203, 255, 238, 0.28), rgba(18, 73, 85, 0.92) 68%);
+        border-color: rgba(116, 244, 212, 0.62);
+    }
+
+    .pill-visual__item-icon--skill {
+        width: 46%;
+        height: 46%;
+        filter: drop-shadow(0 0 6px rgba(203, 255, 240, 0.78)) drop-shadow(0 0 12px rgba(58, 220, 170, 0.48));
+    }
+}
+
 .pill-visual.is-artifact-phong-loi {
     filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.34));
 
