@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Quantum Sea Saturn - Deep Gradient Edition</title>
+
+    <style>
+        :root {
+            --primary-color: #ffffff;
+            --primary-color-rgb: 255, 255, 255;
+            --bg-color-rgb: 25, 25, 25;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(var(--bg-color-rgb), 1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(var(--primary-color-rgb), 0.5);
+            border-radius: 5px;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            font-family: system-ui, -apple-system, sans-serif;
+
+            & ::selection {
+                background-color: var(--primary-color);
+                color: #ffffff;
+            }
+
+            & .hidden {
+                display: none !important;
+            }
+
+            & #toggle_controls_btn {
+                position: absolute;
+                top: 24px;
+                right: 24px;
+                background-color: rgba(var(--bg-color-rgb), 0.75);
+                backdrop-filter: blur(24px);
+                padding: 12px 20px;
+                border-radius: 50px;
+                corner-shape: squircle;
+                color: var(--primary-color);
+                font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                border: 1px solid rgba(var(--primary-color-rgb), 0.2);
+                cursor: pointer;
+                z-index: 1000;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+                transition: all 0.3s ease;
+                user-select: none;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+
+                &:hover {
+                    background-color: rgba(var(--primary-color-rgb), 0.2);
+                    color: #000000;
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+                }
+
+                &:active {
+                    transform: translateY(0px);
+                }
+            }
+
+            & #pill_menu_container {
+                position: absolute;
+                top: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(var(--bg-color-rgb), 0.75);
+                backdrop-filter: blur(24px);
+                padding: 8px;
+                border-radius: 50px;
+                corner-shape: squircle;
+                display: flex;
+                flex-direction: row;
+                gap: 8px;
+                z-index: 100;
+                user-select: none;
+                box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+
+                & details {
+                    position: relative;
+                    background-color: transparent;
+                    border-radius: 50px;
+                    corner-shape: squircle;
+
+                    & summary {
+                        padding: 10px 20px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        font-size: 13px;
+                        letter-spacing: 0.5px;
+                        color: #b0bec5;
+                        list-style: none;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 8px;
+                        border-radius: 50px;
+                        corner-shape: squircle;
+                        transition: all 0.3s ease;
+
+                        &::-webkit-details-marker {
+                            display: none;
+                        }
+
+                        &:hover {
+                            background-color: rgba(255, 255, 255, 0.05);
+                            color: #ffffff;
+                        }
+                    }
+
+                    &[open] summary {
+                        background-color: var(--primary-color);
+                        color: #000000;
+                    }
+
+                    & .details_content {
+                        position: absolute;
+                        top: calc(100% + 16px);
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background-color: rgba(var(--bg-color-rgb), 0.85);
+                        backdrop-filter: blur(32px);
+                        padding: 20px;
+                        border-radius: 20px;
+                        corner-shape: squircle;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 16px;
+                        width: 260px;
+                        box-shadow: 0 16px 64px rgba(0, 0, 0, 0.8);
+                        border: 1px solid rgba(var(--primary-color-rgb), 0.15);
+                        cursor: default;
+
+                        &.optics_guide {
+                            color: #b0bec5;
+                            font-size: 13px;
+                            line-height: 1.6;
+                        }
+
+                        & .optics_paragraph_margin {
+                            margin: 0 0 8px 0;
+                            color: #fff;
+                        }
+
+                        & .optics_paragraph {
+                            margin: 0;
+                            color: #fff;
+                        }
+
+                        & .action_btn {
+                            background-color: rgba(var(--primary-color-rgb), 0.15);
+                            color: var(--primary-color);
+                            border: 1px solid rgba(var(--primary-color-rgb), 0.4);
+                            padding: 10px 16px;
+                            border-radius: 12px;
+                            corner-shape: squircle;
+                            font-family: inherit;
+                            font-size: 13px;
+                            font-weight: 700;
+                            letter-spacing: 0.5px;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            gap: 8px;
+
+                            &:hover {
+                                background-color: var(--primary-color);
+                                color: #000000;
+                                box-shadow: 0 4px 16px rgba(var(--primary-color-rgb), 0.4);
+                            }
+
+                            &:active {
+                                transform: translateY(2px);
+                            }
+                        }
+                    }
+                }
+
+                & .control_group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+
+                    & label {
+                        font-size: 12px;
+                        font-weight: 600;
+                        letter-spacing: 0.5px;
+                        color: #b0bec5;
+                        display: flex;
+                        justify-content: space-between;
+
+                        & span {
+                            color: #ffffff;
+                        }
+                    }
+
+                    & input[type="range"] {
+                        width: 100%;
+                        cursor: pointer;
+                        accent-color: var(--primary-color);
+                    }
+                }
+            }
+
+            & #gl_canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+                cursor: grab;
+
+                &:active {
+                    cursor: grabbing;
+                }
+            }
+
+            & .toast-container {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                z-index: 1000;
+
+                & .toast {
+                    background-color: rgba(var(--bg-color-rgb), 0.95);
+                    backdrop-filter: blur(12px);
+                    color: #fff;
+                    padding: 14px 20px;
+                    border-radius: 12px;
+                    corner-shape: squircle;
+                    font-size: 14px;
+                    user-select: none;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+                    opacity: 0;
+                    transform: translateY(10px);
+                    transition: opacity 0.3s ease, transform 0.3s ease;
+                    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+
+                    &.show {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+
+                    &.error {
+                        background-color: rgba(211, 47, 47, 0.9);
+                    }
+
+                    & .toast_icon_error {
+                        color: #ff4444;
+                    }
+
+                    & .toast_icon_info {
+                        color: var(--primary-color);
+                    }
+                }
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <button id="toggle_controls_btn"><i class="fa-solid fa-eye-slash"></i> Hide UI</button>
+
+    <div id="pill_menu_container">
+        <details>
+            <summary><i class="fa-solid fa-camera-retro"></i>Guide</summary>
+            <div class="details_content optics_guide">
+                <p class="optics_paragraph_margin"><strong><i class="fa-solid fa-computer-mouse"></i> Mouse
+                        (Camera)</strong><br>
+                    • <b>Left Click + Drag:</b> Look Around<br>
+                    • <b>Right Click + Drag:</b> Roll Camera<br>
+                    • <b>Middle Click + Drag:</b> Pan Position<br>
+                    • <b>Scroll Wheel:</b> Adjust FOV</p>
+                <p class="optics_paragraph"><strong><i class="fa-regular fa-keyboard"></i> Keyboard
+                        (Movement)</strong><br>
+                    • <b>W / S:</b> Fly Forward / Backward<br>
+                    • <b>A / D:</b> Strafe Left / Right<br>
+                    • <b>E / Q:</b> Ascend / Descend</p>
+            </div>
+        </details>
+
+        <details>
+            <summary><i class="fa-solid fa-palette"></i> Colors</summary>
+            <div class="details_content">
+                <button id="randomize_colors_btn" class="action_btn"><i class="fa-solid fa-shuffle"></i> Randomize
+                    Phase</button>
+
+                <div class="control_group">
+                    <label for="color_anim_speed_input">Phase Anim Speed <span
+                            id="color_anim_speed_val">0.0</span></label>
+                    <input type="range" id="color_anim_speed_input" min="0.0" max="5.0" step="0.1" value="0.0">
+                </div>
+                <div class="control_group">
+                    <label for="color_red_input">Phase Red Shift <span id="color_red_val">0.0</span></label>
+                    <input type="range" id="color_red_input" min="0.0" max="5.0" step="0.1" value="0.0">
+                </div>
+                <div class="control_group">
+                    <label for="color_green_input">Phase Green Shift <span id="color_green_val">2.0</span></label>
+                    <input type="range" id="color_green_input" min="0.0" max="5.0" step="0.1" value="2.0">
+                </div>
+                <div class="control_group">
+                    <label for="color_blue_input">Phase Blue Shift <span id="color_blue_val">4.0</span></label>
+                    <input type="range" id="color_blue_input" min="0.0" max="5.0" step="0.1" value="4.0">
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary><i class="fa-solid fa-fire-flame-curved"></i> Atmospherics</summary>
+            <div class="details_content">
+                <div class="control_group">
+                    <label for="fire_dir_x_input">Fire Direction X <span id="fire_dir_x_val">0.7</span></label>
+                    <input type="range" id="fire_dir_x_input" min="-2.0" max="2.0" step="0.1" value="0.7">
+                </div>
+                <div class="control_group">
+                    <label for="fire_dir_y_input">Fire Direction Y <span id="fire_dir_y_val">-1.0</span></label>
+                    <input type="range" id="fire_dir_y_input" min="-2.0" max="2.0" step="0.1" value="-1.0">
+                </div>
+                <div class="control_group">
+                    <label for="fire_anim_speed_input">Fire Animation Speed <span
+                            id="fire_anim_speed_val">1.5</span></label>
+                    <input type="range" id="fire_anim_speed_input" min="0.0" max="5.0" step="0.1" value="1.5">
+                </div>
+                <div class="control_group">
+                    <label for="fire_move_speed_input">Fire Movement Speed <span
+                            id="fire_move_speed_val">0.1</span></label>
+                    <input type="range" id="fire_move_speed_input" min="0.0" max="3.0" step="0.1" value="0.1">
+                </div>
+                <div class="control_group">
+                    <label for="fire_particle_size_input">Particle Size <span
+                            id="fire_particle_size_val">0.0030</span></label>
+                    <input type="range" id="fire_particle_size_input" min="0.001" max="0.03" step="0.0001"
+                        value="0.0030">
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary><i class="fa-solid fa-globe"></i> Environment</summary>
+            <div class="details_content">
+                <div class="control_group">
+                    <label for="time_speed_input">Time Speed <span id="time_speed_val">1.0</span></label>
+                    <input type="range" id="time_speed_input" min="0.0" max="3.0" step="0.1" value="1.0">
+                </div>
+                <div class="control_group">
+                    <label for="max_iterations_input">Raymarch Steps <span id="max_iterations_val">50.0</span></label>
+                    <input type="range" id="max_iterations_input" min="10.0" max="150.0" step="1.0" value="50.0">
+                </div>
+                <div class="control_group">
+                    <label for="exposure_input">Exposure / Glow <span id="exposure_val">1000.0</span></label>
+                    <input type="range" id="exposure_input" min="100.0" max="3000.0" step="10.0" value="1000.0">
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary><i class="fa-solid fa-shapes"></i> Geometry</summary>
+            <div class="details_content">
+                <div class="control_group">
+                    <label for="forward_speed_input">Forward Wave <span id="forward_speed_val">1.0</span></label>
+                    <input type="range" id="forward_speed_input" min="0.0" max="5.0" step="0.1" value="1.0">
+                </div>
+                <div class="control_group">
+                    <label for="twist_input">Twist Frequency <span id="twist_val">0.5</span></label>
+                    <input type="range" id="twist_input" min="0.0" max="3.0" step="0.05" value="0.5">
+                </div>
+                <div class="control_group">
+                    <label for="expansion_input">Expansion Factor <span id="expansion_val">0.1</span></label>
+                    <input type="range" id="expansion_input" min="0.0" max="1.0" step="0.01" value="0.1">
+                </div>
+                <div class="control_group">
+                    <label for="cone_shape_input">Cone Angle <span id="cone_shape_val">0.3</span></label>
+                    <input type="range" id="cone_shape_input" min="0.0" max="2.0" step="0.05" value="0.3">
+                </div>
+                <div class="control_group">
+                    <label for="cone_scale_input">Cone Scale <span id="cone_scale_val">7.0</span></label>
+                    <input type="range" id="cone_scale_input" min="1.0" max="20.0" step="0.5" value="7.0">
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary><i class="fa-brands fa-hubspot"></i> Fractals</summary>
+            <div class="details_content">
+                <div class="control_group">
+                    <label for="turb_max_input">Turbulence Iterations <span id="turb_max_val">15.0</span></label>
+                    <input type="range" id="turb_max_input" min="5.0" max="30.0" step="1.0" value="15.0">
+                </div>
+                <div class="control_group">
+                    <label for="turb_step_input">Turbulence Divider <span id="turb_step_val">0.6</span></label>
+                    <input type="range" id="turb_step_input" min="0.1" max="0.9" step="0.05" value="0.6">
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <canvas id="gl_canvas"></canvas>
+    <div id="toast_container" class="toast-container"></div>
+
+    <script>
+        let debug = true;
+        console.clear();
+
+        // Rendering Variables (Turbulence Core)
+        let time_speed_value = 1.0;
+        let max_iterations_value = 50.0;
+        let color_anim_speed_value = 0.0;
+        let color_shift_time = 0.0;
+        let color_red_value = 0.0;
+        let color_green_value = 2.0;
+        let color_blue_value = 4.0;
+        let forward_speed_value = 1.0;
+        let twist_value = 0.5;
+        let expansion_value = 0.1;
+        let turb_max_value = 15.0;
+        let turb_step_value = 0.6;
+        let cone_shape_value = 0.3;
+        let cone_scale_value = 7.0;
+        let exposure_value = 1000.0;
+
+        // Rendering Variables (Unified Colors & Atmospherics)
+        let fire_dir_x_value = 0.7;
+        let fire_dir_y_value = -1.0;
+        let fire_anim_speed_value = 1.5;
+        let fire_move_speed_value = 0.1;
+        let fire_particle_size_value = 0.003;
+        let spark_color_value = [1.0, 1.0, 1.0];
+        let bloom_color_value = [0.8, 0.8, 0.8];
+        let smoke_color_value = [0.5, 0.5, 0.5];
+        let background_color_value = [0.1, 0.1, 0.1];
+
+        // WebGL Context Variables
+        let canvas_element_id = "gl_canvas";
+        let gl_canvas = null;
+        let gl_context = null;
+        let shader_program = null;
+
+        // Uniform Locations
+        let time_uniform_location = null;
+        let resolution_uniform_location = null;
+        let u_time_speed_loc = null;
+        let u_max_iterations_loc = null;
+        let u_color_offset_loc = null;
+        let u_forward_speed_loc = null;
+        let u_twist_loc = null;
+        let u_expansion_loc = null;
+        let u_turb_max_loc = null;
+        let u_turb_step_loc = null;
+        let u_cone_shape_loc = null;
+        let u_cone_scale_loc = null;
+        let u_exposure_loc = null;
+        let u_bg_color_loc = null;
+
+        let u_fire_dir_loc = null;
+        let u_fire_anim_speed_loc = null;
+        let u_fire_move_speed_loc = null;
+        let u_fire_particle_size_loc = null;
+        let u_spark_color_loc = null;
+        let u_bloom_color_loc = null;
+        let u_smoke_color_loc = null;
+
+        let u_cam_pos_loc = null;
+        let u_cam_angles_loc = null;
+        let u_cam_fov_loc = null;
+
+        // Timing & Camera Logic
+        let accumulated_time = 0.0;
+        let last_frame_time = 0.0;
+        let animation_frame_id = null;
+
+        let cam_pos = { x: 0.0, y: 0.0, z: 0.0 };
+        let cam_pitch = 0.0;
+        let cam_yaw = 0.0;
+        let cam_roll = 0.0;
+        let cam_fov = 1.0;
+        let active_keys = {
+            w: false,
+            a: false,
+            s: false,
+            d: false,
+            q: false,
+            e: false
+        };
+        let is_dragging_left = false;
+        let is_dragging_right = false;
+        let is_dragging_middle = false;
+        let last_mouse_x = 0;
+        let last_mouse_y = 0;
+
+        let vertex_shader_source = `
+			attribute vec2 a_position;
+			void main() {
+				gl_Position = vec4(a_position, 0.0, 1.0);
+			}
+		`;
+
+        let fragment_shader_source = `
+			precision highp float;
+			uniform vec3 iResolution;
+			uniform float iTime;
+			
+			// Environmental Uniforms (Turbulence)
+			uniform float u_time_speed;
+			uniform float u_max_iterations;
+			uniform vec4 u_color_offset;
+			uniform float u_forward_speed;
+			uniform float u_twist;
+			uniform float u_expansion;
+			uniform float u_turb_max;
+			uniform float u_turb_step;
+			uniform float u_cone_shape;
+			uniform float u_cone_scale;
+			uniform float u_exposure;
+			uniform vec3 u_bg_color;
+
+			// Atmospherics Uniforms (Fire/Smoke)
+			uniform vec2 u_fire_dir;
+			uniform float u_fire_anim_speed;
+			uniform float u_fire_move_speed;
+			uniform float u_fire_particle_size;
+			uniform vec3 u_spark_color;
+			uniform vec3 u_bloom_color;
+			uniform vec3 u_smoke_color;
+
+			// Camera Uniforms
+			uniform vec3 u_cam_pos;
+			uniform vec3 u_cam_angles;
+			uniform float u_cam_fov;
+
+			// Constants from Fire Shader integration
+			#define PI 3.1415927
+			#define TWO_PI 6.283185
+			#define PARTICLE_SCALE (vec2(0.5, 1.6))
+			#define PARTICLE_SCALE_VAR (vec2(0.25, 0.2))
+			#define PARTICLE_BLOOM_SCALE (vec2(0.5, 0.8))
+			#define PARTICLE_BLOOM_SCALE_VAR (vec2(0.3, 0.1))
+			#define SIZE_MOD 1.05
+			#define ALPHA_MOD 0.9
+			#define LAYERS_COUNT 15
+
+			// INTEGRATION: Unified Environment Time offsets the 2D atmosphere based on actual 3D Space (Z axis)
+			#define ATMOS_TIME (iTime * u_time_speed - u_cam_pos.z * 0.5)
+
+			// Mathematical Hash & Noise implementations required by the original logic
+			float hash1_2(in vec2 p) {
+				vec3 p3  = fract(vec3(p.xyx) * .1031);
+				p3 += dot(p3, p3.yzx + 33.33);
+				return fract((p3.x + p3.y) * p3.z);
+			}
+
+			vec2 hash2_2(in vec2 p) {
+				vec3 p3 = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+				p3 += dot(p3, p3.yzx+33.33);
+				return fract((p3.xx+p3.yz)*p3.zy);
+			}
+
+			float noise1_2(in vec2 p) {
+				vec2 i = floor(p);
+				vec2 f = fract(p);
+				vec2 u = f * f * (3.0 - 2.0 * f);
+				return mix(mix(hash1_2(i + vec2(0.0,0.0)), hash1_2(i + vec2(1.0,0.0)), u.x),
+						   mix(hash1_2(i + vec2(0.0,1.0)), hash1_2(i + vec2(1.0,1.0)), u.x), u.y);
+			}
+
+			vec2 noise2_2(in vec2 p) {
+				vec2 i = floor(p);
+				vec2 f = fract(p);
+				vec2 u = f * f * (3.0 - 2.0 * f);
+				return mix(mix(hash2_2(i + vec2(0.0,0.0)), hash2_2(i + vec2(1.0,0.0)), u.x),
+						   mix(hash2_2(i + vec2(0.0,1.0)), hash2_2(i + vec2(1.0,1.0)), u.x), u.y);
+			}
+
+			vec4 customTanh(vec4 x) {
+				vec4 exp_two_x = exp(2.0 * x);
+				return (exp_two_x - 1.0) / (exp_two_x + 1.0);
+			}
+
+			mat2 rotMat(float angle) {
+				float s = sin(angle);
+				float c = cos(angle);
+				return mat2(c, -s, s, c);
+			}
+
+			// Core Functions extracted exactly from user's atmospheric fire shader
+			// INTEGRATION: Modified to accept the procedural movement_direction vector and synchronized ATMOS_TIME
+			float layeredNoise1_2(in vec2 uv, in float sizeMod, in float alphaMod, in int layers, in float animation, in vec2 movement_direction) {
+				float noise = 0.0;
+				float alpha = 1.0;
+				float size = 1.0;
+				vec2 offset = vec2(0.0);
+				for (int i = 0; i < 30; i++) {
+					if (i >= layers) break;
+					offset += hash2_2(vec2(alpha, size)) * 10.0;
+					
+					// INTEGRATION: Application of synchronized ATMOS_TIME globally and movement_direction dynamically
+					noise += noise1_2(uv * size + ATMOS_TIME * animation * 8.0 * movement_direction * u_fire_move_speed + offset) * alpha;
+					alpha *= alphaMod;
+					size *= sizeMod;
+				}
+				noise *= (1.0 - alphaMod)/(1.0 - pow(alphaMod, float(layers)));
+				return noise;
+			}
+
+			vec2 rotate(in vec2 point, in float deg) {
+				float s = sin(deg);
+				float c = cos(deg);
+				return mat2(c, -s, s, c) * point; // mat2x2 -> mat2 compatibility
+			}
+
+			vec2 voronoiPointFromRoot(in vec2 root, in float deg) {
+				vec2 point = hash2_2(root) - 0.5;
+				float s = sin(deg);
+				float c = cos(deg);
+				point = mat2(c, -s, s, c) * point * 0.66;
+				point += root + 0.5;
+				return point;
+			}
+
+			float degFromRootUV(in vec2 uv) {
+				// INTEGRATION: Global Environment Time explicitly influences Atmosphere Rotation
+				return ATMOS_TIME * u_fire_anim_speed * (hash1_2(uv) - 0.5) * 2.0;   
+			}
+
+			vec2 randomAround2_2(in vec2 point, in vec2 range, in vec2 uv) {
+				return point + (hash2_2(uv) - 0.5) * range;
+			}
+
+			vec3 fireParticles(in vec2 uv, in vec2 originalUV) {
+				vec3 particles = vec3(0.0);
+				vec2 rootUV = floor(uv);
+				float deg = degFromRootUV(rootUV);
+				vec2 pointUV = voronoiPointFromRoot(rootUV, deg);
+				float dist = 2.0;
+				float distBloom = 0.0;
+			   
+				// INTEGRATION: Fractal uniforms (u_turb_step, u_turb_max) manipulate particle distortion matrices
+				vec2 tempUV = uv + (noise2_2(uv * 2.0 * u_turb_step) - 0.5) * 0.1 * (u_turb_max / 15.0);
+				
+				// INTEGRATION: Global Environment Time injected into Atmosphere
+				tempUV += -(noise2_2(uv * 3.0 + ATMOS_TIME) - 0.5) * 0.07;
+
+				// Sparks sdf
+				dist = length(rotate(tempUV - pointUV, 0.7) * randomAround2_2(PARTICLE_SCALE, PARTICLE_SCALE_VAR, rootUV));
+				
+				// Bloom sdf
+				distBloom = length(rotate(tempUV - pointUV, 0.7) * randomAround2_2(PARTICLE_BLOOM_SCALE, PARTICLE_BLOOM_SCALE_VAR, rootUV));
+
+				// INTEGRATION: The entire Atmosphere glow is modulated by the primary Geometry Exposure/Glow variable!
+				float exposure_factor = u_exposure / 1000.0;
+				vec3 dynamic_spark = u_spark_color * 1.5 * exposure_factor;
+				vec3 dynamic_bloom = u_bloom_color * 0.8 * exposure_factor;
+
+				// Add sparks
+				particles += (1.0 - smoothstep(u_fire_particle_size * 0.6, u_fire_particle_size * 3.0, dist)) * dynamic_spark;
+				
+				// Add bloom
+				particles += pow((1.0 - smoothstep(0.0, u_fire_particle_size * 6.0, distBloom)) * 1.0, 3.0) * dynamic_bloom;
+
+				// Upper disappear curve randomization
+				float border = (hash1_2(rootUV) - 0.5) * 2.0;
+				float disappear = 1.0 - smoothstep(border, border + 0.5, originalUV.y);
+				
+				// Lower appear curve randomization
+				border = (hash1_2(rootUV + 0.214) - 1.8) * 0.7;
+				float appear = smoothstep(border, border + 0.4, originalUV.y);
+				
+				return particles * disappear * appear;
+			}
+
+			// Layering particles to imitate 3D view
+			// INTEGRATION: Accepting dynamic movement vectors
+			vec3 layeredParticles(in vec2 uv, in float sizeMod, in float alphaMod, in int layers, in float smoke, in vec2 movement_direction) { 
+				vec3 particles = vec3(0.0);
+				float size = 1.0;
+				float alpha = 1.0;
+				vec2 offset = vec2(0.0);
+				vec2 noiseOffset;
+				vec2 bokehUV;
+				
+				for (int i = 0; i < 30; i++) {
+					if (i >= layers) break;
+					
+					// Particle noise movement
+					noiseOffset = (noise2_2(uv * size * 2.0 + 0.5) - 0.5) * 0.15;
+					
+					// INTEGRATION: Movement Direction and synchronized ATMOS_TIME scale
+					bokehUV = (uv * size + ATMOS_TIME * movement_direction * u_fire_move_speed) + offset + noiseOffset; 
+					
+					// Adding particles								if there is more smoke, remove smaller particles
+					particles += fireParticles(bokehUV, uv) * alpha * (1.0 - smoothstep(0.0, 1.0, smoke) * (float(i) / float(layers)));
+					
+					// Moving uv origin to avoid generating the same particles
+					offset += hash2_2(vec2(alpha, alpha)) * 10.0;
+					
+					alpha *= alphaMod;
+					size *= sizeMod;
+				}
+				
+				return particles;
+			}
+
+			// Abstract Turbulence computation
+			vec3 getTurbulence(vec2 fragCoord) {
+				float animation_time = iTime * u_time_speed;
+				float ray_depth = 0.0;
+				float step_distance = 0.0;
+				vec4 color_accumulator = vec4(0.0);
+				
+				for (float iteration_count = 0.0; iteration_count < 300.0; iteration_count++) {
+					if (iteration_count >= u_max_iterations) {
+						break;
+					}
+					
+					vec2 uv = (fragCoord * 2.0 - iResolution.xy) / iResolution.y;
+					vec3 ray_dir = normalize(vec3(uv, -u_cam_fov));
+					
+					ray_dir.yz *= rotMat(u_cam_angles.x);
+					ray_dir.xz *= rotMat(u_cam_angles.y);
+					ray_dir.xy *= rotMat(u_cam_angles.z);
+
+					vec3 ray_position = u_cam_pos + ray_depth * ray_dir;
+					
+					ray_position.z += 5.0 + cos(animation_time * u_forward_speed);
+					
+					vec4 angles = ray_position.y * u_twist + vec4(0.0, 33.0, 11.0, 0.0);
+					vec4 cos_angles = cos(angles);
+					mat2 rotation_matrix = mat2(cos_angles.x, cos_angles.y, cos_angles.z, cos_angles.w);
+					
+					ray_position.xz *= rotation_matrix / max(ray_position.y * u_expansion + 1.0, 0.1);
+					
+					float current_turbulence = 2.0;
+					for (float fractal_step = 0.0; fractal_step < 50.0; fractal_step++) {
+						if (current_turbulence >= u_turb_max) {
+							break;
+						}
+						// INTEGRATION: Abstract background fractal still utilizes default global time
+						ray_position += cos((ray_position.yzx - vec3(animation_time / 0.1, animation_time, current_turbulence)) * current_turbulence) / current_turbulence;
+						current_turbulence /= u_turb_step;
+					}
+					
+					step_distance = 0.01 + abs(length(ray_position.xz) + ray_position.y * u_cone_shape - 0.5) / u_cone_scale;
+					ray_depth += step_distance;
+					
+					color_accumulator += (sin(ray_depth / 3.0 + u_color_offset) + 1.1) / step_distance;
+				}
+				
+				vec4 final_color = customTanh(color_accumulator / u_exposure);
+
+				float luminance = dot(final_color.rgb, vec3(0.299, 0.587, 0.114));
+				float void_factor = clamp(1.0 - luminance * 2.5, 0.0, 1.0);
+				final_color.rgb += u_bg_color * void_factor;
+
+				return final_color.rgb;
+			}
+
+			// Fire and Atmospherics computation
+			vec4 getAtmospherics(vec2 fragCoord) {
+				vec2 uv = (2.0 * fragCoord - iResolution.xy) / iResolution.x;
+				
+				// INTEGRATION: Sync 2D Atmosphere with 3D Camera Angles & Position explicitly to map motion properly
+				uv.x += u_cam_angles.y * 1.0; // Yaw shifts horizontal view
+				uv.y -= u_cam_angles.x * 1.0; // Pitch shifts vertical view
+				uv -= u_cam_pos.xy * 0.2;     // XY movement pans 2D perspective
+
+				float vignette = 1.0 - smoothstep(0.4, 1.4, length(uv + vec2(0.0, 0.3)));
+				
+				uv *= 1.8;
+
+				// INTEGRATION: Geometry & Fractals twist and distort the atmosphere field completely
+				uv = rotMat(length(uv) * u_twist) * uv; 
+				uv *= (1.0 - u_expansion * 0.5); 
+				
+				// INTEGRATION: Movement Direction relies on unified UI controls and dynamic Time
+				vec2 movement_direction = u_fire_dir + vec2(sin(ATMOS_TIME) * 0.2, -u_forward_speed * 0.5);
+				
+				// INTEGRATION: Global Environment Time injected into Smoke calculations
+				float smokeIntensity = layeredNoise1_2(uv * 10.0 + ATMOS_TIME * 4.0 * movement_direction * u_fire_move_speed, 1.7, 0.7, 6, 0.2, movement_direction);
+				smokeIntensity *= pow(1.0 - smoothstep(-1.0, 1.6, uv.y), 2.0); 
+				
+				// INTEGRATION: Exposure directly dictates smoke intensity
+				vec3 dynamic_smoke = u_smoke_color * 0.8 * (u_exposure / 1000.0);
+				vec3 smoke = smokeIntensity * dynamic_smoke * 0.8 * vignette;
+				
+				// Cutting holes in smoke
+				smoke *= pow(layeredNoise1_2(uv * 4.0 + ATMOS_TIME * 0.5 * movement_direction * u_fire_move_speed, 1.8, 0.5, 3, 0.2, movement_direction), 2.0) * 1.5;
+				
+				vec3 particles = layeredParticles(uv, SIZE_MOD, ALPHA_MOD, LAYERS_COUNT, smokeIntensity, movement_direction);
+				
+				vec3 col = particles + smoke + dynamic_smoke * 0.02;
+				return vec4(col, vignette);
+			}
+
+			void mainImage(out vec4 fragColor, vec2 fragCoord) {
+				// Base Pass: 3D raymarched abstract turbulence void
+				vec3 base_color = getTurbulence(fragCoord);
+				
+				// Overlay Pass: 2D Multi-layered fire and smoke
+				vec4 atmospheric_fx = getAtmospherics(fragCoord);
+				
+				// Additive Blending
+				vec3 final_color = base_color + atmospheric_fx.rgb;
+				final_color *= atmospheric_fx.a; // Vignette multiplication
+				
+				final_color = smoothstep(-0.08, 1.0, final_color);
+
+				fragColor = vec4(final_color, 1.0);
+			}
+
+			void main() {
+				vec4 final_output_color;
+				mainImage(final_output_color, gl_FragCoord.xy);
+				gl_FragColor = vec4(final_output_color.rgb, 1.0);
+			}
+		`;
+
+        function updateUIColors() {
+            try {
+                // Process CSS Variables for dynamic UI based on the synchronized shader values
+                let r = Math.max(0, Math.min(255, Math.round(spark_color_value[0] * 255)));
+                let g = Math.max(0, Math.min(255, Math.round(spark_color_value[1] * 255)));
+                let b = Math.max(0, Math.min(255, Math.round(spark_color_value[2] * 255)));
+                let hex_primary =
+                    "#" + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+
+                document.documentElement.style.setProperty("--primary-color", hex_primary);
+                document.documentElement.style.setProperty(
+                    "--primary-color-rgb",
+                    `${r}, ${g}, ${b}`
+                );
+
+                let bg_r = Math.max(
+                    0,
+                    Math.min(255, Math.round(background_color_value[0] * 255))
+                );
+                let bg_g = Math.max(
+                    0,
+                    Math.min(255, Math.round(background_color_value[1] * 255))
+                );
+                let bg_b = Math.max(
+                    0,
+                    Math.min(255, Math.round(background_color_value[2] * 255))
+                );
+                document.documentElement.style.setProperty(
+                    "--bg-color-rgb",
+                    `${bg_r}, ${bg_g}, ${bg_b}`
+                );
+            } catch (error) {
+                if (debug)
+                    console.error("%c[UI Color Update Error]", "color: #ff4444;", error);
+            }
+        }
+
+        function randomizeColors() {
+            try {
+                // Turbulence phase shifts
+                color_red_value = Math.random() * 5.0;
+                color_green_value = Math.random() * 5.0;
+                color_blue_value = Math.random() * 5.0;
+
+                let red_input = document.getElementById("color_red_input");
+                let green_input = document.getElementById("color_green_input");
+                let blue_input = document.getElementById("color_blue_input");
+
+                if (red_input) {
+                    red_input.value = color_red_value;
+                    document.getElementById(
+                        "color_red_val"
+                    ).textContent = color_red_value.toFixed(2);
+                }
+                if (green_input) {
+                    green_input.value = color_green_value;
+                    document.getElementById(
+                        "color_green_val"
+                    ).textContent = color_green_value.toFixed(2);
+                }
+                if (blue_input) {
+                    blue_input.value = color_blue_value;
+                    document.getElementById(
+                        "color_blue_val"
+                    ).textContent = color_blue_value.toFixed(2);
+                }
+
+                if (debug) {
+                    console.log(
+                        `%c[Colors Randomizer] New Theme Combo Generated & Unified!`,
+                        "color: var(--primary-color)"
+                    );
+                }
+                displayToast("New Phase Shift Applied!");
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[Colors Randomizer Error]", "color: #ff4444;", error);
+                }
+            }
+        }
+
+        // UI Utilities
+        function displayToast(message_text, is_error = false) {
+            try {
+                if (debug) {
+                    console.log(
+                        `%c[Toast Notification] ${message_text}`,
+                        `color: ${is_error ? "#ff4444" : "var(--primary-color)"};`
+                    );
+                }
+                let container = document.getElementById("toast_container");
+                let toast_element = document.createElement("div");
+                toast_element.className = "toast";
+
+                // Apply icon styling securely connected to the CSS vars logic
+                toast_element.innerHTML = is_error
+                    ? `<i class="fa-solid fa-circle-exclamation toast_icon_error"></i> ${message_text}`
+                    : `<i class="fa-solid fa-circle-info toast_icon_info"></i> ${message_text}`;
+
+                if (is_error) {
+                    toast_element.classList.add("error");
+                }
+
+                container.appendChild(toast_element);
+                void toast_element.offsetWidth;
+                toast_element.classList.add("show");
+
+                setTimeout(() => {
+                    toast_element.classList.remove("show");
+                    setTimeout(() => {
+                        if (container.contains(toast_element)) {
+                            container.removeChild(toast_element);
+                        }
+                    }, 300);
+                }, 4000);
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[Toast Error]", "color: #ff4444;", error);
+                }
+            }
+        }
+
+        function handleMouseMove(event) {
+            try {
+                let delta_x = event.clientX - last_mouse_x;
+                let delta_y = event.clientY - last_mouse_y;
+
+                if (is_dragging_left) {
+                    cam_yaw -= delta_x * 0.005;
+                    cam_pitch += delta_y * 0.005;
+                    cam_pitch = Math.max(-Math.PI / 2.1, Math.min(Math.PI / 2.1, cam_pitch));
+                }
+
+                if (is_dragging_right) {
+                    cam_roll += delta_x * 0.005;
+                }
+
+                if (is_dragging_middle) {
+                    let forward_vector = {
+                        x: -Math.sin(cam_yaw) * Math.cos(cam_pitch),
+                        y: -Math.sin(cam_pitch),
+                        z: Math.cos(cam_yaw) * Math.cos(cam_pitch)
+                    };
+                    let right_vector = {
+                        x: Math.cos(cam_yaw),
+                        y: 0,
+                        z: Math.sin(cam_yaw)
+                    };
+                    let up_vector = {
+                        x: right_vector.y * forward_vector.z - right_vector.z * forward_vector.y,
+                        y: right_vector.z * forward_vector.x - right_vector.x * forward_vector.z,
+                        z: right_vector.x * forward_vector.y - right_vector.y * forward_vector.x
+                    };
+                    let pan_speed = 0.008;
+                    cam_pos.x += (-delta_x * right_vector.x + delta_y * up_vector.x) * pan_speed;
+                    cam_pos.y += (-delta_x * right_vector.y + delta_y * up_vector.y) * pan_speed;
+                    cam_pos.z += (-delta_x * right_vector.z + delta_y * up_vector.z) * pan_speed;
+                }
+
+                last_mouse_x = event.clientX;
+                last_mouse_y = event.clientY;
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[Mouse Handling Error]", "color: #ff4444;", error);
+                }
+            }
+        }
+
+        function setupControls() {
+            try {
+                if (debug) {
+                    console.log(
+                        "%c[UI Setup] Initializing pill menu events...",
+                        "color: var(--primary-color)"
+                    );
+                }
+
+                let toggle_btn = document.getElementById("toggle_controls_btn");
+                let pill_menu_container = document.getElementById("pill_menu_container");
+                let is_controls_visible = true;
+
+                toggle_btn.addEventListener("click", () => {
+                    is_controls_visible = !is_controls_visible;
+                    if (is_controls_visible) {
+                        pill_menu_container.classList.remove("hidden");
+                    } else {
+                        pill_menu_container.classList.add("hidden");
+                    }
+                    toggle_btn.innerHTML = is_controls_visible
+                        ? '<i class="fa-solid fa-eye-slash"></i> Hide UI'
+                        : '<i class="fa-solid fa-eye"></i> Show UI';
+                    if (debug) {
+                        console.log(
+                            `%c[UI Event] Pill menu visibility toggled to: ${is_controls_visible}`,
+                            "color: #b0bec5"
+                        );
+                    }
+                });
+
+                let details_elements = document.querySelectorAll(
+                    "#pill_menu_container details"
+                );
+                details_elements.forEach((target_detail) => {
+                    target_detail.addEventListener("click", (event) => {
+                        if (target_detail.hasAttribute("open")) {
+                            return;
+                        }
+                        details_elements.forEach((detail) => {
+                            if (detail !== target_detail) {
+                                detail.removeAttribute("open");
+                            }
+                        });
+                    });
+                });
+
+                let randomize_btn = document.getElementById("randomize_colors_btn");
+                if (randomize_btn) {
+                    randomize_btn.addEventListener("click", randomizeColors);
+                }
+
+                function bindSlider(input_id, display_id, variable_updater) {
+                    let input_element = document.getElementById(input_id);
+                    let display_element = document.getElementById(display_id);
+
+                    if (!input_element || !display_element) return;
+
+                    input_element.addEventListener("input", (event) => {
+                        let parsed_value = parseFloat(event.target.value);
+                        if (input_id === "fire_particle_size_input") {
+                            display_element.textContent = parsed_value.toFixed(4);
+                        } else {
+                            display_element.textContent = parsed_value.toFixed(2);
+                        }
+
+                        variable_updater(parsed_value);
+
+                        if (debug) {
+                            console.log(
+                                `%c[Parameter Changed] ${input_id} = ${parsed_value}`,
+                                "color: #b0bec5"
+                            );
+                        }
+                    });
+                }
+
+                bindSlider("time_speed_input", "time_speed_val", (val) => {
+                    time_speed_value = val;
+                });
+                bindSlider("max_iterations_input", "max_iterations_val", (val) => {
+                    max_iterations_value = val;
+                });
+                bindSlider("exposure_input", "exposure_val", (val) => {
+                    exposure_value = val;
+                });
+
+                bindSlider("color_anim_speed_input", "color_anim_speed_val", (val) => {
+                    color_anim_speed_value = val;
+                });
+                bindSlider("color_red_input", "color_red_val", (val) => {
+                    color_red_value = val;
+                });
+                bindSlider("color_green_input", "color_green_val", (val) => {
+                    color_green_value = val;
+                });
+                bindSlider("color_blue_input", "color_blue_val", (val) => {
+                    color_blue_value = val;
+                });
+
+                bindSlider("forward_speed_input", "forward_speed_val", (val) => {
+                    forward_speed_value = val;
+                });
+                bindSlider("twist_input", "twist_val", (val) => {
+                    twist_value = val;
+                });
+                bindSlider("expansion_input", "expansion_val", (val) => {
+                    expansion_value = val;
+                });
+                bindSlider("cone_shape_input", "cone_shape_val", (val) => {
+                    cone_shape_value = val;
+                });
+                bindSlider("cone_scale_input", "cone_scale_val", (val) => {
+                    cone_scale_value = val;
+                });
+
+                bindSlider("turb_max_input", "turb_max_val", (val) => {
+                    turb_max_value = val;
+                });
+                bindSlider("turb_step_input", "turb_step_val", (val) => {
+                    turb_step_value = val;
+                });
+
+                bindSlider("fire_dir_x_input", "fire_dir_x_val", (val) => {
+                    fire_dir_x_value = val;
+                });
+                bindSlider("fire_dir_y_input", "fire_dir_y_val", (val) => {
+                    fire_dir_y_value = val;
+                });
+                bindSlider("fire_anim_speed_input", "fire_anim_speed_val", (val) => {
+                    fire_anim_speed_value = val;
+                });
+                bindSlider("fire_move_speed_input", "fire_move_speed_val", (val) => {
+                    fire_move_speed_value = val;
+                });
+                bindSlider("fire_particle_size_input", "fire_particle_size_val", (val) => {
+                    fire_particle_size_value = val;
+                });
+
+                window.addEventListener("mousedown", function (event) {
+                    if (event.target.tagName !== "CANVAS") return;
+                    if (event.button === 0) is_dragging_left = true;
+                    if (event.button === 1) {
+                        is_dragging_middle = true;
+                        event.preventDefault();
+                    }
+                    if (event.button === 2) is_dragging_right = true;
+                    last_mouse_x = event.clientX;
+                    last_mouse_y = event.clientY;
+
+                    if (debug) {
+                        console.log(
+                            `%c[Mouse Event] Canvas Drag Started. Button: ${event.button}`,
+                            "color: #b0bec5"
+                        );
+                    }
+                });
+
+                window.addEventListener("mouseup", function (event) {
+                    if (event.button === 0) is_dragging_left = false;
+                    if (event.button === 1) is_dragging_middle = false;
+                    if (event.button === 2) is_dragging_right = false;
+                });
+
+                window.addEventListener("mousemove", handleMouseMove);
+
+                window.addEventListener("contextmenu", function (event) {
+                    if (event.target.tagName === "CANVAS") event.preventDefault();
+                });
+
+                window.addEventListener(
+                    "wheel",
+                    function (event) {
+                        if (event.target.tagName !== "CANVAS") return;
+                        cam_fov -= event.deltaY * 0.002;
+                        cam_fov = Math.max(0.1, Math.min(5.0, cam_fov));
+
+                        if (debug) {
+                            console.log(`%c[Mouse Event] FOV Adjusted: ${cam_fov}`, "color: #b0bec5");
+                        }
+                    },
+                    { passive: true }
+                );
+
+                window.addEventListener("keydown", function (event) {
+                    if (!event.key) return;
+                    let key_code = event.key.toLowerCase();
+                    if (active_keys.hasOwnProperty(key_code)) {
+                        active_keys[key_code] = true;
+                    }
+                });
+
+                window.addEventListener("keyup", function (event) {
+                    if (!event.key) return;
+                    let key_code = event.key.toLowerCase();
+                    if (active_keys.hasOwnProperty(key_code)) {
+                        active_keys[key_code] = false;
+                    }
+                });
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[Controls Error]", "color: #ff4444;", error);
+                }
+            }
+        }
+
+        // Rendering Flow
+        function compileShader(type, source_code) {
+            let shader = gl_context.createShader(type);
+            gl_context.shaderSource(shader, source_code);
+            gl_context.compileShader(shader);
+
+            if (!gl_context.getShaderParameter(shader, gl_context.COMPILE_STATUS)) {
+                let error_info = gl_context.getShaderInfoLog(shader);
+                if (debug) {
+                    console.error("%c[Shader Compilation Error]", "color: #ff4444;", error_info);
+                }
+                displayToast("Shader compilation failed. Check console logs.", true);
+                gl_context.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function handleResize() {
+            try {
+                if (!gl_canvas || !gl_context) return;
+
+                gl_canvas.width = window.innerWidth;
+                gl_canvas.height = window.innerHeight;
+                gl_context.viewport(0, 0, gl_canvas.width, gl_canvas.height);
+
+                if (resolution_uniform_location) {
+                    gl_context.uniform3f(
+                        resolution_uniform_location,
+                        gl_canvas.width,
+                        gl_canvas.height,
+                        1.0
+                    );
+                }
+
+                if (debug) {
+                    console.log(
+                        `%c[Resize Event] Canvas resized to ${gl_canvas.width}x${gl_canvas.height}`,
+                        "color: #b0bec5"
+                    );
+                }
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[Resize Error]", "color: #ff4444;", error);
+                }
+            }
+        }
+
+        function renderLoop() {
+            try {
+                let current_time_measurement = performance.now();
+                let time_difference_milliseconds = current_time_measurement - last_frame_time;
+                let delta_time_seconds = time_difference_milliseconds / 1000.0;
+                last_frame_time = current_time_measurement;
+
+                accumulated_time = accumulated_time + delta_time_seconds;
+                color_shift_time += delta_time_seconds * color_anim_speed_value;
+
+                let movement_speed = 5.0 * delta_time_seconds;
+                let forward_vector = {
+                    x: -Math.sin(cam_yaw) * Math.cos(cam_pitch),
+                    y: -Math.sin(cam_pitch),
+                    z: Math.cos(cam_yaw) * Math.cos(cam_pitch)
+                };
+                let right_vector = {
+                    x: Math.cos(cam_yaw),
+                    y: 0,
+                    z: Math.sin(cam_yaw)
+                };
+
+                if (active_keys.w) {
+                    cam_pos.x += forward_vector.x * movement_speed;
+                    cam_pos.y += forward_vector.y * movement_speed;
+                    cam_pos.z += forward_vector.z * movement_speed;
+                }
+                if (active_keys.s) {
+                    cam_pos.x -= forward_vector.x * movement_speed;
+                    cam_pos.y -= forward_vector.y * movement_speed;
+                    cam_pos.z -= forward_vector.z * movement_speed;
+                }
+                if (active_keys.a) {
+                    cam_pos.x -= right_vector.x * movement_speed;
+                    cam_pos.y -= right_vector.y * movement_speed;
+                    cam_pos.z -= right_vector.z * movement_speed;
+                }
+                if (active_keys.d) {
+                    cam_pos.x += right_vector.x * movement_speed;
+                    cam_pos.y += right_vector.y * movement_speed;
+                    cam_pos.z += right_vector.z * movement_speed;
+                }
+                if (active_keys.e) {
+                    cam_pos.y += movement_speed;
+                }
+                if (active_keys.q) {
+                    cam_pos.y -= movement_speed;
+                }
+
+                // Synchronize unified color arrays mathematically from the phase sliders
+                spark_color_value[0] =
+                    Math.sin(color_red_value + color_shift_time) * 0.5 + 0.5;
+                spark_color_value[1] =
+                    Math.sin(color_green_value + color_shift_time) * 0.5 + 0.5;
+                spark_color_value[2] =
+                    Math.sin(color_blue_value + color_shift_time) * 0.5 + 0.5;
+
+                // Added progressive phase offsets for secondary elements to create a cohesive but dynamic theme
+                // This guarantees colors trail the main fire hue organically without drifting into mismatched palettes
+                bloom_color_value[0] =
+                    Math.sin(color_red_value + color_shift_time + 0.2) * 0.4 + 0.4;
+                bloom_color_value[1] =
+                    Math.sin(color_green_value + color_shift_time + 0.2) * 0.4 + 0.4;
+                bloom_color_value[2] =
+                    Math.sin(color_blue_value + color_shift_time + 0.2) * 0.4 + 0.4;
+
+                smoke_color_value[0] =
+                    Math.sin(color_red_value + color_shift_time + 0.4) * 0.3 + 0.2;
+                smoke_color_value[1] =
+                    Math.sin(color_green_value + color_shift_time + 0.4) * 0.3 + 0.2;
+                smoke_color_value[2] =
+                    Math.sin(color_blue_value + color_shift_time + 0.4) * 0.3 + 0.2;
+
+                background_color_value[0] =
+                    Math.sin(color_red_value + color_shift_time + 0.6) * 0.05 + 0.02;
+                background_color_value[1] =
+                    Math.sin(color_green_value + color_shift_time + 0.6) * 0.05 + 0.02;
+                background_color_value[2] =
+                    Math.sin(color_blue_value + color_shift_time + 0.6) * 0.05 + 0.02;
+
+                // Continuously update HTML/CSS Theme
+                updateUIColors();
+
+                gl_context.uniform1f(time_uniform_location, accumulated_time);
+
+                gl_context.uniform1f(u_time_speed_loc, time_speed_value);
+                gl_context.uniform1f(u_max_iterations_loc, max_iterations_value);
+                gl_context.uniform4f(
+                    u_color_offset_loc,
+                    color_red_value + color_shift_time,
+                    color_green_value + color_shift_time,
+                    color_blue_value + color_shift_time,
+                    0.0
+                );
+                gl_context.uniform1f(u_forward_speed_loc, forward_speed_value);
+                gl_context.uniform1f(u_twist_loc, twist_value);
+                gl_context.uniform1f(u_expansion_loc, expansion_value);
+                gl_context.uniform1f(u_turb_max_loc, turb_max_value);
+                gl_context.uniform1f(u_turb_step_loc, turb_step_value);
+                gl_context.uniform1f(u_cone_shape_loc, cone_shape_value);
+                gl_context.uniform1f(u_cone_scale_loc, cone_scale_value);
+                gl_context.uniform1f(u_exposure_loc, exposure_value);
+                gl_context.uniform3f(
+                    u_bg_color_loc,
+                    background_color_value[0],
+                    background_color_value[1],
+                    background_color_value[2]
+                );
+
+                gl_context.uniform2f(u_fire_dir_loc, fire_dir_x_value, fire_dir_y_value);
+                gl_context.uniform1f(u_fire_anim_speed_loc, fire_anim_speed_value);
+                gl_context.uniform1f(u_fire_move_speed_loc, fire_move_speed_value);
+                gl_context.uniform1f(u_fire_particle_size_loc, fire_particle_size_value);
+                gl_context.uniform3f(
+                    u_spark_color_loc,
+                    spark_color_value[0],
+                    spark_color_value[1],
+                    spark_color_value[2]
+                );
+                gl_context.uniform3f(
+                    u_bloom_color_loc,
+                    bloom_color_value[0],
+                    bloom_color_value[1],
+                    bloom_color_value[2]
+                );
+                gl_context.uniform3f(
+                    u_smoke_color_loc,
+                    smoke_color_value[0],
+                    smoke_color_value[1],
+                    smoke_color_value[2]
+                );
+
+                gl_context.uniform3f(u_cam_pos_loc, cam_pos.x, cam_pos.y, cam_pos.z);
+                gl_context.uniform3f(u_cam_angles_loc, cam_pitch, cam_yaw, cam_roll);
+                gl_context.uniform1f(u_cam_fov_loc, cam_fov);
+
+                gl_context.drawArrays(gl_context.TRIANGLES, 0, 6);
+
+                animation_frame_id = requestAnimationFrame(renderLoop);
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[Render Error]", "color: #ff4444;", error);
+                }
+                cancelAnimationFrame(animation_frame_id);
+                displayToast("Rendering stopped due to an error.", true);
+            }
+        }
+
+        function initWebgl() {
+            try {
+                if (debug) {
+                    console.log(
+                        "%c[WebGL Initialization] Starting setup...",
+                        "color: var(--primary-color)"
+                    );
+                }
+
+                gl_canvas = document.getElementById(canvas_element_id);
+                gl_context =
+                    gl_canvas.getContext("webgl") || gl_canvas.getContext("experimental-webgl");
+
+                if (!gl_context) {
+                    throw new Error("WebGL is not supported in this browser.");
+                }
+
+                let vertex_shader = compileShader(
+                    gl_context.VERTEX_SHADER,
+                    vertex_shader_source
+                );
+                let fragment_shader = compileShader(
+                    gl_context.FRAGMENT_SHADER,
+                    fragment_shader_source
+                );
+
+                if (!vertex_shader || !fragment_shader) {
+                    throw new Error("Failed to compile shaders.");
+                }
+
+                shader_program = gl_context.createProgram();
+                gl_context.attachShader(shader_program, vertex_shader);
+                gl_context.attachShader(shader_program, fragment_shader);
+                gl_context.linkProgram(shader_program);
+
+                if (!gl_context.getProgramParameter(shader_program, gl_context.LINK_STATUS)) {
+                    throw new Error(
+                        "Unable to initialize the shader program: " +
+                        gl_context.getProgramInfoLog(shader_program)
+                    );
+                }
+
+                gl_context.useProgram(shader_program);
+
+                let position_buffer = gl_context.createBuffer();
+                gl_context.bindBuffer(gl_context.ARRAY_BUFFER, position_buffer);
+                let positions = new Float32Array([
+                    -1.0,
+                    -1.0,
+                    1.0,
+                    -1.0,
+                    -1.0,
+                    1.0,
+                    -1.0,
+                    1.0,
+                    1.0,
+                    -1.0,
+                    1.0,
+                    1.0
+                ]);
+                gl_context.bufferData(
+                    gl_context.ARRAY_BUFFER,
+                    positions,
+                    gl_context.STATIC_DRAW
+                );
+
+                let position_attribute_location = gl_context.getAttribLocation(
+                    shader_program,
+                    "a_position"
+                );
+                gl_context.enableVertexAttribArray(position_attribute_location);
+                gl_context.vertexAttribPointer(
+                    position_attribute_location,
+                    2,
+                    gl_context.FLOAT,
+                    false,
+                    0,
+                    0
+                );
+
+                time_uniform_location = gl_context.getUniformLocation(
+                    shader_program,
+                    "iTime"
+                );
+                resolution_uniform_location = gl_context.getUniformLocation(
+                    shader_program,
+                    "iResolution"
+                );
+
+                u_time_speed_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_time_speed"
+                );
+                u_max_iterations_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_max_iterations"
+                );
+                u_color_offset_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_color_offset"
+                );
+                u_forward_speed_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_forward_speed"
+                );
+                u_twist_loc = gl_context.getUniformLocation(shader_program, "u_twist");
+                u_expansion_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_expansion"
+                );
+                u_turb_max_loc = gl_context.getUniformLocation(shader_program, "u_turb_max");
+                u_turb_step_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_turb_step"
+                );
+                u_cone_shape_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_cone_shape"
+                );
+                u_cone_scale_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_cone_scale"
+                );
+                u_exposure_loc = gl_context.getUniformLocation(shader_program, "u_exposure");
+                u_bg_color_loc = gl_context.getUniformLocation(shader_program, "u_bg_color");
+
+                u_fire_dir_loc = gl_context.getUniformLocation(shader_program, "u_fire_dir");
+                u_fire_anim_speed_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_fire_anim_speed"
+                );
+                u_fire_move_speed_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_fire_move_speed"
+                );
+                u_fire_particle_size_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_fire_particle_size"
+                );
+                u_spark_color_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_spark_color"
+                );
+                u_bloom_color_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_bloom_color"
+                );
+                u_smoke_color_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_smoke_color"
+                );
+
+                u_cam_pos_loc = gl_context.getUniformLocation(shader_program, "u_cam_pos");
+                u_cam_angles_loc = gl_context.getUniformLocation(
+                    shader_program,
+                    "u_cam_angles"
+                );
+                u_cam_fov_loc = gl_context.getUniformLocation(shader_program, "u_cam_fov");
+
+                handleResize();
+                window.addEventListener("resize", handleResize);
+                setupControls();
+
+                last_frame_time = performance.now();
+                displayToast("Shader successfully loaded and compiled.");
+
+                if (debug) {
+                    console.log(
+                        "%c[WebGL Initialization] Success. Starting render loop...",
+                        "color: var(--primary-color)"
+                    );
+                }
+
+                renderLoop();
+            } catch (error) {
+                if (debug) {
+                    console.error("%c[WebGL Initialization Error]", "color: #ff4444;", error);
+                }
+                displayToast(error.message, true);
+            }
+        }
+
+        window.onload = initWebgl;
+
+    </script>
+</body>
+
+</html>

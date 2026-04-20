@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        canvas {
+            position: fixed;
+            left: 0;
+            top: 0;
+            transform-origin: 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas onmousemove="UpdateTarget()" ontouchmove="UpdateTarget()"></canvas>
+
+    <script>
+        "use strict";
+        function CalculateAngle(x, y) {
+            if (x == y) return 0;
+            if (x >= 0) return Math.atan(y / x) + Math.PI / 2;
+            return Math.PI * 1.5 + Math.atan(y / x);
+        }
+        var Sword = { Position: { x: 0, y: 0 }, Track: [], Speed: { x: 0, y: 0 }, Target: { x: 0, y: 0 }, Angle: 0, Size: 1 };
+        var canvas = document.querySelector('canvas');
+        var ctx = canvas.getContext("2d");
+        var base_w, base_h, base_wh, normal_w, normal_h, normal_wh;
+        function WindowResize() {
+            base_w = window.innerWidth * window.devicePixelRatio;
+            base_h = window.innerHeight * window.devicePixelRatio;
+            canvas.style = 'transform: scale(' + 1 / window.devicePixelRatio + ')';
+            canvas.style.width = base_w + 'px';
+            canvas.style.height = base_h + 'px';
+            canvas.width = base_w;
+            canvas.height = base_h;
+            normal_w = base_w / 100;
+            normal_h = base_h / 100;
+            base_wh = Math.min(base_w, base_h);
+            normal_wh = Math.min(normal_w, normal_h);
+            Sword.Target.x = normal_w * 50;
+            Sword.Target.y = normal_h * 50;
+        }
+        WindowResize();
+        window.onresize = function () { WindowResize(); };
+        function GameChange() {
+            Sword.Speed.x = (Sword.Target.x - Sword.Position.x) * 0.2;
+            Sword.Speed.y = (Sword.Target.y - Sword.Position.y) * 0.2;
+            Sword.Position.x += Sword.Speed.x;
+            Sword.Position.y += Sword.Speed.y;
+            var TargetAngle;
+            if (Math.abs(Sword.Speed.x) < 0.2 && Math.abs(Sword.Speed.x) < 0.2) {
+                TargetAngle = 0;
+                Sword.Track.shift();
+            } else {
+                TargetAngle = CalculateAngle(Sword.Speed.x, Sword.Speed.y);
+                Sword.Track.push({ Position: { x: Sword.Position.x, y: Sword.Position.y }, Angle: Sword.Angle });
+                if (Sword.Track.length > 20) Sword.Track.shift();
+            }
+            var Delta_Angle = TargetAngle - Sword.Angle;
+            if (Delta_Angle > Math.PI) Delta_Angle = -Math.PI * 2 + Delta_Angle;
+            if (Delta_Angle < -Math.PI) Delta_Angle = Math.PI * 2 + Delta_Angle;
+            Sword.Angle += Delta_Angle * 0.2;
+        }
+        function GameDraw() {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, base_w, base_h);
+            //Sword
+            var normal_size = Sword.Size * normal_wh;
+            //Track
+            for (var i = 0; i < Sword.Track.length - 1; i++) {
+                ctx.fillStyle = "rgba(255,255,0," + i / Sword.Track.length + ")";
+                var x1 = Sword.Track[i].Position.x + Math.cos(Sword.Track[i].Angle - Math.PI / 2) * normal_size * (2);
+                var y1 = Sword.Track[i].Position.y + Math.sin(Sword.Track[i].Angle - Math.PI / 2) * normal_size * (2);
+                var x2 = Sword.Track[i].Position.x - Math.cos(Sword.Track[i].Angle - Math.PI / 2) * normal_size * (-14);
+                var y2 = Sword.Track[i].Position.y - Math.sin(Sword.Track[i].Angle - Math.PI / 2) * normal_size * (-14);
+                var x3 = Sword.Track[i + 1].Position.x - Math.cos(Sword.Track[i + 1].Angle - Math.PI / 2) * normal_size * (-14);
+                var y3 = Sword.Track[i + 1].Position.y - Math.sin(Sword.Track[i + 1].Angle - Math.PI / 2) * normal_size * (-14);
+                var x4 = Sword.Track[i + 1].Position.x + Math.cos(Sword.Track[i + 1].Angle - Math.PI / 2) * normal_size * (2);
+                var y4 = Sword.Track[i + 1].Position.y + Math.sin(Sword.Track[i + 1].Angle - Math.PI / 2) * normal_size * (2);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x3, y3);
+                ctx.lineTo(x4, y4);
+                ctx.fill();
+            }
+            var tangle = Sword.Angle;
+            var ta, tb, tc, td, te, tf;
+            te = Sword.Position.x;
+            tf = Sword.Position.y;
+            ta = Math.cos(tangle);
+            tb = Math.sin(tangle);
+            tc = -Math.sin(tangle);
+            td = Math.cos(tangle);
+            ctx.setTransform(ta, tb, tc, td, te, tf);
+            //Sword_Handle
+            ctx.fillStyle = "#333";
+            ctx.fillRect(normal_size * -1, normal_size * -2, normal_size * 2, normal_size * 4);
+            //Sword_Guard
+            ctx.fillStyle = "#eeee33";
+            ctx.fillRect(normal_size * -2, normal_size * -3, normal_size * 4, normal_size * 2);
+            //Sword_Body
+            ctx.fillStyle = "#eee";
+            ctx.fillRect(normal_size * -1, normal_size * -14, normal_size * 2, normal_size * 12);
+        }
+        function GameCycle() {
+            GameChange();
+            GameDraw();
+            requestAnimationFrame(GameCycle);
+        }
+        GameCycle();
+        function UpdateTarget() {
+            if (event.touches) {
+                Sword.Target.x = event.touches[0].clientX * window.devicePixelRatio;
+                Sword.Target.y = event.touches[0].clientY * window.devicePixelRatio;
+            } else {
+                Sword.Target.x = event.clientX * window.devicePixelRatio;
+                Sword.Target.y = event.clientY * window.devicePixelRatio;
+            }
+        }
+    </script>
+</body>
+
+</html>
