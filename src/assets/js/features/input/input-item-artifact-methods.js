@@ -5812,104 +5812,116 @@ Object.assign(Input, {
 
     drawNguLongThuatCursor(ctx, scaleFactor) {
         if (!this.isNguLongThuatEnabled?.()) {
-            if (Array.isArray(this.nguLongThuatTrail) && this.nguLongThuatTrail.length) {
-                this.nguLongThuatTrail.length = 0;
-            }
             this.nguLongThuatVisual = null;
             return;
         }
 
-        if (!this.nguLongThuatVisual || !Array.isArray(this.nguLongThuatVisual.segments)) {
+        if (!this.nguLongThuatVisual || !Array.isArray(this.nguLongThuatVisual.elems)) {
+            const widthSafe = Math.max(1, Number(ctx?.canvas?.width) || width || window.innerWidth || 1);
+            const heightSafe = Math.max(1, Number(ctx?.canvas?.height) || height || window.innerHeight || 1);
+            const segmentCount = 40;
             this.nguLongThuatVisual = {
-                segments: Array.from({ length: 28 }).map(() => ({ x: this.x, y: this.y })),
-                swaySeed: Math.random() * Math.PI * 2
+                width: widthSafe,
+                height: heightSafe,
+                pointer: { x: this.x, y: this.y },
+                elems: Array.from({ length: segmentCount }).map(() => ({ x: widthSafe / 2, y: 0 })),
+                frm: Math.random(),
+                rad: 0,
+                radm: Math.max(20, Math.min(widthSafe / 2, heightSafe / 2) - 20),
+                lastPointerX: this.x,
+                lastPointerY: this.y,
+                pathCache: (typeof Path2D === 'function')
+                    ? {
+                        cabezaWhite: new Path2D("M-28.9,-1.1L-28.55 -1.95Q-28.1 -3.1 -27.25 -2.95L-26.7 -2.95Q-27.7 -1.65 -28.9 -1.1M-18.35,-1.8Q-15.1 -10.3 -9.6 -6.05Q-15.1 -6.2 -18.35 -1.8M-18.35,1.1Q-15.1 5.45 -9.6 5.35Q-15.1 9.55 -18.35 1.1M-26.7,2.2L-27.25 2.25Q-28.1 2.4 -28.55 1.2L-28.9 0.35Q-27.7 0.9 -26.7 2.2"),
+                        cabezaBlack: new Path2D("M-21.05,-8.25Q-13.6 -15.95 -1.3 -12.1Q-7.85 -8.5 -5.85 -4.35Q-2.3 -4.85 10.5 0.15Q0 4.35 -5.85 3.65Q-7.85 7.75 -1.25 12.45Q-13.6 15.2 -21.05 7.5Q-29.55 4.05 -30.2 -0.35Q-29.55 -4.8 -21.05 -8.25M-26.7,-2.95L-27.25 -2.95Q-28.1 -3.1 -28.55 -1.95L-28.9 -1.1Q-27.7 -1.65 -26.7 -2.95M-9.6,-6.05Q-15.1 -10.3 -18.35 -1.8Q-15.1 -6.2 -9.6 -6.05M-9.6,5.35Q-15.1 5.45 -18.35 1.1Q-15.1 9.55 -9.6 5.35M-28.9,0.35L-28.55 1.2Q-28.1 2.4 -27.25 2.25L-26.7 2.2Q-27.7 0.9 -28.9 0.35"),
+                        espinaTop: new Path2D("M-18.8,0Q-17.85 -5.7 -12.3 -9.6Q-11.2 -5.35 -6.5 -8.25L-6.45 -8.2L-6.2 -8.3Q1.25 -16.25 6.65 -12.4Q0.05 -12.55 0 -5.95Q2.7 -2.4 7.75 -4.1Q18 -1.45 18.8 0L-18.8 0"),
+                        espinaBottom: new Path2D("M18.8,0Q18 1.45 7.75 4.1Q2.7 2.4 0 5.95Q0.05 12.55 6.65 12.4Q1.25 16.25 -6.2 8.35Q-6.35 8.25 -6.45 8.25L-6.5 8.25Q-11.2 5.35 -12.3 9.6Q-17.85 5.7 -18.8 0L18.8 0")
+                    }
+                    : null
             };
         }
+
         const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
-        const segments = this.nguLongThuatVisual.segments;
-        const now = performance.now() * 0.001;
-        const glowColor = cfg.glowColor || '#27d8c5';
-        const bodyColor = cfg.color || '#71f0d2';
-        const headColor = cfg.secondaryColor || '#f8fffd';
-        const swaySeed = this.nguLongThuatVisual.swaySeed || 0;
+        const visual = this.nguLongThuatVisual;
+        const w = Math.max(1, Number(ctx?.canvas?.width) || width || window.innerWidth || 1);
+        const h = Math.max(1, Number(ctx?.canvas?.height) || height || window.innerHeight || 1);
+        if (visual.width !== w || visual.height !== h) {
+            visual.width = w;
+            visual.height = h;
+            visual.radm = Math.max(20, Math.min(w / 2, h / 2) - 20);
+        }
 
-        const lead = segments[0];
-        lead.x += (this.x - lead.x) * 0.42;
-        lead.y += (this.y - lead.y) * 0.42;
+        const pointer = visual.pointer;
+        const movement = Math.hypot(this.x - visual.lastPointerX, this.y - visual.lastPointerY);
+        pointer.x = this.x;
+        pointer.y = this.y;
+        if (movement > 0.5) visual.rad = 0;
+        visual.lastPointerX = this.x;
+        visual.lastPointerY = this.y;
 
-        for (let i = 1; i < segments.length; i++) {
-            const prev = segments[i - 1];
-            const seg = segments[i];
-            const follow = 0.34 - Math.min(0.2, i * 0.004);
-            const wave = (1 - (i / segments.length));
-            const sway = Math.sin((now * 5.4) + swaySeed + (i * 0.72)) * (6.2 * scaleFactor * wave);
-            seg.x += ((prev.x - seg.x) * follow) + (Math.cos(now * 3.1 + (i * 0.18)) * 0.08 * scaleFactor);
-            seg.y += ((prev.y - seg.y) * follow) + (sway * 0.05);
+        const elems = visual.elems;
+        const e0 = elems[0];
+        const ax = (Math.cos(3 * visual.frm) * visual.rad * visual.width) / visual.height;
+        const ay = (Math.sin(4 * visual.frm) * visual.rad * visual.height) / visual.width;
+        e0.x += (ax + pointer.x - e0.x) / 10;
+        e0.y += (ay + pointer.y - e0.y) / 10;
+
+        for (let i = 1; i < elems.length; i++) {
+            const e = elems[i];
+            const ep = elems[i - 1];
+            const a = Math.atan2(e.y - ep.y, e.x - ep.x);
+            e.x += (ep.x - e.x + (Math.cos(a) * (100 - i)) / 5) / 4;
+            e.y += (ep.y - e.y + (Math.sin(a) * (100 - i)) / 5) / 4;
         }
 
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        for (let i = segments.length - 1; i >= 0; i--) {
-            const seg = segments[i];
-            const ratio = i / Math.max(1, segments.length - 1);
-            const size = Math.max(1.2, ((1 - ratio) * 14 + 2.4) * scaleFactor);
-            const aura = size * 2.2;
-            const alpha = 0.12 + ((1 - ratio) * 0.5);
+        for (let i = elems.length - 1; i >= 1; i--) {
+            const e = elems[i];
+            const ep = elems[i - 1];
+            const a = Math.atan2(e.y - ep.y, e.x - ep.x);
+            const s = ((162 + 4 * (1 - i)) / 50) * scaleFactor;
+            const tx = (ep.x + e.x) / 2;
+            const ty = (ep.y + e.y) / 2;
 
-            const glowGradient = ctx.createRadialGradient(seg.x, seg.y, 0, seg.x, seg.y, aura);
-            glowGradient.addColorStop(0, withAlpha(headColor, alpha));
-            glowGradient.addColorStop(0.35, withAlpha(bodyColor, alpha * 0.9));
-            glowGradient.addColorStop(1, withAlpha(glowColor, 0));
-            ctx.fillStyle = glowGradient;
-            ctx.beginPath();
-            ctx.arc(seg.x, seg.y, aura, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.save();
+            ctx.translate(tx, ty);
+            ctx.rotate(a);
+            ctx.scale(s, s);
 
-            ctx.fillStyle = withAlpha(bodyColor, 0.2 + ((1 - ratio) * 0.7));
-            ctx.beginPath();
-            ctx.arc(seg.x, seg.y, size, 0, Math.PI * 2);
-            ctx.fill();
+            if (visual.pathCache && i === 1) {
+                ctx.fillStyle = cfg.secondaryColor || '#FFFFFF';
+                ctx.fill(visual.pathCache.cabezaWhite);
+                ctx.fillStyle = '#000000';
+                ctx.fill(visual.pathCache.cabezaBlack);
+            } else if (visual.pathCache) {
+                const gradTop = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
+                gradTop.addColorStop(0, '#CCCCCC');
+                gradTop.addColorStop(1, '#333333');
+                ctx.fillStyle = gradTop;
+                ctx.fill(visual.pathCache.espinaTop);
+
+                const gradBottom = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
+                gradBottom.addColorStop(0, '#CCCCCC');
+                gradBottom.addColorStop(1, '#333333');
+                ctx.fillStyle = gradBottom;
+                ctx.fill(visual.pathCache.espinaBottom);
+            } else {
+                ctx.fillStyle = withAlpha(cfg.color || '#71f0d2', Math.max(0.1, 1 - (i / elems.length)));
+                ctx.beginPath();
+                ctx.arc(0, 0, Math.max(2.2, 7 - (i * 0.14)), 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
         }
-
-        const head = segments[0];
-        const neck = segments[2] || head;
-        const angle = Math.atan2(head.y - neck.y, head.x - neck.x);
-        const headRadius = Math.max(6, 10 * scaleFactor);
-        const eyeRadius = Math.max(1, 1.6 * scaleFactor);
-        const hornLength = 9 * scaleFactor;
-
-        ctx.save();
-        ctx.translate(head.x, head.y);
-        ctx.rotate(angle);
-        ctx.shadowBlur = 18 * scaleFactor;
-        ctx.shadowColor = withAlpha(glowColor, 0.92);
-
-        ctx.fillStyle = withAlpha(headColor, 0.95);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, headRadius * 1.12, headRadius * 0.92, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = withAlpha('#ffffff', 0.95);
-        ctx.lineWidth = Math.max(1, 1.3 * scaleFactor);
-        ctx.beginPath();
-        ctx.moveTo(-headRadius * 0.35, -headRadius * 0.3);
-        ctx.lineTo(-headRadius * 0.35 - hornLength, -headRadius * 0.95);
-        ctx.moveTo(headRadius * 0.35, -headRadius * 0.3);
-        ctx.lineTo(headRadius * 0.35 + hornLength, -headRadius * 0.95);
-        ctx.stroke();
-
-        ctx.fillStyle = '#051f1a';
-        ctx.beginPath();
-        ctx.arc(-headRadius * 0.35, -eyeRadius * 0.2, eyeRadius, 0, Math.PI * 2);
-        ctx.arc(headRadius * 0.35, -eyeRadius * 0.2, eyeRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = withAlpha('#ffffff', 0.9);
-        ctx.beginPath();
-        ctx.ellipse(0, headRadius * 0.35, headRadius * 0.56, headRadius * 0.2, 0, 0, Math.PI * 2);
-        ctx.fill();
         ctx.restore();
-        ctx.restore();
+
+        if (visual.rad < visual.radm) visual.rad += 1;
+        visual.frm += 0.003;
+        if (visual.rad > 60) {
+            pointer.x += (visual.width / 2 - pointer.x) * 0.05;
+            pointer.y += (visual.height / 2 - pointer.y) * 0.05;
+        }
     },
 
     drawCursor(ctx, scaleFactor) {

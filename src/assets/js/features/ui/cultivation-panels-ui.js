@@ -1086,7 +1086,6 @@ Object.assign(SkillsUI, {
                     : 'Lĩnh ngộ',
                 buttonDisabled: nguLongLearned ? false : !nguLongItem,
                 inventoryKey: nguLongItem?.key || null,
-                hideActionButton: nguLongLearned,
                 roster: []
             });
         }
