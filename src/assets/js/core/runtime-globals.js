@@ -73,9 +73,25 @@ function showNotify(text, color) {
     }, 2500);
 }
 
+function getViewportSize() {
+    const viewport = window.visualViewport;
+    if (viewport && Number.isFinite(viewport.width) && Number.isFinite(viewport.height)) {
+        return {
+            width: Math.max(1, Math.round(viewport.width)),
+            height: Math.max(1, Math.round(viewport.height))
+        };
+    }
+
+    return {
+        width: Math.max(1, Math.round(window.innerWidth || 0)),
+        height: Math.max(1, Math.round(window.innerHeight || 0))
+    };
+}
+
 function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+    const viewport = getViewportSize();
+    width = canvas.width = viewport.width;
+    height = canvas.height = viewport.height;
     scaleFactor = width / CONFIG.CORE.BASE_WIDTH;
     if (typeof window.starField?.resize === 'function') {
         window.starField.resize(width, height);
@@ -83,11 +99,15 @@ function resize() {
 
     if (document.body) {
         document.body.classList.toggle('is-touch-device', IS_TOUCH_ENVIRONMENT);
-        document.body.classList.toggle('is-mobile-landscape', IS_TOUCH_ENVIRONMENT && window.innerWidth > window.innerHeight);
+        document.body.classList.toggle('is-mobile-landscape', IS_TOUCH_ENVIRONMENT && width > height);
     }
 }
 window.addEventListener("resize", resize);
 window.addEventListener("orientationchange", resize);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resize);
+    window.visualViewport.addEventListener('scroll', resize);
+}
 resize();
 
 if (typeof GameContext !== 'undefined' && GameContext && typeof GameContext.register === 'function') {

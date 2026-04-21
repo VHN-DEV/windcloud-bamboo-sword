@@ -1,8 +1,8 @@
 const Camera = {
     currentZoom: 1,
     targetZoom: 1,
-    centerX: window.innerWidth / 2,
-    centerY: window.innerHeight / 2,
+    centerX: (typeof width === 'number' ? width : window.innerWidth) / 2,
+    centerY: (typeof height === 'number' ? height : window.innerHeight) / 2,
     zoomAnchorScreenX: null,
     zoomAnchorScreenY: null,
     zoomAnchorWorldX: null,
@@ -21,8 +21,8 @@ const Camera = {
             this.zoomAnchorWorldY !== null &&
             Math.abs(this.currentZoom - previousZoom) > 0.0001
         ) {
-            const screenCenterX = window.innerWidth / 2;
-            const screenCenterY = window.innerHeight / 2;
+            const screenCenterX = (typeof width === 'number' ? width : window.innerWidth) / 2;
+            const screenCenterY = (typeof height === 'number' ? height : window.innerHeight) / 2;
 
             this.centerX = this.zoomAnchorWorldX - (this.zoomAnchorScreenX - screenCenterX) / this.currentZoom;
             this.centerY = this.zoomAnchorWorldY - (this.zoomAnchorScreenY - screenCenterY) / this.currentZoom;
@@ -49,7 +49,7 @@ const Camera = {
         this.zoomAnchorWorldY = worldPosition.y;
     },
 
-    adjustZoom(amount, screenX = window.innerWidth / 2, screenY = window.innerHeight / 2) {
+    adjustZoom(amount, screenX = (typeof width === 'number' ? width : window.innerWidth) / 2, screenY = (typeof height === 'number' ? height : window.innerHeight) / 2) {
         if (!Number.isFinite(amount) || amount === 0) return;
         this.setZoomAnchor(screenX, screenY);
         this.targetZoom = Math.max(CONFIG.ZOOM.MIN, Math.min(CONFIG.ZOOM.MAX, this.targetZoom + amount));
@@ -60,8 +60,8 @@ const Camera = {
      * Dựa trên điểm trung tâm của canvas và mức độ Zoom hiện tại
      */
     screenToWorld(screenX, screenY) {
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
+        const centerX = (typeof width === 'number' ? width : window.innerWidth) / 2;
+        const centerY = (typeof height === 'number' ? height : window.innerHeight) / 2;
         
         return {
             x: (screenX - centerX) / this.currentZoom + this.centerX,

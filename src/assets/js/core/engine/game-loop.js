@@ -725,8 +725,10 @@ function animate() {
     }
 
     const zoom = Math.max(0.001, Camera.currentZoom || 1);
-    const visibleHalfWidth = window.innerWidth / (2 * zoom);
-    const visibleHalfHeight = window.innerHeight / (2 * zoom);
+    const viewportWidth = typeof width === 'number' ? width : window.innerWidth;
+    const viewportHeight = typeof height === 'number' ? height : window.innerHeight;
+    const visibleHalfWidth = viewportWidth / (2 * zoom);
+    const visibleHalfHeight = viewportHeight / (2 * zoom);
     const visibleLeft = Camera.centerX - visibleHalfWidth;
     const visibleRight = Camera.centerX + visibleHalfWidth;
     const visibleTop = Camera.centerY - visibleHalfHeight;
