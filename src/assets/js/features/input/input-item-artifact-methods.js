@@ -5828,11 +5828,14 @@ Object.assign(Input, {
         const radiusScaleMin = Math.max(0.1, Number(cfg.particleRadiusScaleMin) || 1);
         const radiusScaleMax = Math.max(radiusScaleMin, Number(cfg.particleRadiusScaleMax) || 1.5);
 
+        const pointerX = Number.isFinite(this.screenX) ? this.screenX : (widthSafe * 0.5);
+        const pointerY = Number.isFinite(this.screenY) ? this.screenY : (heightSafe * 0.5);
+
         if (!this.nguLinhThuatVisual || !Array.isArray(this.nguLinhThuatVisual.particles)) {
             this.nguLinhThuatVisual = {
                 width: widthSafe,
                 height: heightSafe,
-                pointer: { x: this.x, y: this.y },
+                pointer: { x: pointerX, y: pointerY },
                 radiusScale: radiusScaleMin,
                 mouseIsDown: false,
                 particles: []
@@ -5842,17 +5845,17 @@ Object.assign(Input, {
         const visual = this.nguLinhThuatVisual;
         visual.width = widthSafe;
         visual.height = heightSafe;
-        // Tương đương mouseIsDown trong snippet gốc: khi đang giữ chuột để tấn công.
-        visual.mouseIsDown = Boolean(this.isAttacking);
-        visual.pointer.x = this.x;
-        visual.pointer.y = this.y;
+        // Giống snippet: bật ngay khi mousedown (không chờ trạng thái attack đã bắt đầu).
+        visual.mouseIsDown = Boolean(this.attackTimer || this.isAttacking);
+        visual.pointer.x = pointerX;
+        visual.pointer.y = pointerY;
 
         if (visual.particles.length !== quantity) {
             visual.particles = Array.from({ length: quantity }).map(() => ({
                 size: 1,
-                position: { x: this.x, y: this.y },
+                position: { x: pointerX, y: pointerY },
                 offset: { x: 0, y: 0 },
-                shift: { x: this.x, y: this.y },
+                shift: { x: pointerX, y: pointerY },
                 speed: 0.01 + Math.random() * 0.04,
                 targetSize: 1,
                 fillColor: '#' + ((Math.random() * 0x404040 + 0xaaaaaa) | 0).toString(16),
