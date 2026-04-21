@@ -5949,7 +5949,8 @@ Object.assign(Input, {
         if (!this.nguLongThuatVisual || !Array.isArray(this.nguLongThuatVisual.elems)) {
             const widthSafe = Math.max(1, Number(ctx?.canvas?.width) || width || window.innerWidth || 1);
             const heightSafe = Math.max(1, Number(ctx?.canvas?.height) || height || window.innerHeight || 1);
-            const segmentCount = 40;
+            const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
+            const segmentCount = Math.max(20, Number(cfg.segmentCount) || 34);
             this.nguLongThuatVisual = {
                 width: widthSafe,
                 height: heightSafe,
@@ -6000,8 +6001,13 @@ Object.assign(Input, {
             const e = elems[i];
             const ep = elems[i - 1];
             const a = Math.atan2(e.y - ep.y, e.x - ep.x);
-            e.x += (ep.x - e.x + (Math.cos(a) * (100 - i)) / 5) / 4;
-            e.y += (ep.y - e.y + (Math.sin(a) * (100 - i)) / 5) / 4;
+            const desiredGap = Math.max(
+                8,
+                (Number(cfg.segmentSpacingBase) || 26) - (i * (Number(cfg.segmentSpacingDecay) || 0.35))
+            );
+            const followDivisor = Math.max(1.4, Number(cfg.segmentFollowDivisor) || 2.6);
+            e.x += (ep.x - e.x + (Math.cos(a) * desiredGap)) / followDivisor;
+            e.y += (ep.y - e.y + (Math.sin(a) * desiredGap)) / followDivisor;
         }
 
         ctx.save();
@@ -6018,21 +6024,26 @@ Object.assign(Input, {
             ctx.rotate(a);
             ctx.scale(s, s);
 
+            const bodyStartColor = cfg.secondaryColor || '#f8fffd';
+            const bodyEndColor = cfg.glowColor || cfg.color || '#71f0d2';
             if (visual.pathCache && i === 1) {
-                ctx.fillStyle = cfg.secondaryColor || '#FFFFFF';
+                const headGrad = ctx.createLinearGradient(-30, 0, 12, 0);
+                headGrad.addColorStop(0, bodyStartColor);
+                headGrad.addColorStop(1, bodyEndColor);
+                ctx.fillStyle = headGrad;
                 ctx.fill(visual.pathCache.cabezaWhite);
-                ctx.fillStyle = '#000000';
+                ctx.fillStyle = withAlpha(cfg.color || '#71f0d2', 0.9);
                 ctx.fill(visual.pathCache.cabezaBlack);
             } else if (visual.pathCache) {
                 const gradTop = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
-                gradTop.addColorStop(0, '#CCCCCC');
-                gradTop.addColorStop(1, '#333333');
+                gradTop.addColorStop(0, bodyStartColor);
+                gradTop.addColorStop(1, bodyEndColor);
                 ctx.fillStyle = gradTop;
                 ctx.fill(visual.pathCache.espinaTop);
 
                 const gradBottom = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
-                gradBottom.addColorStop(0, '#CCCCCC');
-                gradBottom.addColorStop(1, '#333333');
+                gradBottom.addColorStop(0, bodyStartColor);
+                gradBottom.addColorStop(1, bodyEndColor);
                 ctx.fillStyle = gradBottom;
                 ctx.fill(visual.pathCache.espinaBottom);
             } else {
