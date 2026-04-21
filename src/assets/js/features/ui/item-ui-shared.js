@@ -225,6 +225,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             : null;
     const isCanLamFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'CAN_LAM_BANG_DIEM';
     const isNguLoiFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'NGU_LOI_THUAT';
+    const isNguLinhFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'NGU_LINH_THUAT';
     const isNguLongFlameArt = item.category === 'FLAME_ART' && item.uniqueKey === 'NGU_LONG_THUAT';
     const isPhongLoiArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'PHONG_LOI_SI';
     const isChuongThienBinhArtifact = item.category === 'ARTIFACT' && item.uniqueKey === 'CHUONG_THIEN_BINH';
@@ -244,6 +245,9 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
 
     if (isNguLoiFlameArt) {
         visualClasses.push('is-flame-art-ngu-loi');
+    }
+    if (isNguLinhFlameArt) {
+        visualClasses.push('is-flame-art-ngu-linh');
     }
     if (isNguLongFlameArt) {
         visualClasses.push('is-flame-art-ngu-long');
@@ -275,6 +279,11 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
         : isChuongThienBinhArtifact
         ? buildChuongThienBinhVisualMarkup()
         : isNguLoiFlameArt && uniqueConfig?.imagePath
+        ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+            coreClass: 'pill-visual__core--book',
+            imageClass: 'pill-visual__item-icon--skill'
+        })
+        : isNguLinhFlameArt && uniqueConfig?.imagePath
         ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
             coreClass: 'pill-visual__core--book',
             imageClass: 'pill-visual__item-icon--skill'

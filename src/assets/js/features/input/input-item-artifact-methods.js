@@ -5841,6 +5841,8 @@ Object.assign(Input, {
                 pointer: { x: pointerX, y: pointerY },
                 radiusScale: radiusScaleMin,
                 mouseIsDown: false,
+                idleFrames: 0,
+                lastPointer: { x: pointerX, y: pointerY },
                 particles: [],
                 trailCanvas,
                 trailCtx: trailCanvas.getContext('2d')
@@ -5860,8 +5862,15 @@ Object.assign(Input, {
         }
         // Giống snippet: bật ngay khi mousedown (không chờ trạng thái attack đã bắt đầu).
         visual.mouseIsDown = Boolean(this.attackTimer || this.isAttacking);
+        const pointerDelta = Math.hypot(pointerX - (visual.lastPointer?.x ?? pointerX), pointerY - (visual.lastPointer?.y ?? pointerY));
+        if (visual.mouseIsDown || pointerDelta > 0.8) {
+            visual.idleFrames = 0;
+        } else {
+            visual.idleFrames = Math.min(240, (visual.idleFrames || 0) + 1);
+        }
         visual.pointer.x = pointerX;
         visual.pointer.y = pointerY;
+        visual.lastPointer = { x: pointerX, y: pointerY };
 
         if (visual.particles.length !== quantity) {
             visual.particles = Array.from({ length: quantity }).map(() => ({
@@ -5887,9 +5896,15 @@ Object.assign(Input, {
         drawCtx.save();
         // Chỉ làm mờ vệt cũ theo alpha, không phủ nền đen để giữ nền game và con trỏ cũ.
         drawCtx.globalCompositeOperation = 'destination-out';
-        drawCtx.fillStyle = 'rgba(0,0,0,0.05)';
+        const fadeAlpha = visual.mouseIsDown
+            ? 0.1
+            : (visual.idleFrames > 10 ? 0.22 : (pointerDelta > 0.8 ? 0.14 : 0.18));
+        drawCtx.fillStyle = `rgba(0,0,0,${fadeAlpha})`;
         drawCtx.fillRect(0, 0, widthSafe, heightSafe);
         drawCtx.globalCompositeOperation = 'source-over';
+        if (!visual.mouseIsDown && visual.idleFrames > 24) {
+            drawCtx.clearRect(0, 0, widthSafe, heightSafe);
+        }
 
         for (let i = 0; i < visual.particles.length; i++) {
             const particle = visual.particles[i];
@@ -5904,7 +5919,7 @@ Object.assign(Input, {
             particle.position.y = Math.max(0, Math.min(heightSafe, particle.position.y));
             particle.size += (particle.targetSize - particle.size) * 0.05;
             if (Math.round(particle.size) === Math.round(particle.targetSize)) {
-                particle.targetSize = 1 + Math.random() * 7;
+                particle.targetSize = 1 + Math.random() * 4.5;
             }
 
             drawCtx.beginPath();
