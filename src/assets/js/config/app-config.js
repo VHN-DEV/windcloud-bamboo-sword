@@ -1391,6 +1391,7 @@ const CONFIG = {
             imagePath: imagePath("animals/ryu.svg"),
             secondaryColor: "#333333",
             glowColor: "#333333",
+            segmentColors: ["#CCCCCC", "#A6A6A6", "#737373", "#4D4D4D", "#333333"],
             segmentCount: 34,
             segmentSpacingBase: 26,
             segmentSpacingDecay: 0.35,
