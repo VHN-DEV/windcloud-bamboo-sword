@@ -61,7 +61,7 @@ function imagePath(imageName) {
 
 const IMAGE_PATHS = {
     UI: {
-        PROFILE_SWORD: imagePath("sword-light.svg"),
+        PROFILE_SWORD: imagePath("arcane-arts/gooey-sword.svg"),
         LIGHTNING: imagePath("lightning.svg")
     },
     BAGS: {
@@ -1355,7 +1355,7 @@ const CONFIG = {
         },
         DAI_CANH_KIEM_TRAN: {
             fullName: "Đại Canh Kiếm Trận",
-            imagePath: IMAGE_PATHS.UI.PROFILE_SWORD,
+            imagePath: imagePath("arcane-arts/flashpoint.svg"),
             quality: "SUPREME",
             color: "#ffd36b",
             buyPriceLowStone: 1000000,
@@ -1368,7 +1368,7 @@ const CONFIG = {
             fullName: "Ngự Lôi Thuật",
             quality: "SUPREME",
             color: "#7aa8ff",
-            imagePath: imagePath("lightning-dissipation.svg"),
+            imagePath: imagePath("arcane-arts/lightning-dissipation.svg"),
             secondaryColor: "#fefefe",
             glowColor: "#2323fe",
             sparkColor: "#feca32",
