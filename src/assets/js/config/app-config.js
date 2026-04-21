@@ -1381,7 +1381,7 @@ const CONFIG = {
             fullName: "Ngự Long Thuật",
             quality: "SUPREME",
             color: "#71f0d2",
-            imagePath: imagePath("animals/dragon.svg"),
+            imagePath: imagePath("animals/ryu.svg"),
             secondaryColor: "#f8fffd",
             glowColor: "#2fd9be",
             buyPriceLowStone: 960000,
