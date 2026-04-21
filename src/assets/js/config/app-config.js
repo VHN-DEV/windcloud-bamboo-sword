@@ -1361,7 +1361,7 @@ const CONFIG = {
             fullName: "Ngự Lôi Thuật",
             quality: "SUPREME",
             color: "#7aa8ff",
-            imagePath: IMAGE_PATHS.UI.LIGHTNING,
+            imagePath: imagePath("lightning-dissipation.svg"),
             secondaryColor: "#fefefe",
             glowColor: "#2323fe",
             sparkColor: "#feca32",

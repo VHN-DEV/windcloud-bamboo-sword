@@ -2647,9 +2647,9 @@ select.shop-control-input {
         filter: drop-shadow(0 0 12px color-mix(in srgb, var(--insect-aura) 28%, transparent));
     }
 
-    &__item-icon--skill {
-        transform: rotate(16deg);
-    }
+    // &__item-icon--skill {
+    //     transform: rotate(16deg);
+    // }
 
     &__item-icon--sword-art {
         transform: rotate(10deg) scale(1.08);
@@ -3404,8 +3404,8 @@ select.shop-control-input {
     }
 
     .pill-visual__item-icon--skill {
-        width: 44%;
-        height: 44%;
+        width: 40%;
+        height: 40%;
         filter: drop-shadow(0 0 6px rgba(220, 230, 255, 0.84)) drop-shadow(0 0 12px rgba(90, 116, 255, 0.5));
     }
 }
