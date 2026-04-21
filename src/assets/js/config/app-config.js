@@ -1387,10 +1387,10 @@ const CONFIG = {
         NGU_LONG_THUAT: {
             fullName: "Ngự Long Thuật",
             quality: "SUPREME",
-            color: "#71f0d2",
+            color: "#CCCCCC",
             imagePath: imagePath("animals/ryu.svg"),
-            secondaryColor: "#f8fffd",
-            glowColor: "#2fd9be",
+            secondaryColor: "#333333",
+            glowColor: "#333333",
             segmentCount: 34,
             segmentSpacingBase: 26,
             segmentSpacingDecay: 0.35,
