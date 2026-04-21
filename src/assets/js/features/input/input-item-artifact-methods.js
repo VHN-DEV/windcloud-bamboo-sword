@@ -5832,19 +5832,32 @@ Object.assign(Input, {
         const pointerY = Number.isFinite(this.screenY) ? this.screenY : (heightSafe * 0.5);
 
         if (!this.nguLinhThuatVisual || !Array.isArray(this.nguLinhThuatVisual.particles)) {
+            const trailCanvas = document.createElement('canvas');
+            trailCanvas.width = widthSafe;
+            trailCanvas.height = heightSafe;
             this.nguLinhThuatVisual = {
                 width: widthSafe,
                 height: heightSafe,
                 pointer: { x: pointerX, y: pointerY },
                 radiusScale: radiusScaleMin,
                 mouseIsDown: false,
-                particles: []
+                particles: [],
+                trailCanvas,
+                trailCtx: trailCanvas.getContext('2d')
             };
         }
 
         const visual = this.nguLinhThuatVisual;
         visual.width = widthSafe;
         visual.height = heightSafe;
+        if (!visual.trailCanvas || !visual.trailCtx) {
+            visual.trailCanvas = document.createElement('canvas');
+            visual.trailCtx = visual.trailCanvas.getContext('2d');
+        }
+        if (visual.trailCanvas.width !== widthSafe || visual.trailCanvas.height !== heightSafe) {
+            visual.trailCanvas.width = widthSafe;
+            visual.trailCanvas.height = heightSafe;
+        }
         // Giống snippet: bật ngay khi mousedown (không chờ trạng thái attack đã bắt đầu).
         visual.mouseIsDown = Boolean(this.attackTimer || this.isAttacking);
         visual.pointer.x = pointerX;
@@ -5870,10 +5883,11 @@ Object.assign(Input, {
         }
         visual.radiusScale = Math.min(radiusScaleMax, Math.max(radiusScaleMin, visual.radiusScale));
 
-        ctx.save();
+        const drawCtx = visual.trailCtx || ctx;
+        drawCtx.save();
         // Giữ đúng logic nền "trail fade" từ HTML mẫu.
-        ctx.fillStyle = 'rgba(0,0,0,0.05)';
-        ctx.fillRect(0, 0, widthSafe, heightSafe);
+        drawCtx.fillStyle = 'rgba(0,0,0,0.05)';
+        drawCtx.fillRect(0, 0, widthSafe, heightSafe);
 
         for (let i = 0; i < visual.particles.length; i++) {
             const particle = visual.particles[i];
@@ -5891,18 +5905,21 @@ Object.assign(Input, {
                 particle.targetSize = 1 + Math.random() * 7;
             }
 
-            ctx.beginPath();
-            ctx.fillStyle = particle.fillColor;
-            ctx.strokeStyle = particle.fillColor;
-            ctx.lineWidth = particle.size;
-            ctx.moveTo(lp.x, lp.y);
-            ctx.lineTo(particle.position.x, particle.position.y);
-            ctx.stroke();
-            ctx.arc(particle.position.x, particle.position.y, particle.size / 2, 0, Math.PI * 2, true);
-            ctx.fill();
+            drawCtx.beginPath();
+            drawCtx.fillStyle = particle.fillColor;
+            drawCtx.strokeStyle = particle.fillColor;
+            drawCtx.lineWidth = particle.size;
+            drawCtx.moveTo(lp.x, lp.y);
+            drawCtx.lineTo(particle.position.x, particle.position.y);
+            drawCtx.stroke();
+            drawCtx.arc(particle.position.x, particle.position.y, particle.size / 2, 0, Math.PI * 2, true);
+            drawCtx.fill();
         }
 
-        ctx.restore();
+        drawCtx.restore();
+        if (visual.trailCanvas) {
+            ctx.drawImage(visual.trailCanvas, 0, 0, widthSafe, heightSafe);
+        }
     },
 
     drawNguLongThuatCursor(ctx, scaleFactor) {

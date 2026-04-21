@@ -1402,7 +1402,7 @@ const CONFIG = {
             fullName: "Ngự Linh Thuật",
             quality: "SUPREME",
             color: "#b7e6ff",
-            imagePath: imagePath("animals/jelly-fish.svg"),
+            imagePath: imagePath("arcane-arts/flashpoint-dark.svg"),
             secondaryColor: "#f3fbff",
             glowColor: "#89d9ff",
             buyPriceLowStone: 880000,
