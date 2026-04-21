@@ -240,7 +240,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const bagImagePath = ['BAG', 'RAINBOW_BAG'].includes(item.category)
         ? (CONFIG.IMAGES?.BAGS?.TREASURE || '')
         : (CONFIG.IMAGES?.BAGS?.STORAGE || '');
-    const configuredImagePath = uniqueConfig?.imagePath || artifactConfig?.imagePath || qualityConfig?.imagePath || '';
+    const configuredImagePath = item.imagePath || uniqueConfig?.imagePath || artifactConfig?.imagePath || qualityConfig?.imagePath || '';
 
     if (isNguLoiFlameArt) {
         visualClasses.push('is-flame-art-ngu-loi');
