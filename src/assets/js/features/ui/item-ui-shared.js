@@ -240,6 +240,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const bagImagePath = ['BAG', 'RAINBOW_BAG'].includes(item.category)
         ? (CONFIG.IMAGES?.BAGS?.TREASURE || '')
         : (CONFIG.IMAGES?.BAGS?.STORAGE || '');
+    const configuredImagePath = uniqueConfig?.imagePath || artifactConfig?.imagePath || qualityConfig?.imagePath || '';
 
     if (isNguLoiFlameArt) {
         visualClasses.push('is-flame-art-ngu-loi');
@@ -302,29 +303,54 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             </div>
         `
         : visual.className === 'is-material'
-            ? buildMaterialArtMarkup(item.materialKey, item)
+            ? configuredImagePath
+                ? buildItemImageVisualMarkup(configuredImagePath, {
+                    coreClass: 'pill-visual__core--artifact',
+                    imageClass: 'pill-visual__item-icon--artifact'
+                })
+                : buildMaterialArtMarkup(item.materialKey, item)
         : visual.className === 'is-alchemy-recipe'
-            ? `
-                <span class="pill-visual__core pill-visual__core--book"></span>
-                <span class="pill-visual__cover-seal pill-visual__cover-seal--herb"></span>
-            `
+            ? configuredImagePath
+                ? buildItemImageVisualMarkup(configuredImagePath, {
+                    coreClass: 'pill-visual__core--book',
+                    imageClass: 'pill-visual__item-icon--skill'
+                })
+                : `
+                    <span class="pill-visual__core pill-visual__core--book"></span>
+                    <span class="pill-visual__cover-seal pill-visual__cover-seal--herb"></span>
+                `
         : visual.className === 'is-alchemy-furnace'
-            ? buildAlchemyFurnaceVisualMarkup(item)
+            ? configuredImagePath
+                ? buildItemImageVisualMarkup(configuredImagePath, {
+                    coreClass: 'pill-visual__core--artifact',
+                    imageClass: 'pill-visual__item-icon--artifact'
+                })
+                : buildAlchemyFurnaceVisualMarkup(item)
         : visual.isBagLike
         ? buildItemImageVisualMarkup(bagImagePath, {
             coreClass: 'pill-visual__core--bag',
             imageClass: 'pill-visual__item-icon--bag'
         })
         : visual.className === 'is-insect-skill'
-            ? `
-                <span class="pill-visual__core pill-visual__core--book"></span>
-                <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
-            `
-            : visual.className === 'is-sword-art'
-                ? `
+            ? uniqueConfig?.imagePath
+                ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                    coreClass: 'pill-visual__core--book',
+                    imageClass: 'pill-visual__item-icon--skill'
+                })
+                : `
                     <span class="pill-visual__core pill-visual__core--book"></span>
-                    <span class="pill-visual__cover-seal pill-visual__cover-seal--${isFormationSecretArt ? 'formation' : 'sword'}"></span>
+                    <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
                 `
+            : visual.className === 'is-sword-art'
+                ? uniqueConfig?.imagePath
+                    ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                        coreClass: 'pill-visual__core--book',
+                        imageClass: 'pill-visual__item-icon--skill'
+                    })
+                    : `
+                        <span class="pill-visual__core pill-visual__core--book"></span>
+                        <span class="pill-visual__cover-seal pill-visual__cover-seal--${isFormationSecretArt ? 'formation' : 'sword'}"></span>
+                    `
             : visual.className === 'is-flame-art'
                 ? uniqueConfig?.imagePath
                     ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
@@ -351,13 +377,26 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
                         <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
                     `
             : visual.className === 'is-insect-artifact'
-                ? `
-                    <span class="pill-visual__core pill-visual__core--book"></span>
-                    <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
-                `
+                ? uniqueConfig?.imagePath
+                    ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                        coreClass: 'pill-visual__core--book',
+                        imageClass: 'pill-visual__item-icon--artifact'
+                    })
+                    : `
+                        <span class="pill-visual__core pill-visual__core--book"></span>
+                        <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
+                    `
         : `
-            <span class="pill-visual__core"></span>
-            <span class="pill-visual__sigil"></span>
+            ${configuredImagePath
+                ? buildItemImageVisualMarkup(configuredImagePath, {
+                    coreClass: 'pill-visual__core--flame',
+                    imageClass: 'pill-visual__item-icon--flame'
+                })
+                : `
+                    <span class="pill-visual__core"></span>
+                    <span class="pill-visual__sigil"></span>
+                `
+            }
         `;
 
     const styleVars = [

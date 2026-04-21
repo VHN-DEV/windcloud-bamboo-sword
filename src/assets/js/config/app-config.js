@@ -550,24 +550,28 @@ const CONFIG = {
         STORAGE_BAGS: {
             LOW: {
                 fullName: "Thanh Mộc Trữ Vật Nang",
+                imagePath: IMAGE_PATHS.BAGS.STORAGE,
                 capacity: 24,
                 color: "#72f1cf",
                 buyPriceLowStone: 320
             },
             MEDIUM: {
                 fullName: "Lưu Vân Nạp Linh Túi",
+                imagePath: IMAGE_PATHS.BAGS.STORAGE,
                 capacity: 40,
                 color: "#6db8ff",
                 buyPriceLowStone: 1200
             },
             HIGH: {
                 fullName: "Tinh Hà Giới Tử Đại",
+                imagePath: IMAGE_PATHS.BAGS.STORAGE,
                 capacity: 64,
                 color: "#c090ff",
                 buyPriceLowStone: 5200
             },
             SUPREME: {
                 fullName: "Càn Khôn Vạn Tượng Nang",
+                imagePath: IMAGE_PATHS.BAGS.STORAGE,
                 capacity: 96,
                 color: "#ffd76f",
                 buyPriceLowStone: 18000
@@ -575,6 +579,7 @@ const CONFIG = {
         },
         SEVEN_COLOR_BAG: {
             fullName: "Thất Sắc Vô Tận Nang",
+            imagePath: IMAGE_PATHS.BAGS.TREASURE,
             quality: "SUPREME",
             color: "#fff1a8",
             capacity: Number.POSITIVE_INFINITY,
@@ -1340,6 +1345,7 @@ const CONFIG = {
     SECRET_ARTS: {
         THANH_LINH_KIEM_QUYET: {
             fullName: "Thanh Linh Kiếm Quyết",
+            imagePath: IMAGE_PATHS.UI.PROFILE_SWORD,
             quality: "HIGH",
             color: "#72f7d0",
             buyPriceLowStone: 280000,
@@ -1349,6 +1355,7 @@ const CONFIG = {
         },
         DAI_CANH_KIEM_TRAN: {
             fullName: "Đại Canh Kiếm Trận",
+            imagePath: IMAGE_PATHS.UI.PROFILE_SWORD,
             quality: "SUPREME",
             color: "#ffd36b",
             buyPriceLowStone: 1000000,
@@ -1395,6 +1402,7 @@ const CONFIG = {
     ARTIFACTS: {
         CHUONG_THIEN_BINH: {
             fullName: "Chưởng Thiên Bình",
+            imagePath: IMAGE_PATHS.ARTIFACTS.CHUONG_THIEN_BINH,
             quality: "SUPREME",
             color: "#8fffe0",
             secondaryColor: "#cffff1",
@@ -1409,6 +1417,7 @@ const CONFIG = {
         },
         PHONG_LOI_SI: {
             fullName: "Phong Lôi Sí",
+            imagePath: IMAGE_PATHS.ARTIFACTS.PHONG_LOI_SI,
             quality: "SUPREME",
             color: "#9fe8ff",
             secondaryColor: "#dffeff",
@@ -1624,6 +1633,7 @@ const CONFIG = {
         UNIQUE_ITEMS: {
             KHU_TRUNG_THUAT: {
                 fullName: "Khu Trùng Thuật",
+                imagePath: imagePath("animals/ant.svg"),
                 quality: "HIGH",
                 color: "#ff92c2",
                 buyPriceLowStone: 4200,
@@ -1632,6 +1642,7 @@ const CONFIG = {
             },
             KY_TRUNG_BANG: {
                 fullName: "Kỳ Trùng Bảng",
+                imagePath: imagePath("animals/spotted-bug.svg"),
                 quality: "SUPREME",
                 color: "#ffd871",
                 buyPriceLowStone: 6800,
@@ -1640,6 +1651,7 @@ const CONFIG = {
         },
         BEAST_BAG: {
             fullName: "Linh Thú Đại",
+            imagePath: IMAGE_PATHS.BAGS.STORAGE,
             quality: "HIGH",
             color: "#8ebfff",
             capacity: 24,
@@ -1648,6 +1660,7 @@ const CONFIG = {
         },
         SEVEN_COLOR_BEAST_BAG: {
             fullName: "Thất Sắc Linh Thú Đại",
+            imagePath: IMAGE_PATHS.BAGS.TREASURE,
             quality: "SUPREME",
             color: "#ffe38b",
             capacity: Number.POSITIVE_INFINITY,
