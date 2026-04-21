@@ -316,15 +316,25 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             imageClass: 'pill-visual__item-icon--bag'
         })
         : visual.className === 'is-insect-skill'
-            ? `
-                <span class="pill-visual__core pill-visual__core--book"></span>
-                <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
-            `
-            : visual.className === 'is-sword-art'
-                ? `
+            ? uniqueConfig?.imagePath
+                ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                    coreClass: 'pill-visual__core--book',
+                    imageClass: 'pill-visual__item-icon--skill'
+                })
+                : `
                     <span class="pill-visual__core pill-visual__core--book"></span>
-                    <span class="pill-visual__cover-seal pill-visual__cover-seal--${isFormationSecretArt ? 'formation' : 'sword'}"></span>
+                    <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
                 `
+            : visual.className === 'is-sword-art'
+                ? uniqueConfig?.imagePath
+                    ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                        coreClass: 'pill-visual__core--book',
+                        imageClass: 'pill-visual__item-icon--skill'
+                    })
+                    : `
+                        <span class="pill-visual__core pill-visual__core--book"></span>
+                        <span class="pill-visual__cover-seal pill-visual__cover-seal--${isFormationSecretArt ? 'formation' : 'sword'}"></span>
+                    `
             : visual.className === 'is-flame-art'
                 ? uniqueConfig?.imagePath
                     ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
@@ -351,10 +361,15 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
                         <span class="pill-visual__wing-artifact pill-visual__wing-artifact--right"></span>
                     `
             : visual.className === 'is-insect-artifact'
-                ? `
-                    <span class="pill-visual__core pill-visual__core--book"></span>
-                    <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
-                `
+                ? uniqueConfig?.imagePath
+                    ? buildItemImageVisualMarkup(uniqueConfig.imagePath, {
+                        coreClass: 'pill-visual__core--book',
+                        imageClass: 'pill-visual__item-icon--artifact'
+                    })
+                    : `
+                        <span class="pill-visual__core pill-visual__core--book"></span>
+                        <span class="pill-visual__cover-seal pill-visual__cover-seal--insect"></span>
+                    `
         : `
             <span class="pill-visual__core"></span>
             <span class="pill-visual__sigil"></span>
