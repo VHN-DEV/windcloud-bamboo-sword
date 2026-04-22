@@ -41,11 +41,23 @@ InventoryUI = {
                 if (!actionBtn) return;
 
                 e.stopPropagation();
-                const itemKey = actionBtn.getAttribute('data-item-key');
+                const itemKey = (actionBtn.getAttribute('data-item-key') || '').trim();
                 const action = actionBtn.getAttribute('data-action') || 'use';
+                const spiritStoneQuality = (actionBtn.getAttribute('data-spirit-quality') || '').trim().toUpperCase();
                 let actionHandled = false;
 
-                if (typeof Input.handleInventoryItemAction === 'function') {
+                if (action === 'refine' && typeof Input.refineSpiritStoneFromInventory === 'function') {
+                    let refinedQuality = spiritStoneQuality;
+                    if (!refinedQuality && itemKey.startsWith('SPIRIT_STONE_TOKEN|')) {
+                        refinedQuality = (itemKey.split('|')[1] || 'LOW').trim().toUpperCase();
+                    }
+
+                    if (refinedQuality) {
+                        actionHandled = Input.refineSpiritStoneFromInventory(refinedQuality, 1);
+                    }
+                }
+
+                if (!actionHandled && typeof Input.handleInventoryItemAction === 'function') {
                     actionHandled = Input.handleInventoryItemAction(itemKey, action);
                 } else if (action === 'sell') {
                     actionHandled = Input.sellInventoryItem(itemKey);
@@ -171,6 +183,7 @@ InventoryUI = {
                     <button
                         class="btn-slot-action"
                         data-action="refine"
+                        data-spirit-quality="${escapeHtml(stone.quality)}"
                         data-item-key="${escapeHtml(stone.key)}"
                     >Luyện hoá</button>
                 </div>
