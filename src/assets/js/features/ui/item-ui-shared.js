@@ -170,12 +170,12 @@ function buildThanhTrucSwordArtifactVisualMarkup() {
     `;
 }
 
-function buildItemImageVisualMarkup(imagePath, { coreClass = '', imageClass = '', extraMarkup = '' } = {}) {
+function buildItemImageVisualMarkup(imagePath, { coreClass = '', imageClass = '', extraMarkup = '', showCore = true } = {}) {
     const imageClasses = ['pill-visual__item-icon', imageClass].filter(Boolean).join(' ');
     const imageName = normalizeImageAssetName(imagePath);
 
     return `
-        <span class="pill-visual__core ${coreClass}"></span>
+        ${showCore ? `<span class="pill-visual__core ${coreClass}"></span>` : ''}
         ${extraMarkup}
         <img ${buildImageSrcWithFallbackMarkup(imageName)} class="${imageClasses}" alt="">
     `;
@@ -236,6 +236,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
     const isFormationSecretArt = item.category === 'SWORD_ART'
         && (item.uniqueKey === 'DAI_CANH_KIEM_TRAN' || uniqueConfig?.visualStyle === 'formation');
     const isKimLoiTrucMau = item.category === 'MATERIAL' && item.materialKey === 'KIM_LOI_TRUC_ROOT';
+    const isSpiritStoneToken = typeof item.key === 'string' && item.key.startsWith('SPIRIT_STONE_TOKEN|');
     const kimLoiStageMeta = isKimLoiTrucMau ? getKimLoiTrucArtStageMeta(item) : null;
     const visualClasses = [visual.className];
     const bagImagePath = ['BAG', 'RAINBOW_BAG'].includes(item.category)
@@ -315,7 +316,8 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             ? configuredImagePath
                 ? buildItemImageVisualMarkup(configuredImagePath, {
                     coreClass: 'pill-visual__core--artifact',
-                    imageClass: 'pill-visual__item-icon--artifact'
+                    imageClass: 'pill-visual__item-icon--artifact',
+                    showCore: !isSpiritStoneToken
                 })
                 : buildMaterialArtMarkup(item.materialKey, item)
         : visual.className === 'is-alchemy-recipe'
