@@ -1499,6 +1499,59 @@ Object.assign(Input, {
         `;
     },
 
+    getSpiritStoneInventoryEntries() {
+        return STONE_ORDER
+            .map(quality => {
+                const count = Math.max(0, Math.floor(Number(this.spiritStones?.[quality]) || 0));
+                if (count <= 0) return null;
+                const type = this.getSpiritStoneType(quality);
+                return {
+                    key: `SPIRIT_STONE_TOKEN|${quality}`,
+                    quality,
+                    count,
+                    label: type.label,
+                    color: type.color,
+                    lowValue: type.value
+                };
+            })
+            .filter(Boolean);
+    },
+
+    refineSpiritStoneFromInventory(quality, count = 1) {
+        const safeCount = Math.max(1, Math.floor(Number(count) || 0));
+        const safeQuality = String(quality || 'LOW').toUpperCase();
+        const available = Math.max(0, Math.floor(Number(this.spiritStones?.[safeQuality]) || 0));
+        if (available < safeCount) return false;
+
+        const type = this.getSpiritStoneType(safeQuality);
+        this.spiritStones[safeQuality] = available - safeCount;
+
+        const expGain = Math.max(1, Math.floor(type.value * safeCount));
+        this.updateExp(expGain);
+        showNotify(
+            `Luyện hoá ${formatNumber(safeCount)} ${type.label}: +${formatNumber(expGain)} tu vi`,
+            type.color || '#7df0cc'
+        );
+        this.refreshResourceUI();
+        return true;
+    },
+
+    handleInventoryItemAction(itemKey, action = 'use') {
+        if (typeof itemKey === 'string' && itemKey.startsWith('SPIRIT_STONE_TOKEN|')) {
+            const quality = itemKey.split('|')[1] || 'LOW';
+            if (action === 'refine') {
+                return this.refineSpiritStoneFromInventory(quality, 1);
+            }
+            return false;
+        }
+
+        if (action === 'sell') return this.sellInventoryItem(itemKey);
+        if (action === 'special' && typeof this.useInventoryItemSpecial === 'function') {
+            return this.useInventoryItemSpecial(itemKey);
+        }
+        return this.useInventoryItem(itemKey);
+    },
+
 });
 
 Object.assign(Input, {

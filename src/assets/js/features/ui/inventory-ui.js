@@ -74,7 +74,10 @@ InventoryUI = {
 
         const inventorySummary = Input.getInventorySummary();
         const entries = inventorySummary.entries;
-        const cards = entries.map(item => {
+        const spiritStoneEntries = typeof Input.getSpiritStoneInventoryEntries === 'function'
+            ? Input.getSpiritStoneInventoryEntries()
+            : [];
+        const normalCards = entries.map(item => {
             const qualityConfig = Input.getItemQualityConfig(item);
             const usable = Input.isInventoryItemUsable(item);
             const sellPrice = Input.getInventorySellPrice(item);
@@ -137,6 +140,31 @@ InventoryUI = {
                 </article>
             `;
         });
+        const spiritStoneCards = spiritStoneEntries.map(stone => `
+            <article class="inventory-slot has-pill-art" style="--slot-accent:${escapeHtml(stone.color)}">
+                <div class="slot-badge">${formatNumber(stone.count)}x</div>
+                <div class="pill-visual is-material">
+                    <span class="pill-visual__aura" style="--pill-aura:${escapeHtml(stone.color)}"></span>
+                    <span class="pill-visual__core"></span>
+                    <span class="pill-visual__spark"></span>
+                    <span class="pill-visual__spark"></span>
+                    <span class="pill-visual__spark"></span>
+                </div>
+                <h4>${escapeHtml(stone.label)}</h4>
+                <div class="item-description">
+                    Tinh hoa thiên địa ngưng tụ trong linh thạch. Luyện hoá 1 viên nhận <strong>${formatNumber(stone.lowValue)} tu vi</strong>.
+                </div>
+                <div class="slot-meta">Loại tiền tệ có thể chuyển thành tu vi</div>
+                <div class="slot-actions">
+                    <button
+                        class="btn-slot-action"
+                        data-action="refine"
+                        data-item-key="${escapeHtml(stone.key)}"
+                    >Luyện hoá</button>
+                </div>
+            </article>
+        `);
+        const cards = normalCards.concat(spiritStoneCards);
 
         const emptySlotCount = Math.max(0, CONFIG.ITEMS.INVENTORY_MIN_SLOTS - cards.length);
         for (let i = 0; i < emptySlotCount; i++) {
