@@ -2697,6 +2697,7 @@ Object.assign(Input, {
             InsectBookUI.render();
         }
 
+        this.syncTribulationPopupUiTestMode();
         this.renderAttackModeUI();
         GameProgress.requestSave();
     },
@@ -3262,8 +3263,24 @@ Object.assign(Input, {
         this.tribulation.hp = config.baseHp;
         this.tribulation.successChance = this.getBreakthroughChanceDetails(this.getCurrentRank()).totalChance;
         this.updateTribulationPopupUI();
-        showNotify('Đang mở popup độ kiếp ở chế độ test giao diện.', '#8fd0ff');
+        if (!this.tribulationUiTestNotifyShown) {
+            showNotify('Đang mở popup độ kiếp ở chế độ test giao diện.', '#8fd0ff');
+            this.tribulationUiTestNotifyShown = true;
+        }
         return true;
+    },
+
+    syncTribulationPopupUiTestMode() {
+        const uiTestEnabled = CONFIG.CULTIVATION?.TRIBULATION?.ENABLE_POPUP === true;
+        if (uiTestEnabled) {
+            this.openTribulationPopupForUiTest();
+            return;
+        }
+
+        if (!this.tribulation?.active) {
+            this.closeTribulationPopup();
+        }
+        this.tribulationUiTestNotifyShown = false;
     },
 
     finishTribulation({ success }) {
