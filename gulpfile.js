@@ -126,6 +126,9 @@ gulp.task('prune-stale-assets', function (done) {
   done();
 });
 
+// Task dọn file thừa chạy thủ công khi cần
+gulp.task('clean-assets', gulp.series('prune-stale-assets'));
+
 // 1. Biên dịch styles.scss (Đã sửa tên cho khớp với ảnh của bạn)
 gulp.task('build-css', function () {
   return gulp.src('src/assets/css/styles.scss') // Bỏ chữ 's' ở styles
@@ -218,7 +221,6 @@ gulp.task('copy-fonts', function () {
 
 // Task chạy mặc định
 gulp.task('default', gulp.series(
-  'prune-stale-assets',
   gulp.parallel('build-css', 'build-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest'))
 ));
 
@@ -228,10 +230,10 @@ gulp.task('watch', function () {
   gulp.watch('src/assets/js/**/*.js', gulp.series('build-js'));
   gulp.watch(
     'src/assets/images/**/*',
-    gulp.series('prune-stale-assets', 'copy-images', 'build-icons-manifest')
+    gulp.series('copy-images', 'build-icons-manifest')
   );
   gulp.watch(
     'src/assets/fonts/**/*.{otf,ttf,woff,woff2}',
-    gulp.series('prune-stale-assets', 'copy-fonts')
+    gulp.series('copy-fonts')
   );
 });
