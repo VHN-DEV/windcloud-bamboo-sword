@@ -1059,6 +1059,7 @@ const CONFIG = {
         BREAKTHROUGH_PENALTY_FACTOR: 0.4, // Hệ số mất tu vi khi đột phá thất bại (40%)
         OVERFLOW_LIMIT: 1.2,              // Giới hạn tràn exp (120% lượng exp cần thiết)
         TRIBULATION: {
+            ENABLE_POPUP: false, // Dành cho test giao diện: true = luôn bật popup độ kiếp, false = hoạt động bình thường.
             // Cấu hình linh động các mốc độ kiếp:
             // Mỗi mốc sourceRankId sẽ mở popup độ kiếp và nếu thành công sẽ nhảy sang targetRankId.
             // Có thể thêm bao nhiêu mốc tùy ý.
@@ -1627,7 +1628,9 @@ const CONFIG = {
             shield: {
                 MAX_CAPACITY: 360,
                 DAMAGE_REDUCTION_PCT: 0.9,
-                CRACK_RECOVER_PER_SEC: 0.13
+                CRACK_RECOVER_PER_SEC: 0.13,
+                RECOVERY_DELAY_MS: 4200,
+                RECOVERY_CAPACITY_PER_SEC: 0.2
             },
             description: "Bảo vật hậu huyền thiên chi bảo hợp từ ngũ cực sơn. Khi đủ năm cực sơn và đã luyện hóa hoàn chỉnh có thể kết hợp/tách rời tùy ý."
         },

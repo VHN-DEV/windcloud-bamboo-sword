@@ -102,7 +102,9 @@ Object.assign(Input, {
         return {
             maxCapacity: Math.max(1, Math.floor(Number(shieldConfig.MAX_CAPACITY) || 360)),
             damageReductionPct: clampNumber(Number(shieldConfig.DAMAGE_REDUCTION_PCT) || 0.9, 0, 1),
-            crackRecoverPerSec: clampNumber(Number(shieldConfig.CRACK_RECOVER_PER_SEC) || 0.13, 0, 1)
+            crackRecoverPerSec: clampNumber(Number(shieldConfig.CRACK_RECOVER_PER_SEC) || 0.13, 0, 1),
+            recoveryDelayMs: Math.max(0, Math.floor(Number(shieldConfig.RECOVERY_DELAY_MS) || 4200)),
+            recoveryCapacityPerSec: clampNumber(Number(shieldConfig.RECOVERY_CAPACITY_PER_SEC) || 0.2, 0, 1)
         };
     },
 
@@ -123,6 +125,7 @@ Object.assign(Input, {
                 maxCapacity,
                 currentCapacity: maxCapacity,
                 crackIntensity: 0,
+                wasBroken: false,
                 lastHitAt: 0,
                 lastRecoverAt: performance.now()
             };
@@ -136,6 +139,7 @@ Object.assign(Input, {
         state.maxCapacity = cfg.maxCapacity;
         state.currentCapacity = cfg.maxCapacity;
         state.crackIntensity = 0;
+        state.wasBroken = false;
         state.lastRecoverAt = performance.now();
         return state;
     },
@@ -149,6 +153,16 @@ Object.assign(Input, {
 
         if (state.crackIntensity > 0) {
             state.crackIntensity = clampNumber(state.crackIntensity - (cfg.crackRecoverPerSec * elapsedSec), 0, 1);
+        }
+
+        const idleMs = Math.max(0, now - (state.lastHitAt || 0));
+        if (idleMs >= cfg.recoveryDelayMs && state.currentCapacity < state.maxCapacity) {
+            const recoverAmount = state.maxCapacity * cfg.recoveryCapacityPerSec * elapsedSec;
+            state.currentCapacity = Math.min(state.maxCapacity, state.currentCapacity + recoverAmount);
+            if (state.currentCapacity > 0 && state.wasBroken) {
+                state.wasBroken = false;
+                showNotify('Nguyên Hợp Ngũ Cực Sơn đã ổn định lại và bắt đầu tự hồi phục.', this.getArtifactConfig('NGUYEN_HOP_NGU_CUC_SON')?.color || '#ffd76a', 1100);
+            }
         }
 
         state.lastRecoverAt = now;
@@ -171,6 +185,9 @@ Object.assign(Input, {
         state.crackIntensity = clampNumber(state.crackIntensity + (damageRatio * 1.7), 0, 1);
         state.lastHitAt = performance.now();
         state.lastRecoverAt = state.lastHitAt;
+        if (state.currentCapacity <= 0) {
+            state.wasBroken = true;
+        }
 
         return {
             absorbed,
@@ -2680,6 +2697,7 @@ Object.assign(Input, {
             InsectBookUI.render();
         }
 
+        this.syncTribulationPopupUiTestMode();
         this.renderAttackModeUI();
         GameProgress.requestSave();
     },
@@ -3230,6 +3248,47 @@ Object.assign(Input, {
         return true;
     },
 
+    openTribulationPopupForUiTest() {
+        if (this.tribulation?.active && this.tribulation?.uiTestMode) {
+            this.openTribulationPopup();
+            this.updateTribulationPopupUI();
+        } else {
+            this.runTribulationSequence({ uiTestMode: true, suppressStartNotify: true });
+        }
+
+        if (!this.tribulationUiTestNotifyShown) {
+            showNotify('Chế độ test giao diện: lôi kiếp sẽ đánh liên tục nhưng không trừ sinh lực.', '#8fd0ff');
+            this.tribulationUiTestNotifyShown = true;
+        }
+        return true;
+    },
+
+    syncTribulationPopupUiTestMode() {
+        const uiTestEnabled = CONFIG.CULTIVATION?.TRIBULATION?.ENABLE_POPUP === true;
+        if (uiTestEnabled) {
+            this.openTribulationPopupForUiTest();
+            return;
+        }
+
+        if (this.tribulation?.uiTestMode) {
+            this.tribulation.active = false;
+            this.tribulation.uiTestMode = false;
+        }
+        if (!this.tribulation?.active) this.closeTribulationPopup();
+        this.tribulationUiTestNotifyShown = false;
+    },
+
+    spawnTribulationUiTestBolt() {
+        const cloudWrap = document.querySelector('#tribulation-popup .tribulation-cloud-wrap');
+        if (!cloudWrap) return;
+        const boltEl = document.createElement('div');
+        boltEl.className = 'tribulation-ui-test-bolt';
+        boltEl.style.left = `${48 + ((Math.random() - 0.5) * 16)}%`;
+        cloudWrap.appendChild(boltEl);
+        requestAnimationFrame(() => boltEl.classList.add('is-active'));
+        setTimeout(() => boltEl.remove(), 520);
+    },
+
     finishTribulation({ success }) {
         this.tribulation.active = false;
         this.closeTribulationPopup();
@@ -3262,7 +3321,8 @@ Object.assign(Input, {
         this.updateHealth(-this.maxHp, 'lôi kiếp');
     },
 
-    runTribulationSequence() {
+    runTribulationSequence({ uiTestMode = false, suppressStartNotify = false } = {}) {
+        if (this.tribulation?.active && this.tribulation?.uiTestMode && uiTestMode) return;
         const config = this.getTribulationConfig();
         const rank = this.getCurrentRank();
         const chanceDetails = this.getBreakthroughChanceDetails(rank);
@@ -3281,7 +3341,8 @@ Object.assign(Input, {
         this.tribulation.totalStrikes = config.strikeCount;
         this.tribulation.maxHp = config.baseHp;
         this.tribulation.hp = config.baseHp;
-        this.tribulation.successChance = chanceDetails.totalChance;
+        this.tribulation.successChance = uiTestMode ? 1 : chanceDetails.totalChance;
+        this.tribulation.uiTestMode = uiTestMode;
         this.updateTribulationPopupUI();
 
         const cloudEl = document.getElementById('tribulation-cloud');
@@ -3520,6 +3581,9 @@ Object.assign(Input, {
             }
             cloudEl?.classList.add('is-striking');
             drawTribulationLightning(strikePower);
+            if (this.tribulation.uiTestMode) {
+                this.spawnTribulationUiTestBolt();
+            }
 
             const mainStrikeDelay = Math.round(130 + Math.min(140, strikePower * 13));
             setTimeout(() => {
@@ -3527,12 +3591,16 @@ Object.assign(Input, {
 
                 contentEl?.classList.add('is-striking');
 
-                const damageRatio = damageMin + (Math.random() * (damageMax - damageMin));
-                const damage = Math.max(1, Math.round(this.tribulation.maxHp * damageRatio));
-                this.tribulation.hp = Math.max(0, this.tribulation.hp - damage);
+                if (this.tribulation.uiTestMode) {
+                    this.tribulation.hp = this.tribulation.maxHp;
+                } else {
+                    const damageRatio = damageMin + (Math.random() * (damageMax - damageMin));
+                    const damage = Math.max(1, Math.round(this.tribulation.maxHp * damageRatio));
+                    this.tribulation.hp = Math.max(0, this.tribulation.hp - damage);
+                }
                 this.updateTribulationPopupUI();
 
-                if (this.tribulation.currentStrike >= this.tribulation.totalStrikes) {
+                if (!this.tribulation.uiTestMode && this.tribulation.currentStrike >= this.tribulation.totalStrikes) {
                     let success = this.tribulation.hp > 0;
                     if (!success) {
                         const heavenlyChance = Math.max(0, Math.min(1, Number(this.tribulation.successChance) || 0));
@@ -3547,15 +3615,22 @@ Object.assign(Input, {
                     return;
                 }
 
+                if (this.tribulation.uiTestMode && this.tribulation.currentStrike >= this.tribulation.totalStrikes) {
+                    this.tribulation.currentStrike = 0;
+                }
                 setTimeout(performStrike, config.strikeIntervalMs);
             }, mainStrikeDelay);
         };
 
         setTimeout(performStrike, config.prepareDelayMs);
-        showNotify(
-            `Thiên lôi tụ vân: bắt đầu độ kiếp Cửu Cửu | Cơ sở ${chanceDetails.basePercent}% + Đan ${chanceDetails.bonusPercent}% = ${chanceDetails.totalPercent}%`,
-            '#91d6ff'
-        );
+        if (!suppressStartNotify) {
+            showNotify(
+                uiTestMode
+                    ? 'Thiên lôi tụ vân: chế độ xem hiệu ứng lôi kiếp (không trừ sinh lực).'
+                    : `Thiên lôi tụ vân: bắt đầu độ kiếp Cửu Cửu | Cơ sở ${chanceDetails.basePercent}% + Đan ${chanceDetails.bonusPercent}% = ${chanceDetails.totalPercent}%`,
+                '#91d6ff'
+            );
+        }
     },
 
     executeBreakthrough(isForced = false) {
@@ -3571,6 +3646,13 @@ Object.assign(Input, {
 
         const currentRank = this.getCurrentRank();
         if (!currentRank) return;
+
+        // Cờ test UI: luôn mở popup độ kiếp, không phụ thuộc cảnh giới hiện tại.
+        if (CONFIG.CULTIVATION?.TRIBULATION?.ENABLE_POPUP === true) {
+            this.openTribulationPopupForUiTest();
+            return;
+        }
+
         if (this.rankIndex >= this.getMaxRankIndex() || currentRank.infiniteStats) {
             this.isReadyToBreak = false;
             showNotify(`Đã chạm ${currentRank.name}, thiên đạo không còn cửa ải cao hơn`, getRankAccentColor(currentRank));
