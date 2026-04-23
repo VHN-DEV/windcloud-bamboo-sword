@@ -62,11 +62,11 @@ function imagePath(imageName) {
 const IMAGE_PATHS = {
     UI: {
         PROFILE_SWORD: imagePath("arcane-arts/gooey-sword.svg"),
-        LIGHTNING: imagePath("lightning.svg")
+        LIGHTNING: imagePath("ui/lightning.svg")
     },
     BAGS: {
-        STORAGE: imagePath("bag.svg"),
-        TREASURE: imagePath("tui-tru-vat.svg")
+        STORAGE: imagePath("ui/bag.svg"),
+        TREASURE: imagePath("ui/tui-tru-vat.svg")
     },
     ARTIFACTS: {
         CAN_LAM_BANG_DIEM: imagePath("artifacts/can-lam-bang-diem.svg"),
