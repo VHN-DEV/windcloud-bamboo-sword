@@ -8,263 +8,70 @@
     :root {
       color-scheme: dark;
       --bg: #07131f;
-      --surface: #0d1f2f;
-      --card: #12263a;
       --text: #e7f4ff;
       --muted: #96afc7;
       --accent: #2ac3ff;
       --border: #1c3b57;
     }
-
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "Noto Sans", system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at top, #10273d 0%, var(--bg) 65%);
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .container {
-      width: min(1200px, 100% - 32px);
-      margin: 24px auto 40px;
-    }
-
+    body { margin: 0; font-family: "Noto Sans", system-ui, sans-serif; background: radial-gradient(circle at top, #10273d 0%, var(--bg) 65%); color: var(--text); }
+    .container { width: min(1200px, 100% - 32px); margin: 24px auto 40px; }
     h1 { margin: 0 0 8px; font-size: clamp(24px, 3vw, 36px); }
     p { margin: 0 0 20px; color: var(--muted); }
-
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    input[type="search"] {
-      flex: 1;
-      min-width: 260px;
-      border: 1px solid var(--border);
-      background: rgba(6, 14, 24, 0.8);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 15px;
-    }
-
+    .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+    input[type="search"] { flex: 1; min-width: 260px; border: 1px solid var(--border); background: rgba(6, 14, 24, 0.8); color: var(--text); border-radius: 12px; padding: 10px 12px; font-size: 15px; }
     #count { color: var(--muted); font-size: 14px; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
-    }
-
-    .icon-card {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: linear-gradient(180deg, rgba(26, 48, 71, 0.9), rgba(16, 30, 44, 0.9));
-      padding: 12px;
-      cursor: pointer;
-      transition: transform 120ms ease, border-color 120ms ease;
-    }
-
-    .icon-card:hover { transform: translateY(-2px); border-color: var(--accent); }
-
-    .icon-preview {
-      width: 100%;
-      height: 88px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      background: rgba(4, 10, 16, 0.55);
-    }
-
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .icon-card { border: 1px solid var(--border); border-radius: 12px; background: linear-gradient(180deg, rgba(26, 48, 71, 0.9), rgba(16, 30, 44, 0.9)); padding: 12px; cursor: pointer; }
+    .icon-preview { width: 100%; height: 88px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; border-radius: 10px; background: rgba(4, 10, 16, 0.55); }
     .icon-preview img { width: 54px; height: 54px; object-fit: contain; }
-
-    .icon-name {
-      font-size: 12px;
-      color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .toast {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      max-width: min(90vw, 460px);
-      background: #06111d;
-      border: 1px solid var(--accent);
-      border-radius: 10px;
-      padding: 10px 12px;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(8px);
-      transition: opacity 140ms ease, transform 140ms ease;
-      color: var(--text);
-      font-size: 14px;
-    }
-
+    .icon-name { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pagination { margin-top: 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pagination button { border: 1px solid var(--border); background: #12263a; color: var(--text); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+    .pagination button[disabled] { opacity: 0.4; cursor: not-allowed; }
+    .toast { position: fixed; right: 16px; bottom: 16px; max-width: min(90vw, 460px); background: #06111d; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 140ms ease, transform 140ms ease; }
     .toast.is-visible { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
   <main class="container">
     <h1>/icons</h1>
-    <p>Click vào icon để copy đường dẫn file SVG.</p>
-
+    <p>Load động từ <code>assets/icons</code>. Click icon để copy đường dẫn SVG.</p>
     <div class="toolbar">
       <input id="search" type="search" placeholder="Tìm theo tên file..." aria-label="Tìm icon">
       <span id="count"></span>
     </div>
-
     <section id="icon-grid" class="grid" aria-live="polite"></section>
+    <div class="pagination">
+      <button id="prev-page" type="button">← Trước</button>
+      <span id="page-status"></span>
+      <button id="next-page" type="button">Sau →</button>
+    </div>
   </main>
-
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
   <script>
-    const iconPaths = [
-        '/assets/images/icons/abstract-047 (1).svg',
-        '/assets/images/icons/abstract-047.svg',
-        '/assets/images/icons/afk-arena (1).svg',
-        '/assets/images/icons/afk-arena.svg',
-        '/assets/images/icons/agape (1).svg',
-        '/assets/images/icons/agape.svg',
-        '/assets/images/icons/andrax (1).svg',
-        '/assets/images/icons/andrax.svg',
-        '/assets/images/icons/anime-brasil (1).svg',
-        '/assets/images/icons/anime-brasil.svg',
-        '/assets/images/icons/ant (1).svg',
-        '/assets/images/icons/ant.svg',
-        '/assets/images/icons/arc-titan-svgrepo-com (1).svg',
-        '/assets/images/icons/arc-titan-svgrepo-com.svg',
-        '/assets/images/icons/arc-warlock-light.svg',
-        '/assets/images/icons/arc-warlock.svg',
-        '/assets/images/icons/archer.svg',
-        '/assets/images/icons/axolotl.svg',
-        '/assets/images/icons/barbed-sun (1).svg',
-        '/assets/images/icons/barbed-sun.svg',
-        '/assets/images/icons/beyond-light-svgrepo-com (1).svg',
-        '/assets/images/icons/beyond-light-svgrepo-com.svg',
-        '/assets/images/icons/black-hole-line-duotone.svg',
-        '/assets/images/icons/blue-light-card (1).svg',
-        '/assets/images/icons/blue-light-card.svg',
-        '/assets/images/icons/buddicons-replies.svg',
-        '/assets/images/icons/celeste.svg',
-        '/assets/images/icons/charged-arrow.svg',
-        '/assets/images/icons/cigale.svg',
-        '/assets/images/icons/cosmic-egg.svg',
-        '/assets/images/icons/cowled.svg',
-        '/assets/images/icons/crab (1).svg',
-        '/assets/images/icons/crab.svg',
-        '/assets/images/icons/crimson-days-svgrepo-com (1).svg',
-        '/assets/images/icons/crimson-days-svgrepo-com.svg',
-        '/assets/images/icons/cursed-star.svg',
-        '/assets/images/icons/daisy.svg',
-        '/assets/images/icons/darkmoon.svg',
-        '/assets/images/icons/dead-wood.svg',
-        '/assets/images/icons/devil-mask.svg',
-        '/assets/images/icons/dragon-tamer.svg',
-        '/assets/images/icons/dragoncity.svg',
-        '/assets/images/icons/dragonframe.svg',
-        '/assets/images/icons/dragonml.svg',
-        '/assets/images/icons/dragons.svg',
-        '/assets/images/icons/earwig.svg',
-        '/assets/images/icons/emoji-bug.svg',
-        '/assets/images/icons/entangled-typhoon.svg',
-        '/assets/images/icons/fireflake.svg',
-        '/assets/images/icons/fragmented-sword (1).svg',
-        '/assets/images/icons/fragmented-sword.svg',
-        '/assets/images/icons/frostfire.svg',
-        '/assets/images/icons/guard.svg',
-        '/assets/images/icons/harpy.svg',
-        '/assets/images/icons/haunting.svg',
-        '/assets/images/icons/hive-with-ai.svg',
-        '/assets/images/icons/hollow-knight-silksong-alt.svg',
-        '/assets/images/icons/holy-oak.svg',
-        '/assets/images/icons/ice-bolt (1).svg',
-        '/assets/images/icons/ice-bolt.svg',
-        '/assets/images/icons/ice-spear (1).svg',
-        '/assets/images/icons/ice-spear.svg',
-        '/assets/images/icons/infinite-links (1).svg',
-        '/assets/images/icons/infinite-links.svg',
-        '/assets/images/icons/kindle.svg',
-        '/assets/images/icons/knight.svg',
-        '/assets/images/icons/kraken-tentacle (1).svg',
-        '/assets/images/icons/kraken-tentacle.svg',
-        '/assets/images/icons/ladybug.svg',
-        '/assets/images/icons/lamprey-mouth.svg',
-        '/assets/images/icons/lightning-dissipation.svg',
-        '/assets/images/icons/lightning-tree.svg',
-        '/assets/images/icons/maggot.svg',
-        '/assets/images/icons/magisk-delta.svg',
-        '/assets/images/icons/mantras.svg',
-        '/assets/images/icons/maze-saw.svg',
-        '/assets/images/icons/minerals.svg',
-        '/assets/images/icons/misc-battlenet.svg',
-        '/assets/images/icons/monster-super-league.svg',
-        '/assets/images/icons/nautilus-shell.svg',
-        '/assets/images/icons/nida-uapp.svg',
-        '/assets/images/icons/ore.svg',
-        '/assets/images/icons/oyster-pearl.svg',
-        '/assets/images/icons/paper-bag-crumpled.svg',
-        '/assets/images/icons/peaks.svg',
-        '/assets/images/icons/phalcon (1).svg',
-        '/assets/images/icons/phalcon.svg',
-        '/assets/images/icons/phoenix.svg',
-        '/assets/images/icons/qiankun-bag.svg',
-        '/assets/images/icons/raspberry.svg',
-        '/assets/images/icons/redragon.svg',
-        '/assets/images/icons/rune-sword (1).svg',
-        '/assets/images/icons/rune-sword.svg',
-        '/assets/images/icons/salmon.svg',
-        '/assets/images/icons/scarab-beetle.svg',
-        '/assets/images/icons/school-of-fish.svg',
-        '/assets/images/icons/scorpion.svg',
-        '/assets/images/icons/sea-serpent.svg',
-        '/assets/images/icons/sea-turtle.svg',
-        '/assets/images/icons/shambling-mound.svg',
-        '/assets/images/icons/shark (1).svg',
-        '/assets/images/icons/shark-jaws.svg',
-        '/assets/images/icons/shark.svg',
-        '/assets/images/icons/shieldcomb.svg',
-        '/assets/images/icons/smouldering-durtles.svg',
-        '/assets/images/icons/snitch-quidditch-ball (1).svg',
-        '/assets/images/icons/snitch-quidditch-ball.svg',
-        '/assets/images/icons/soul.svg',
-        '/assets/images/icons/spear.svg',
-        '/assets/images/icons/spiderman.svg',
-        '/assets/images/icons/stalagtite.svg',
-        '/assets/images/icons/stone-pile.svg',
-        '/assets/images/icons/sugar-cane.svg',
-        '/assets/images/icons/t-rex-skull.svg',
-        '/assets/images/icons/thor-fist.svg',
-        '/assets/images/icons/tick.svg',
-        '/assets/images/icons/vanguard.svg',
-        '/assets/images/icons/warlock-eye (1).svg',
-        '/assets/images/icons/warlock-eye.svg',
-        '/assets/images/icons/whirlwind.svg',
-        '/assets/images/icons/wulkanowy.svg',
-    ];
+    const PAGE_SIZE = 24;
+    const MANIFEST_URL = '/assets/images/icons/icons-manifest.json';
 
     const grid = document.getElementById('icon-grid');
     const searchInput = document.getElementById('search');
     const countEl = document.getElementById('count');
+    const pageStatus = document.getElementById('page-status');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
     const toast = document.getElementById('toast');
+
+    let iconPaths = [];
+    let filtered = [];
+    let currentPage = 1;
 
     const fileNameFromPath = (path) => path.split('/').pop() || path;
 
     function showToast(message) {
       toast.textContent = message;
       toast.classList.add('is-visible');
-      window.clearTimeout(showToast.timer);
-      showToast.timer = window.setTimeout(() => toast.classList.remove('is-visible'), 1800);
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 1800);
     }
 
     async function copyPath(path) {
@@ -281,38 +88,57 @@
         }
         showToast(`Đã copy: ${path}`);
       } catch (err) {
-        console.error('Copy thất bại:', err);
         showToast('Không thể copy. Hãy kiểm tra quyền clipboard.');
       }
     }
 
-    function renderIcons(keyword = '') {
-      const normalized = keyword.trim().toLowerCase();
-      const list = normalized
-        ? iconPaths.filter((path) => fileNameFromPath(path).toLowerCase().includes(normalized))
-        : iconPaths;
+    function renderPage() {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
       grid.innerHTML = '';
-      countEl.textContent = `Hiển thị ${list.length} / ${iconPaths.length} icon SVG`;
-
-      list.forEach((path) => {
+      pageItems.forEach((path) => {
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'icon-card';
         card.title = `Copy đường dẫn: ${path}`;
         card.addEventListener('click', () => copyPath(path));
-
-        card.innerHTML = `
-          <div class="icon-preview"><img loading="lazy" src="${path}" alt="${fileNameFromPath(path)}"></div>
-          <div class="icon-name">${fileNameFromPath(path)}</div>
-        `;
-
+        card.innerHTML = `<div class="icon-preview"><img loading="lazy" src="${path}" alt="${fileNameFromPath(path)}"></div><div class="icon-name">${fileNameFromPath(path)}</div>`;
         grid.appendChild(card);
       });
+
+      countEl.textContent = `Hiển thị ${filtered.length} icon SVG`;
+      pageStatus.textContent = `Trang ${currentPage}/${totalPages}`;
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = currentPage === totalPages;
     }
 
-    searchInput.addEventListener('input', (event) => renderIcons(event.target.value));
-    renderIcons();
+    function applyFilter(keyword = '') {
+      const normalized = keyword.trim().toLowerCase();
+      filtered = normalized ? iconPaths.filter((path) => fileNameFromPath(path).toLowerCase().includes(normalized)) : iconPaths;
+      currentPage = 1;
+      renderPage();
+    }
+
+    async function loadIcons() {
+      try {
+        const response = await fetch(MANIFEST_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Không tải được manifest');
+        const files = await response.json();
+        iconPaths = files.map((name) => `/assets/images/icons/${name}`);
+        applyFilter('');
+      } catch (error) {
+        grid.innerHTML = '<p>Không tải được danh sách icon. Hãy chạy build để tạo manifest.</p>';
+      }
+    }
+
+    searchInput.addEventListener('input', (event) => applyFilter(event.target.value));
+    prevBtn.addEventListener('click', () => { currentPage -= 1; renderPage(); });
+    nextBtn.addEventListener('click', () => { currentPage += 1; renderPage(); });
+    loadIcons();
   </script>
 </body>
 </html>

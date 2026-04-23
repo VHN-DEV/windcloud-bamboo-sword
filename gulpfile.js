@@ -4,6 +4,8 @@ const terser = require('gulp-terser');
 const sass = require('gulp-sass')(require('sass'));
 const cleanCSS = require('gulp-clean-css');
 const rename = require('gulp-rename');
+const fs = require('fs');
+const path = require('path');
 
 // 1. Biên dịch styles.scss (Đã sửa tên cho khớp với ảnh của bạn)
 gulp.task('build-css', function () {
@@ -60,6 +62,22 @@ gulp.task('build-js', function () {
     .pipe(gulp.dest('public/assets/js'));
 });
 
+
+// 3. Tạo manifest động cho icon SVG
+gulp.task('build-icons-manifest', function (done) {
+  const iconDir = path.join(__dirname, 'src/assets/images/icons');
+  const outputDir = path.join(__dirname, 'public/assets/images/icons');
+  const outputFile = path.join(outputDir, 'icons-manifest.json');
+
+  const files = fs.readdirSync(iconDir)
+    .filter((file) => file.toLowerCase().endsWith('.svg'))
+    .sort((a, b) => a.localeCompare(b));
+
+  fs.mkdirSync(outputDir, { recursive: true });
+  fs.writeFileSync(outputFile, JSON.stringify(files, null, 2), 'utf8');
+  done();
+});
+
 // 3. Copy hình ảnh sang public
 gulp.task('copy-images', function () {
   return gulp.src('src/assets/images/**/*', { encoding: false })
@@ -76,12 +94,12 @@ gulp.task('copy-fonts', function () {
 });
 
 // Task chạy mặc định
-gulp.task('default', gulp.parallel('build-css', 'build-js', 'copy-images', 'copy-fonts'));
+gulp.task('default', gulp.parallel('build-css', 'build-js', 'copy-images', 'copy-fonts', 'build-icons-manifest'));
 
 // Task theo dõi thay đổi
 gulp.task('watch', function () {
   gulp.watch('src/assets/css/**/*.scss', gulp.series('build-css'));
   gulp.watch('src/assets/js/**/*.js', gulp.series('build-js'));
-  gulp.watch('src/assets/images/**/*', gulp.series('copy-images'));
+  gulp.watch('src/assets/images/**/*', gulp.series('copy-images', 'build-icons-manifest'));
   gulp.watch('src/assets/fonts/**/*.{otf,ttf,woff,woff2}', gulp.series('copy-fonts'));
 });
