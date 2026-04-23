@@ -3249,22 +3249,15 @@ Object.assign(Input, {
     },
 
     openTribulationPopupForUiTest() {
-        const config = this.getTribulationConfig();
-        const popupOpened = this.openTribulationPopup();
-        if (!popupOpened) {
-            showNotify('Không thể mở popup độ kiếp để test giao diện', '#ff7777');
-            return false;
+        if (this.tribulation?.active && this.tribulation?.uiTestMode) {
+            this.openTribulationPopup();
+            this.updateTribulationPopupUI();
+        } else {
+            this.runTribulationSequence({ uiTestMode: true, suppressStartNotify: true });
         }
 
-        this.tribulation.active = false;
-        this.tribulation.currentStrike = 0;
-        this.tribulation.totalStrikes = config.strikeCount;
-        this.tribulation.maxHp = config.baseHp;
-        this.tribulation.hp = config.baseHp;
-        this.tribulation.successChance = this.getBreakthroughChanceDetails(this.getCurrentRank()).totalChance;
-        this.updateTribulationPopupUI();
         if (!this.tribulationUiTestNotifyShown) {
-            showNotify('Đang mở popup độ kiếp ở chế độ test giao diện.', '#8fd0ff');
+            showNotify('Chế độ test giao diện: lôi kiếp sẽ đánh liên tục nhưng không trừ sinh lực.', '#8fd0ff');
             this.tribulationUiTestNotifyShown = true;
         }
         return true;
@@ -3277,9 +3270,11 @@ Object.assign(Input, {
             return;
         }
 
-        if (!this.tribulation?.active) {
-            this.closeTribulationPopup();
+        if (this.tribulation?.uiTestMode) {
+            this.tribulation.active = false;
+            this.tribulation.uiTestMode = false;
         }
+        if (!this.tribulation?.active) this.closeTribulationPopup();
         this.tribulationUiTestNotifyShown = false;
     },
 
@@ -3315,7 +3310,8 @@ Object.assign(Input, {
         this.updateHealth(-this.maxHp, 'lôi kiếp');
     },
 
-    runTribulationSequence() {
+    runTribulationSequence({ uiTestMode = false, suppressStartNotify = false } = {}) {
+        if (this.tribulation?.active && this.tribulation?.uiTestMode && uiTestMode) return;
         const config = this.getTribulationConfig();
         const rank = this.getCurrentRank();
         const chanceDetails = this.getBreakthroughChanceDetails(rank);
@@ -3334,7 +3330,8 @@ Object.assign(Input, {
         this.tribulation.totalStrikes = config.strikeCount;
         this.tribulation.maxHp = config.baseHp;
         this.tribulation.hp = config.baseHp;
-        this.tribulation.successChance = chanceDetails.totalChance;
+        this.tribulation.successChance = uiTestMode ? 1 : chanceDetails.totalChance;
+        this.tribulation.uiTestMode = uiTestMode;
         this.updateTribulationPopupUI();
 
         const cloudEl = document.getElementById('tribulation-cloud');
@@ -3580,12 +3577,16 @@ Object.assign(Input, {
 
                 contentEl?.classList.add('is-striking');
 
-                const damageRatio = damageMin + (Math.random() * (damageMax - damageMin));
-                const damage = Math.max(1, Math.round(this.tribulation.maxHp * damageRatio));
-                this.tribulation.hp = Math.max(0, this.tribulation.hp - damage);
+                if (this.tribulation.uiTestMode) {
+                    this.tribulation.hp = this.tribulation.maxHp;
+                } else {
+                    const damageRatio = damageMin + (Math.random() * (damageMax - damageMin));
+                    const damage = Math.max(1, Math.round(this.tribulation.maxHp * damageRatio));
+                    this.tribulation.hp = Math.max(0, this.tribulation.hp - damage);
+                }
                 this.updateTribulationPopupUI();
 
-                if (this.tribulation.currentStrike >= this.tribulation.totalStrikes) {
+                if (!this.tribulation.uiTestMode && this.tribulation.currentStrike >= this.tribulation.totalStrikes) {
                     let success = this.tribulation.hp > 0;
                     if (!success) {
                         const heavenlyChance = Math.max(0, Math.min(1, Number(this.tribulation.successChance) || 0));
@@ -3600,15 +3601,22 @@ Object.assign(Input, {
                     return;
                 }
 
+                if (this.tribulation.uiTestMode && this.tribulation.currentStrike >= this.tribulation.totalStrikes) {
+                    this.tribulation.currentStrike = 0;
+                }
                 setTimeout(performStrike, config.strikeIntervalMs);
             }, mainStrikeDelay);
         };
 
         setTimeout(performStrike, config.prepareDelayMs);
-        showNotify(
-            `Thiên lôi tụ vân: bắt đầu độ kiếp Cửu Cửu | Cơ sở ${chanceDetails.basePercent}% + Đan ${chanceDetails.bonusPercent}% = ${chanceDetails.totalPercent}%`,
-            '#91d6ff'
-        );
+        if (!suppressStartNotify) {
+            showNotify(
+                uiTestMode
+                    ? 'Thiên lôi tụ vân: chế độ xem hiệu ứng lôi kiếp (không trừ sinh lực).'
+                    : `Thiên lôi tụ vân: bắt đầu độ kiếp Cửu Cửu | Cơ sở ${chanceDetails.basePercent}% + Đan ${chanceDetails.bonusPercent}% = ${chanceDetails.totalPercent}%`,
+                '#91d6ff'
+            );
+        }
     },
 
     executeBreakthrough(isForced = false) {
