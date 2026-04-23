@@ -67,14 +67,17 @@ gulp.task('build-js', function () {
 gulp.task('build-icons-manifest', function (done) {
   const iconDir = path.join(__dirname, 'public/assets/images/icons');
   const outputDir = path.join(__dirname, 'public/assets/images/icons');
-  const outputFile = path.join(outputDir, 'icons-manifest.json');
+  const outputJsonFile = path.join(outputDir, 'icons-manifest.json');
+  const outputJsFile = path.join(outputDir, 'icons-manifest.js');
 
   const files = fs.readdirSync(iconDir)
     .filter((file) => file.toLowerCase().endsWith('.svg'))
     .sort((a, b) => a.localeCompare(b));
 
   fs.mkdirSync(outputDir, { recursive: true });
-  fs.writeFileSync(outputFile, JSON.stringify(files, null, 2), 'utf8');
+  fs.writeFileSync(outputJsonFile, JSON.stringify(files, null, 2), 'utf8');
+  fs.writeFileSync(outputJsFile, `window.__ICON_MANIFEST__ = ${JSON.stringify(files, null, 2)};
+`, 'utf8');
   done();
 });
 
