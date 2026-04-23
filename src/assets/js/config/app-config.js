@@ -1991,10 +1991,10 @@ const CONFIG = {
         MAGNET_SPEED: 16, // Tốc độ di chuyển của linh thạch khi bị hút
         TRAIL_LENGTH: 12, // Số lượng điểm trong vệt sáng của linh thạch khi di chuyển
         STARTING_COUNTS: {
-            LOW: 400,     // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
-            MEDIUM: 200,   // Số lượng trung phẩm linh thạch ban đầu
-            HIGH: 100,     // Số lượng thượng phẩm linh thạch ban đầu
-            SUPREME: 50   // Số lượng cực phẩm linh thạch ban đầu
+            LOW: 0,     // Số lượng hạ phẩm linh thạch ban đầu để dev test nhanh
+            MEDIUM: 0,   // Số lượng trung phẩm linh thạch ban đầu
+            HIGH: 0,     // Số lượng thượng phẩm linh thạch ban đầu
+            SUPREME: 0   // Số lượng cực phẩm linh thạch ban đầu
         },
         DROP_COUNT: {
             NORMAL: 1, // Số lượng linh thạch rơi ra khi đánh quái thường

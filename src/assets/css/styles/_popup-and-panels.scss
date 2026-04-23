@@ -139,6 +139,62 @@
             }
         }
     }
+
+    .input-group-test-mode {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+            width: 100%;
+        }
+
+        small {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 12px;
+            line-height: 1.35;
+        }
+    }
+
+    .test-mode-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .btn-test-mode {
+        min-width: 72px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid rgba($primary-color, 0.35);
+        background: rgba(0, 0, 0, 0.45);
+        color: #e8f3ff;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            border-color: rgba($primary-color, 0.8);
+            color: #fff;
+        }
+
+        &.is-active {
+            border-color: $primary-color;
+            color: #05140f;
+            background: linear-gradient(180deg, #9bffe7 0%, $primary-color 100%);
+            box-shadow: 0 0 12px rgba($primary-color, 0.28);
+        }
+    }
+
+    .test-mode-status {
+        margin-left: auto;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.8px;
+    }
 }
 
 .popup-footer {

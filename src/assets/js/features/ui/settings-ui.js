@@ -5,12 +5,17 @@ const SettingsUI = {
     btnSave: document.getElementById('save-settings'),
     btnReset: document.getElementById('reset-settings'),
     btnResetProgress: document.getElementById('reset-progress'),
+    btnTestModeTrue: document.getElementById('cfg-test-mode-true'),
+    btnTestModeFalse: document.getElementById('cfg-test-mode-false'),
+    testModeStatus: document.getElementById('cfg-test-mode-status'),
+    isTestMode: false,
 
     init() {
         if (!this.overlay || !this.btnOpen) return;
 
         // Tải dữ liệu đã lưu từ trước khi khởi tạo UI
         this.load();
+        this.loadTestMode();
 
         // 1. Mở popup
         this.btnOpen.addEventListener('pointerdown', (e) => {
@@ -50,6 +55,20 @@ const SettingsUI = {
                 }
             });
         }
+
+        if (this.btnTestModeTrue) {
+            this.btnTestModeTrue.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.applyTestMode(true);
+            });
+        }
+
+        if (this.btnTestModeFalse) {
+            this.btnTestModeFalse.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                this.applyTestMode(false);
+            });
+        }
         
         // 5. Đóng khi nhấn ra ngoài vùng trống (overlay)
         this.overlay.addEventListener('pointerdown', (e) => {
@@ -67,6 +86,47 @@ const SettingsUI = {
                     this.reset();
                 }
             });
+        }
+    },
+
+    loadTestMode() {
+        const savedMode = localStorage.getItem('thanh_truc_test_mode');
+        this.isTestMode = savedMode === 'true';
+        this.updateTestModeUi();
+    },
+
+    updateTestModeUi() {
+        if (this.testModeStatus) {
+            this.testModeStatus.textContent = this.isTestMode ? 'TRUE' : 'FALSE';
+            this.testModeStatus.style.color = this.isTestMode ? '#8fffe0' : '#ff9b9b';
+        }
+
+        if (this.btnTestModeTrue) {
+            this.btnTestModeTrue.classList.toggle('is-active', this.isTestMode);
+        }
+
+        if (this.btnTestModeFalse) {
+            this.btnTestModeFalse.classList.toggle('is-active', !this.isTestMode);
+        }
+    },
+
+    applyTestMode(enabled) {
+        const nextMode = Boolean(enabled);
+        const wasTestMode = this.isTestMode;
+        this.isTestMode = nextMode;
+        localStorage.setItem('thanh_truc_test_mode', String(this.isTestMode));
+        this.updateTestModeUi();
+
+        if (!wasTestMode && this.isTestMode) {
+            Input.spiritStones = Input.spiritStones || {};
+            Input.spiritStones.SUPREME = Math.max(0, Math.floor(Number(Input.spiritStones.SUPREME) || 0)) + 100;
+            Input.refreshResourceUI?.();
+            showNotify("Chế độ test đã bật: nhận 100 Cực phẩm linh thạch!", "#ffd76f");
+            return;
+        }
+
+        if (wasTestMode && !this.isTestMode) {
+            showNotify("Chế độ test đã tắt.", "#ff9b9b");
         }
     },
 
@@ -122,6 +182,7 @@ const SettingsUI = {
 
     open() {
         syncPopupCursorState();
+        this.updateTestModeUi();
         
         // Cập nhật giá trị hiện tại của CONFIG vào các ô input trong HTML
         const mapping = {
