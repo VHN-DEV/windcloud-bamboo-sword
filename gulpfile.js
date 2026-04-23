@@ -7,6 +7,125 @@ const rename = require('gulp-rename');
 const fs = require('fs');
 const path = require('path');
 
+function collectRelativeFiles(rootDir) {
+  if (!fs.existsSync(rootDir)) {
+    return [];
+  }
+
+  const results = [];
+  const stack = [rootDir];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    const entries = fs.readdirSync(current, { withFileTypes: true });
+
+    entries.forEach((entry) => {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        return;
+      }
+
+      results.push(path.relative(rootDir, fullPath));
+    });
+  }
+
+  return results;
+}
+
+function removeEmptyDirs(rootDir) {
+  if (!fs.existsSync(rootDir)) {
+    return;
+  }
+
+  const entries = fs.readdirSync(rootDir, { withFileTypes: true });
+  entries.forEach((entry) => {
+    if (!entry.isDirectory()) {
+      return;
+    }
+
+    const fullPath = path.join(rootDir, entry.name);
+    removeEmptyDirs(fullPath);
+
+    if (fs.readdirSync(fullPath).length === 0) {
+      fs.rmdirSync(fullPath);
+    }
+  });
+}
+
+// 0. Dọn các file thừa trong public/assets trước mỗi lần build
+gulp.task('prune-stale-assets', function (done) {
+  const srcRoot = path.join(__dirname, 'src/assets');
+  const publicRoot = path.join(__dirname, 'public/assets');
+
+  const managedTargets = [
+    {
+      srcDir: path.join(srcRoot, 'images'),
+      destDir: path.join(publicRoot, 'images'),
+      ignoreSrc: () => false
+    },
+    {
+      srcDir: path.join(srcRoot, 'fonts'),
+      destDir: path.join(publicRoot, 'fonts'),
+      ignoreSrc: (relativePath) => path.basename(relativePath).startsWith('._')
+    }
+  ];
+
+  managedTargets.forEach(({ srcDir, destDir, ignoreSrc }) => {
+    if (!fs.existsSync(destDir)) {
+      return;
+    }
+
+    const expected = new Set(
+      collectRelativeFiles(srcDir).filter((relativePath) => !ignoreSrc(relativePath))
+    );
+    const current = collectRelativeFiles(destDir);
+
+    current.forEach((relativePath) => {
+      if (expected.has(relativePath)) {
+        return;
+      }
+
+      fs.rmSync(path.join(destDir, relativePath), { force: true });
+    });
+
+    removeEmptyDirs(destDir);
+  });
+
+  // JS/CSS build output chỉ giữ lại file đích chính
+  const managedSingleFiles = [
+    {
+      dir: path.join(publicRoot, 'css'),
+      keep: new Set(['styles.min.css'])
+    },
+    {
+      dir: path.join(publicRoot, 'js'),
+      keep: new Set(['scripts.min.js'])
+    },
+    {
+      dir: path.join(publicRoot, 'images/icons'),
+      keep: new Set(['icons-manifest.json', 'icons-manifest.js'])
+    }
+  ];
+
+  managedSingleFiles.forEach(({ dir, keep }) => {
+    if (!fs.existsSync(dir)) {
+      return;
+    }
+
+    const files = fs.readdirSync(dir, { withFileTypes: true });
+    files.forEach((entry) => {
+      if (entry.isDirectory() || keep.has(entry.name)) {
+        return;
+      }
+
+      fs.rmSync(path.join(dir, entry.name), { force: true });
+    });
+  });
+
+  done();
+});
+
 // 1. Biên dịch styles.scss (Đã sửa tên cho khớp với ảnh của bạn)
 gulp.task('build-css', function () {
   return gulp.src('src/assets/css/styles.scss') // Bỏ chữ 's' ở styles
@@ -97,7 +216,10 @@ gulp.task('copy-fonts', function () {
 });
 
 // Task chạy mặc định
-gulp.task('default', gulp.parallel('build-css', 'build-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest')));
+gulp.task('default', gulp.series(
+  'prune-stale-assets',
+  gulp.parallel('build-css', 'build-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest'))
+));
 
 // Task theo dõi thay đổi
 gulp.task('watch', function () {
