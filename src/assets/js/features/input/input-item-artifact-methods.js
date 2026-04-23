@@ -3607,15 +3607,17 @@ Object.assign(Input, {
 
         const currentRank = this.getCurrentRank();
         if (!currentRank) return;
+
+        // Cờ test UI: luôn mở popup độ kiếp, không phụ thuộc cảnh giới hiện tại.
+        if (CONFIG.CULTIVATION?.TRIBULATION?.ENABLE_POPUP === true) {
+            this.openTribulationPopupForUiTest();
+            return;
+        }
+
         if (this.rankIndex >= this.getMaxRankIndex() || currentRank.infiniteStats) {
             this.isReadyToBreak = false;
             showNotify(`Đã chạm ${currentRank.name}, thiên đạo không còn cửa ải cao hơn`, getRankAccentColor(currentRank));
             this.refreshResourceUI();
-            return;
-        }
-
-        if (CONFIG.CULTIVATION?.TRIBULATION?.ENABLE_POPUP === true) {
-            this.openTribulationPopupForUiTest();
             return;
         }
 
