@@ -1065,7 +1065,7 @@ const CONFIG = {
         BREAKTHROUGH_PENALTY_FACTOR: 0.4, // Hệ số mất tu vi khi đột phá thất bại (40%)
         OVERFLOW_LIMIT: 1.2,              // Giới hạn tràn exp (120% lượng exp cần thiết)
         TRIBULATION: {
-            ENABLE_POPUP: true, // Dành cho test giao diện: true = luôn bật popup độ kiếp, false = hoạt động bình thường.
+            ENABLE_POPUP: false, // Dành cho test giao diện: true = luôn bật popup độ kiếp, false = hoạt động bình thường.
             // Cấu hình linh động các mốc độ kiếp:
             // Mỗi mốc sourceRankId sẽ mở popup độ kiếp và nếu thành công sẽ nhảy sang targetRankId.
             // Có thể thêm bao nhiêu mốc tùy ý.
