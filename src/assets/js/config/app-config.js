@@ -1995,10 +1995,10 @@ const CONFIG = {
             ELITE: { LOW: 0.44, MEDIUM: 0.36, HIGH: 0.16, SUPREME: 0.04 } // Tỉ lệ rơi theo chất lượng khi đánh quái tinh anh
         },
         TYPES: {
-            LOW: { label: "Hạ phẩm linh thạch", shortLabel: "Hạ phẩm", value: 1, color: "#62f0d9", radius: 4.5, imagePath: imagePath("icons/lightning.svg") }, // Thông tin hiển thị và giá trị của linh thạch hạ phẩm
-            MEDIUM: { label: "Trung phẩm linh thạch", shortLabel: "Trung phẩm", value: 100, color: "#59b6ff", radius: 5.5, imagePath: imagePath("icons/lightning-dissipation.svg") }, // Thông tin hiển thị và giá trị của linh thạch trung phẩm
-            HIGH: { label: "Thượng phẩm linh thạch", shortLabel: "Thượng phẩm", value: 10000, color: "#b78cff", radius: 6.5, imagePath: imagePath("icons/darkmoon.svg") }, // Thông tin hiển thị và giá trị của linh thạch thượng phẩm
-            SUPREME: { label: "Cực phẩm linh thạch", shortLabel: "Cực phẩm", value: 1000000, color: "#ffd76f", radius: 7.5, imagePath: imagePath("icons/dragons.svg") } // Thông tin hiển thị và giá trị của linh thạch cực phẩm
+            LOW: { label: "Hạ phẩm linh thạch", shortLabel: "Hạ phẩm", value: 1, color: "#62f0d9", radius: 4.5, imagePath: imagePath("arcane-arts/ha-pham-linh-thach.png") }, // Thông tin hiển thị và giá trị của linh thạch hạ phẩm
+            MEDIUM: { label: "Trung phẩm linh thạch", shortLabel: "Trung phẩm", value: 100, color: "#59b6ff", radius: 5.5, imagePath: imagePath("arcane-arts/trung-pham-linh-thach.png") }, // Thông tin hiển thị và giá trị của linh thạch trung phẩm
+            HIGH: { label: "Thượng phẩm linh thạch", shortLabel: "Thượng phẩm", value: 10000, color: "#b78cff", radius: 6.5, imagePath: imagePath("arcane-arts/thuong-pham-linh-thach.png") }, // Thông tin hiển thị và giá trị của linh thạch thượng phẩm
+            SUPREME: { label: "Cực phẩm linh thạch", shortLabel: "Cực phẩm", value: 1000000, color: "#ffd76f", radius: 7.5, imagePath: imagePath("arcane-arts/cu-pham-linh-thach.png") } // Thông tin hiển thị và giá trị của linh thạch cực phẩm
         }
     }
 };

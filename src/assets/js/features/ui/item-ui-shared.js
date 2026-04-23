@@ -316,7 +316,7 @@ function buildPillVisualMarkup(item, qualityConfig, options = {}) {
             ? configuredImagePath
                 ? buildItemImageVisualMarkup(configuredImagePath, {
                     coreClass: 'pill-visual__core--artifact',
-                    imageClass: 'pill-visual__item-icon--artifact',
+                    imageClass: 'pill-visual__item-icon--material',
                     showCore: !isSpiritStoneToken
                 })
                 : buildMaterialArtMarkup(item.materialKey, item)

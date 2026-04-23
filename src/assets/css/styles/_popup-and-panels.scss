@@ -2669,6 +2669,11 @@ select.shop-control-input {
         // transform: translateY(1px) scale(1.52);
     }
 
+    &__item-icon--material {
+        z-index: 5;
+        transform: translateY(1px) scale(3.52);
+    }
+
     &__cover-seal {
         position: absolute;
         z-index: 4;
