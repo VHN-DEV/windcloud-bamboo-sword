@@ -3378,18 +3378,25 @@ Object.assign(Input, {
 
             const cloudLeft = cloudRect.left - wrapRect.left;
             const cloudCenterX = cloudLeft + (cloudRect.width / 2);
-            const topAnchor = Math.max(10, (cloudRect.top - wrapRect.top) + (cloudRect.height * 0.35));
+            const rawTopAnchor = (cloudRect.top - wrapRect.top) + (cloudRect.height * 0.35);
+            const topAnchor = Math.min(
+                Math.max(8, rawTopAnchor),
+                Math.max(8, height - 72)
+            );
             const depthRatio = Math.max(0, Math.min(1, strikePower / 7));
             const minSegmentHeight = 5;
             const roughness = 2;
             const maxDifference = Math.max(24, width / (4.2 - (depthRatio * 0.9)));
             const rand = (min, max) => Math.random() * (max - min) + min;
             const createLightning = () => {
-                const groundHeight = height - 16;
+                const groundHeight = Math.max(topAnchor + 36, height - 16);
                 let segmentHeight = groundHeight - topAnchor;
                 let lightning = [
-                    { x: cloudCenterX, y: topAnchor },
-                    { x: rand(50, Math.max(52, width - 50)), y: groundHeight + ((Math.random() - 0.9) * 50) }
+                    { x: Math.max(12, Math.min(width - 12, cloudCenterX)), y: topAnchor },
+                    {
+                        x: rand(16, Math.max(18, width - 16)),
+                        y: Math.min(height - 6, groundHeight + ((Math.random() - 0.9) * 50))
+                    }
                 ];
                 let currentDiff = maxDifference;
 
