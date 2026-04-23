@@ -1315,14 +1315,24 @@ Object.assign(Input, {
     getRareDropContext(enemy = null, isElite = false) {
         const enemyLevel = Math.max(1, Number(enemy?.rankData?.id) || 1);
         const playerLevel = Math.max(1, Number(this.getCurrentRank?.()?.id) || 1);
-        const levelGap = Math.max(0, enemyLevel - playerLevel);
+        const levelGap = enemyLevel - playerLevel;
         const eliteBonus = isElite ? 0.18 : 0;
-        const levelBonus = Math.min(0.35, levelGap * 0.04);
+        const levelBonus = clampNumber(levelGap * 0.04, -0.3, 0.35);
         return {
             enemyLevel,
             playerLevel,
             levelGap,
             rareBoost: eliteBonus + levelBonus
+        };
+    },
+
+    getMaterialRarityScale(materialCfg = null) {
+        const dropWeight = Math.max(0.01, Number(materialCfg?.dropWeight) || 1);
+        const rarityFactor = clampNumber((1 / dropWeight) - 0.2, 0, 6);
+        return {
+            dropWeight,
+            rarityFactor,
+            centeredRarity: clampNumber(rarityFactor - 1, -0.8, 5)
         };
     },
 
@@ -1406,9 +1416,9 @@ Object.assign(Input, {
         const materialRates = this.getEnemyMaterialDropRates(enemy);
         const boostedMaterialRates = Object.entries(materialRates).reduce((rates, [materialKey, weight]) => {
             const materialCfg = this.getMaterialConfig(materialKey);
-            const dropWeight = Math.max(0.01, Number(materialCfg?.dropWeight) || 1);
-            const rarityFactor = clampNumber((1 / dropWeight) - 0.2, 0, 6);
-            rates[materialKey] = Math.max(0.01, Math.max(0.01, Number(weight) || 1) * (1 + (rareBoost * rarityFactor)));
+            const { centeredRarity } = this.getMaterialRarityScale(materialCfg);
+            const baseWeight = Math.max(0.01, Number(weight) || 1);
+            rates[materialKey] = Math.max(0.01, baseWeight * (1 + (rareBoost * centeredRarity)));
             return rates;
         }, {});
         const fallbackKey = Object.keys(materialRates)[0] || 'TINH_THIT';
