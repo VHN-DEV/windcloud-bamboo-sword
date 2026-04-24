@@ -42,20 +42,30 @@
     .toast.is-visible { opacity: 1; transform: translateY(0); }
     .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(2, 7, 12, 0.72); padding: 20px; z-index: 30; }
     .modal.is-open { display: flex; }
-    .modal-panel { width: min(980px, 100%); max-height: min(92vh, 900px); overflow: auto; border: 1px solid var(--border); border-radius: 14px; background: #0a1825; padding: 16px; }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .modal-title { margin: 0; font-size: 20px; }
-    .modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .modal-btn { border: 1px solid var(--border); background: #12263a; color: var(--text); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
-    .modal-content { display: grid; gap: 12px; grid-template-columns: 280px 1fr; }
-    .svg-preview-box { border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-height: 220px; background: #f3f7fd; display: flex; align-items: center; justify-content: center; }
-    .svg-preview-box svg { width: 180px; height: 180px; object-fit: contain; }
-    .controls { border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
-    .control-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .modal-panel { width: min(1120px, 100%); max-height: min(92vh, 900px); overflow: auto; border: 1px solid #d8dde4; border-radius: 14px; background: #f5f7fa; color: #111827; padding: 12px; }
+    .modal-layout { display: grid; grid-template-columns: 280px 1fr; gap: 14px; }
+    .modal-left { display: grid; gap: 12px; align-content: start; }
+    .preview-panel { border: 1px solid #d8dde4; border-radius: 12px; background: #eef1f5; padding: 14px; min-height: 250px; display: flex; align-items: center; justify-content: center; }
+    .preview-panel.is-dark { background: #0b1622; }
+    .preview-panel img { max-width: 210px; max-height: 210px; object-fit: contain; }
+    .size-panel { border: 1px solid #d8dde4; border-radius: 12px; background: #eef1f5; padding: 10px; display: flex; gap: 10px; justify-content: space-between; }
+    .size-chip { text-align: center; color: #6b7280; font-size: 11px; }
+    .size-chip img { display: block; margin: 0 auto 4px; object-fit: contain; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .modal-title { margin: 0; font-size: 32px; line-height: 1; font-weight: 700; }
+    .modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .modal-btn { border: 1px solid #d1d5db; background: #ffffff; color: #111827; border-radius: 10px; padding: 7px 11px; cursor: pointer; font-weight: 600; }
+    .modal-btn.is-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .helper-tabs, .export-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .helper-tabs span, .export-tabs span { border: 1px solid #d1d5db; border-radius: 9px; padding: 6px 10px; background: #fff; font-size: 13px; color: #4b5563; }
+    .code-cmd { border: 1px solid #d8dde4; border-radius: 10px; background: #eef1f5; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-bottom: 10px; }
+    .controls { border: 1px solid #d8dde4; border-radius: 12px; padding: 12px; background: #fff; }
+    .controls h3 { margin: 0 0 10px; font-size: 13px; color: #6b7280; letter-spacing: 0.04em; }
+    .control-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
     .control-row input[type="color"] { width: 38px; height: 28px; border: none; background: transparent; cursor: pointer; }
-    .svg-code { width: 100%; min-height: 240px; border: 1px solid var(--border); border-radius: 10px; background: #07121d; color: #cae6ff; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+    .svg-code { width: 100%; min-height: 170px; border: 1px solid #d8dde4; border-radius: 10px; background: #f8fafc; color: #1f2937; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
     @media (max-width: 840px) {
-      .modal-content { grid-template-columns: 1fr; }
+      .modal-layout { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -79,25 +89,35 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="svg-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="svg-modal-title">
     <div class="modal-panel">
-      <div class="modal-head">
-        <h2 id="svg-modal-title" class="modal-title">SVG icon</h2>
-        <button id="svg-modal-close" class="modal-btn" type="button">Đóng</button>
-      </div>
-      <div class="modal-actions">
-        <button id="copy-svg-code-btn" class="modal-btn" type="button">Copy code SVG</button>
-        <button id="download-svg-btn" class="modal-btn" type="button">Download SVG</button>
-      </div>
-      <div class="modal-content">
-        <div class="svg-preview-box" id="svg-preview-box"></div>
+      <div class="modal-layout">
+        <aside class="modal-left">
+          <div id="svg-preview-box" class="preview-panel"></div>
+          <div id="size-panel" class="size-panel"></div>
+        </aside>
         <div>
+          <div class="modal-head">
+            <h2 id="svg-modal-title" class="modal-title">SVG icon</h2>
+            <button id="svg-modal-close" class="modal-btn" type="button">Đóng</button>
+          </div>
+          <div class="modal-actions">
+            <button id="copy-svg-code-btn" class="modal-btn is-primary" type="button">SVG</button>
+            <button id="download-svg-btn" class="modal-btn" type="button">Download</button>
+          </div>
+          <div class="helper-tabs"><span>pnpm</span><span>npm</span><span>yarn</span><span>bun</span></div>
+          <div class="code-cmd">pnpm dlx shadcn@latest add icon-json</div>
+          <div class="export-tabs"><span>IMG</span><span>DATA URI IMG</span><span>CDN</span><span>SVG</span><span>REACT</span><span>VUE</span><span>ASTRO</span><span>SOLID</span></div>
           <div class="controls">
+            <h3>CUSTOMIZE COLORS</h3>
             <div class="control-row">
-              <label><input id="toggle-fill-color" type="checkbox"> Đổi fill</label>
+              <label><input id="toggle-fill-color" type="checkbox"> Fill</label>
               <input id="fill-color-picker" type="color" value="#000000">
             </div>
             <div class="control-row">
-              <label><input id="toggle-stroke-color" type="checkbox"> Đổi stroke</label>
+              <label><input id="toggle-stroke-color" type="checkbox"> Stroke</label>
               <input id="stroke-color-picker" type="color" value="#000000">
+            </div>
+            <div class="control-row">
+              <label><input id="toggle-modal-preview-bg" type="checkbox"> Nền sáng popup</label>
             </div>
           </div>
           <textarea id="svg-code-output" class="svg-code" readonly></textarea>
@@ -130,6 +150,8 @@
     const fillColorPicker = document.getElementById('fill-color-picker');
     const toggleStrokeColor = document.getElementById('toggle-stroke-color');
     const strokeColorPicker = document.getElementById('stroke-color-picker');
+    const toggleModalPreviewBg = document.getElementById('toggle-modal-preview-bg');
+    const sizePanel = document.getElementById('size-panel');
 
     let folderNames = Object.keys(IMAGE_BY_FOLDER);
     let activeFolder = folderNames[0] || '';
@@ -139,6 +161,7 @@
     let currentSvgPath = '';
     let originalSvgCode = '';
     let previewBlobUrl = '';
+    let isLightPopupPreview = true;
     const isFileProtocol = window.location.protocol === 'file:';
 
     function renderPreviewBgToggle() {
@@ -183,19 +206,27 @@
 
     function renderSvgModal() {
       const customized = getCustomizedSvgCode();
+      svgPreviewBox.classList.toggle('is-dark', !isLightPopupPreview);
       if (previewBlobUrl) {
         URL.revokeObjectURL(previewBlobUrl);
         previewBlobUrl = '';
       }
       if (!customized) {
+        if (isFileProtocol && currentSvgPath) {
+          svgPreviewBox.innerHTML = `<img src="${currentSvgPath}" alt="${fileNameFromPath(currentSvgPath)}" style="max-width:180px;max-height:180px;object-fit:contain;">`;
+          sizePanel.innerHTML = [16, 24, 32, 48, 64].map((size) => `<div class="size-chip"><img src="${currentSvgPath}" width="${size}" height="${size}" alt="${size}px"><span>${size}px</span></div>`).join('');
+          return;
+        }
         svgCodeOutput.value = '';
         svgPreviewBox.innerHTML = '';
+        sizePanel.innerHTML = '';
         return;
       }
       svgCodeOutput.value = customized;
       const blob = new Blob([customized], { type: 'image/svg+xml;charset=utf-8' });
       previewBlobUrl = URL.createObjectURL(blob);
       svgPreviewBox.innerHTML = `<img src="${previewBlobUrl}" alt="SVG preview" style="max-width:180px;max-height:180px;object-fit:contain;">`;
+      sizePanel.innerHTML = [16, 24, 32, 48, 64].map((size) => `<div class="size-chip"><img src="${previewBlobUrl}" width="${size}" height="${size}" alt="${size}px"><span>${size}px</span></div>`).join('');
     }
 
     async function openSvgModal(path) {
@@ -203,10 +234,12 @@
       document.getElementById('svg-modal-title').textContent = fileNameFromPath(path);
       toggleFillColor.checked = false;
       toggleStrokeColor.checked = false;
+      toggleModalPreviewBg.checked = isLightPopupPreview;
 
       if (isFileProtocol) {
         originalSvgCode = '';
         svgPreviewBox.innerHTML = `<img src="${path}" alt="${fileNameFromPath(path)}" style="max-width:180px;max-height:180px;object-fit:contain;">`;
+        sizePanel.innerHTML = [16, 24, 32, 48, 64].map((size) => `<div class="size-chip"><img src="${path}" width="${size}" height="${size}" alt="${size}px"><span>${size}px</span></div>`).join('');
         svgCodeOutput.value = 'Bạn đang mở trang bằng file:// nên trình duyệt chặn đọc nội dung SVG (CORS).\\nHãy chạy qua http://localhost/... để dùng tính năng copy code, đổi fill/stroke.'; 
         svgModal.classList.add('is-open');
         return;
@@ -361,6 +394,11 @@
     [toggleFillColor, fillColorPicker, toggleStrokeColor, strokeColorPicker].forEach((el) => {
       el.addEventListener('input', () => renderSvgModal());
     });
+    toggleModalPreviewBg.addEventListener('change', () => {
+      isLightPopupPreview = toggleModalPreviewBg.checked;
+      renderSvgModal();
+    });
+    toggleModalPreviewBg.checked = true;
     copySvgCodeBtn.addEventListener('click', async () => {
       const code = getCustomizedSvgCode();
       if (!code) {
