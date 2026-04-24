@@ -12,12 +12,16 @@
       --muted: #96afc7;
       --accent: #2ac3ff;
       --border: #1c3b57;
+      --chip: #102436;
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: "Noto Sans", system-ui, sans-serif; background: radial-gradient(circle at top, #10273d 0%, var(--bg) 65%); color: var(--text); }
     .container { width: min(1200px, 100% - 32px); margin: 24px auto 40px; }
     h1 { margin: 0 0 8px; font-size: clamp(24px, 3vw, 36px); }
     p { margin: 0 0 20px; color: var(--muted); }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tab-btn { border: 1px solid var(--border); background: var(--chip); color: var(--text); border-radius: 999px; padding: 7px 12px; cursor: pointer; font-size: 13px; }
+    .tab-btn.is-active { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(42, 195, 255, 0.35) inset; }
     .toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
     input[type="search"] { flex: 1; min-width: 260px; border: 1px solid var(--border); background: rgba(6, 14, 24, 0.8); color: var(--text); border-radius: 12px; padding: 10px 12px; font-size: 15px; }
     #count { color: var(--muted); font-size: 14px; }
@@ -36,7 +40,8 @@
 <body>
   <main class="container">
     <h1>ICONS</h1>
-    <p>Click icon để copy đường dẫn SVG.</p>
+    <p>Mỗi tab tương ứng 1 thư mục trong <code>assets/images</code>. Click icon để copy đường dẫn SVG.</p>
+    <nav id="tabs" class="tabs" aria-label="Thư mục ảnh"></nav>
     <div class="toolbar">
       <input id="search" type="search" placeholder="Tìm theo tên file..." aria-label="Tìm icon">
       <span id="count"></span>
@@ -49,12 +54,314 @@
     </div>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="../assets/images/icons/icons-manifest.js"></script>
   <script>
     const PAGE_SIZE = 24;
-    const ICON_BASE_PATH = '../assets/images/icons';
-    const MANIFEST_URL = `${ICON_BASE_PATH}/icons-manifest.json`;
+    const SVG_BY_FOLDER = {
+      "aberrations": [
+            "../assets/images/aberrations/bang-tam.svg",
+            "../assets/images/aberrations/huyen-diem-nga.svg",
+            "../assets/images/aberrations/huyet-ngoc-tri-chu.svg",
+            "../assets/images/aberrations/huyet-thuc-nghi.svg",
+            "../assets/images/aberrations/kien-thien-tinh.svg",
+            "../assets/images/aberrations/kim-giap-hac.svg",
+            "../assets/images/aberrations/luc-duc-suong-cong.svg",
+            "../assets/images/aberrations/phe-kim-trung.svg",
+            "../assets/images/aberrations/phi-thien-tu-van-hac.svg",
+            "../assets/images/aberrations/thiet-hoa-nghi.svg"
+      ],
+      "animals": [
+            "../assets/images/animals/abstract-005.svg",
+            "../assets/images/animals/afk-arena.svg",
+            "../assets/images/animals/agave.svg",
+            "../assets/images/animals/algae.svg",
+            "../assets/images/animals/alien-bug.svg",
+            "../assets/images/animals/alien-egg.svg",
+            "../assets/images/animals/alien-stare.svg",
+            "../assets/images/animals/ammonite.svg",
+            "../assets/images/animals/angel-wings.svg",
+            "../assets/images/animals/angler-fish.svg",
+            "../assets/images/animals/angular-spider.svg",
+            "../assets/images/animals/animal-skull.svg",
+            "../assets/images/animals/animal-spider.svg",
+            "../assets/images/animals/animal-tasmanian-devil.svg",
+            "../assets/images/animals/ant.svg",
+            "../assets/images/animals/axolotl.svg",
+            "../assets/images/animals/bamboo.svg",
+            "../assets/images/animals/bastet.svg",
+            "../assets/images/animals/bat.svg",
+            "../assets/images/animals/battle-mech.svg",
+            "../assets/images/animals/beanstalk.svg",
+            "../assets/images/animals/bear.svg",
+            "../assets/images/animals/beast-eye.svg",
+            "../assets/images/animals/bee.svg",
+            "../assets/images/animals/bestial-fangs.svg",
+            "../assets/images/animals/big-elephant.svg",
+            "../assets/images/animals/boar.svg",
+            "../assets/images/animals/broken-skull.svg",
+            "../assets/images/animals/brute.svg",
+            "../assets/images/animals/buffalo-head.svg",
+            "../assets/images/animals/bulb.svg",
+            "../assets/images/animals/capybara.svg",
+            "../assets/images/animals/carnivore-mouth.svg",
+            "../assets/images/animals/cat-kitty.svg",
+            "../assets/images/animals/cat.svg",
+            "../assets/images/animals/caterpillar.svg",
+            "../assets/images/animals/cobra.svg",
+            "../assets/images/animals/crab.svg",
+            "../assets/images/animals/cracked-alien-skull.svg",
+            "../assets/images/animals/crocodile.svg",
+            "../assets/images/animals/cthulhu.svg",
+            "../assets/images/animals/cyber-eye.svg",
+            "../assets/images/animals/dawn.svg",
+            "../assets/images/animals/deer.svg",
+            "../assets/images/animals/deer2.svg",
+            "../assets/images/animals/deku-tree.svg",
+            "../assets/images/animals/delighted.svg",
+            "../assets/images/animals/devil-mask.svg",
+            "../assets/images/animals/double-dragon.svg",
+            "../assets/images/animals/dragon.svg",
+            "../assets/images/animals/dragon2.svg",
+            "../assets/images/animals/dragon3.svg",
+            "../assets/images/animals/drakkar-dragon.svg",
+            "../assets/images/animals/elephant.svg",
+            "../assets/images/animals/evil-tree.svg",
+            "../assets/images/animals/faction-ironbanner.svg",
+            "../assets/images/animals/fajrfilmfestival.svg",
+            "../assets/images/animals/fish-seafood.svg",
+            "../assets/images/animals/flying-dragon.svg",
+            "../assets/images/animals/foam.svg",
+            "../assets/images/animals/food-chain.svg",
+            "../assets/images/animals/fox.svg",
+            "../assets/images/animals/gambit.svg",
+            "../assets/images/animals/gorilla.svg",
+            "../assets/images/animals/gryphon.svg",
+            "../assets/images/animals/helicoprion.svg",
+            "../assets/images/animals/heron.svg",
+            "../assets/images/animals/hollow-knight-silksong-alt.svg",
+            "../assets/images/animals/hunter-smoke.svg",
+            "../assets/images/animals/hydra.svg",
+            "../assets/images/animals/ice-golem.svg",
+            "../assets/images/animals/jelly-fish.svg",
+            "../assets/images/animals/jellyfish.svg",
+            "../assets/images/animals/kraken.svg",
+            "../assets/images/animals/krakenjs.svg",
+            "../assets/images/animals/leviathan-dogs.svg",
+            "../assets/images/animals/lion.svg",
+            "../assets/images/animals/maggot-mini.svg",
+            "../assets/images/animals/maggot.svg",
+            "../assets/images/animals/mammoth.svg",
+            "../assets/images/animals/mandalorian.svg",
+            "../assets/images/animals/masked-spider.svg",
+            "../assets/images/animals/medusa-head.svg",
+            "../assets/images/animals/megabot.svg",
+            "../assets/images/animals/mermaid.svg",
+            "../assets/images/animals/metroid.svg",
+            "../assets/images/animals/minotaur.svg",
+            "../assets/images/animals/monkey.svg",
+            "../assets/images/animals/nautilus-shell.svg",
+            "../assets/images/animals/octopus.svg",
+            "../assets/images/animals/perana.svg",
+            "../assets/images/animals/phalcon.svg",
+            "../assets/images/animals/phoenix.svg",
+            "../assets/images/animals/piranha.svg",
+            "../assets/images/animals/porcupinefish.svg",
+            "../assets/images/animals/rabbit.svg",
+            "../assets/images/animals/raven.svg",
+            "../assets/images/animals/redragon.svg",
+            "../assets/images/animals/robot-golem.svg",
+            "../assets/images/animals/rock-golem.svg",
+            "../assets/images/animals/ryu.svg",
+            "../assets/images/animals/saber-toothed-cat-head.svg",
+            "../assets/images/animals/salmon.svg",
+            "../assets/images/animals/sand-snake.svg",
+            "../assets/images/animals/set-troll.svg",
+            "../assets/images/animals/shambling-mound.svg",
+            "../assets/images/animals/shark.svg",
+            "../assets/images/animals/snail-crawl.svg",
+            "../assets/images/animals/snail.svg",
+            "../assets/images/animals/soul.svg",
+            "../assets/images/animals/space-suit.svg",
+            "../assets/images/animals/spark-spirit.svg",
+            "../assets/images/animals/spectre.svg",
+            "../assets/images/animals/spider-face.svg",
+            "../assets/images/animals/spotted-bug.svg",
+            "../assets/images/animals/squid.svg",
+            "../assets/images/animals/squirrel.svg",
+            "../assets/images/animals/tadpole.svg",
+            "../assets/images/animals/tapir.svg",
+            "../assets/images/animals/three-headed-dragon.svg",
+            "../assets/images/animals/tiger.svg",
+            "../assets/images/animals/turtle.svg",
+            "../assets/images/animals/unfriendly-fire.svg",
+            "../assets/images/animals/wasp-sting.svg",
+            "../assets/images/animals/whale-tail.svg",
+            "../assets/images/animals/whale.svg",
+            "../assets/images/animals/wolf.svg"
+      ],
+      "arcane-arts": [
+            "../assets/images/arcane-arts/bug.svg",
+            "../assets/images/arcane-arts/cigale.svg",
+            "../assets/images/arcane-arts/flashpoint-dark.svg",
+            "../assets/images/arcane-arts/flashpoint.svg",
+            "../assets/images/arcane-arts/gooey-sword.svg",
+            "../assets/images/arcane-arts/lamprey-mouth.svg",
+            "../assets/images/arcane-arts/lightning-dissipation.svg",
+            "../assets/images/arcane-arts/monster-super-league.svg"
+      ],
+      "artifacts": [
+            "../assets/images/artifacts/am-duong-dai-ngu-hanh-cuc-son.svg",
+            "../assets/images/artifacts/bac-cuc-nguyen-quang-cuc-son-icon.svg",
+            "../assets/images/artifacts/bat-linh-xich.svg",
+            "../assets/images/artifacts/binh-son-an.svg",
+            "../assets/images/artifacts/can-lam-bang-diem.svg",
+            "../assets/images/artifacts/chuong-thien-binh.svg",
+            "../assets/images/artifacts/hao-am-han-phach-cuc-son-icon.svg",
+            "../assets/images/artifacts/hao-am-han-phach-cuc-son.svg",
+            "../assets/images/artifacts/hu-thien-dinh.svg",
+            "../assets/images/artifacts/huyet-sac-phi-phong.svg",
+            "../assets/images/artifacts/nguyen-hop-ngu-cuc-son-icon.svg",
+            "../assets/images/artifacts/nguyen-hop-ngu-cuc-son.svg",
+            "../assets/images/artifacts/nguyen-tu-cuc-son-icon.svg",
+            "../assets/images/artifacts/nguyen-tu-cuc-son.svg",
+            "../assets/images/artifacts/phong-loi-si.svg",
+            "../assets/images/artifacts/thai-at-thanh-quang-cuc-son-icon.svg",
+            "../assets/images/artifacts/thai-at-thanh-quang-cuc-son.svg"
+      ],
+      "icons": [
+            "../assets/images/icons/abstract-047 (1).svg",
+            "../assets/images/icons/abstract-047.svg",
+            "../assets/images/icons/afk-arena.svg",
+            "../assets/images/icons/agape (1).svg",
+            "../assets/images/icons/agape.svg",
+            "../assets/images/icons/andrax (1).svg",
+            "../assets/images/icons/andrax.svg",
+            "../assets/images/icons/anime-brasil (1).svg",
+            "../assets/images/icons/anime-brasil.svg",
+            "../assets/images/icons/ant (1).svg",
+            "../assets/images/icons/ant.svg",
+            "../assets/images/icons/arc-titan-svgrepo-com (1).svg",
+            "../assets/images/icons/arc-titan-svgrepo-com.svg",
+            "../assets/images/icons/arc-warlock-light.svg",
+            "../assets/images/icons/arc-warlock.svg",
+            "../assets/images/icons/archer.svg",
+            "../assets/images/icons/axolotl.svg",
+            "../assets/images/icons/barbed-sun (1).svg",
+            "../assets/images/icons/barbed-sun.svg",
+            "../assets/images/icons/beyond-light-svgrepo-com (1).svg",
+            "../assets/images/icons/beyond-light-svgrepo-com.svg",
+            "../assets/images/icons/black-hole-line-duotone.svg",
+            "../assets/images/icons/blue-light-card (1).svg",
+            "../assets/images/icons/blue-light-card.svg",
+            "../assets/images/icons/buddicons-replies.svg",
+            "../assets/images/icons/celeste.svg",
+            "../assets/images/icons/charged-arrow.svg",
+            "../assets/images/icons/cigale.svg",
+            "../assets/images/icons/cosmic-egg.svg",
+            "../assets/images/icons/cowled.svg",
+            "../assets/images/icons/crab (1).svg",
+            "../assets/images/icons/crab.svg",
+            "../assets/images/icons/crimson-days-svgrepo-com (1).svg",
+            "../assets/images/icons/crimson-days-svgrepo-com.svg",
+            "../assets/images/icons/cursed-star.svg",
+            "../assets/images/icons/daisy.svg",
+            "../assets/images/icons/darkmoon.svg",
+            "../assets/images/icons/dead-wood.svg",
+            "../assets/images/icons/devil-mask.svg",
+            "../assets/images/icons/dragon-tamer.svg",
+            "../assets/images/icons/dragoncity.svg",
+            "../assets/images/icons/dragonframe.svg",
+            "../assets/images/icons/dragonml.svg",
+            "../assets/images/icons/dragons.svg",
+            "../assets/images/icons/earwig.svg",
+            "../assets/images/icons/emoji-bug.svg",
+            "../assets/images/icons/entangled-typhoon.svg",
+            "../assets/images/icons/fireflake.svg",
+            "../assets/images/icons/fragmented-sword (1).svg",
+            "../assets/images/icons/fragmented-sword.svg",
+            "../assets/images/icons/frostfire.svg",
+            "../assets/images/icons/guard.svg",
+            "../assets/images/icons/harpy.svg",
+            "../assets/images/icons/haunting.svg",
+            "../assets/images/icons/hive-with-ai.svg",
+            "../assets/images/icons/hollow-knight-silksong-alt.svg",
+            "../assets/images/icons/holy-oak.svg",
+            "../assets/images/icons/ice-bolt (1).svg",
+            "../assets/images/icons/ice-bolt.svg",
+            "../assets/images/icons/ice-spear (1).svg",
+            "../assets/images/icons/ice-spear.svg",
+            "../assets/images/icons/infinite-links (1).svg",
+            "../assets/images/icons/infinite-links.svg",
+            "../assets/images/icons/kindle.svg",
+            "../assets/images/icons/knight.svg",
+            "../assets/images/icons/kraken-tentacle (1).svg",
+            "../assets/images/icons/kraken-tentacle.svg",
+            "../assets/images/icons/ladybug.svg",
+            "../assets/images/icons/lamprey-mouth.svg",
+            "../assets/images/icons/lightning-dissipation.svg",
+            "../assets/images/icons/lightning-tree.svg",
+            "../assets/images/icons/maggot.svg",
+            "../assets/images/icons/magisk-delta.svg",
+            "../assets/images/icons/mantras.svg",
+            "../assets/images/icons/maze-saw.svg",
+            "../assets/images/icons/minerals.svg",
+            "../assets/images/icons/misc-battlenet.svg",
+            "../assets/images/icons/monster-super-league.svg",
+            "../assets/images/icons/nida-uapp.svg",
+            "../assets/images/icons/ore.svg",
+            "../assets/images/icons/oyster-pearl.svg",
+            "../assets/images/icons/paper-bag-crumpled.svg",
+            "../assets/images/icons/peaks.svg",
+            "../assets/images/icons/phalcon (1).svg",
+            "../assets/images/icons/phalcon.svg",
+            "../assets/images/icons/phoenix.svg",
+            "../assets/images/icons/qiankun-bag.svg",
+            "../assets/images/icons/raspberry.svg",
+            "../assets/images/icons/redragon.svg",
+            "../assets/images/icons/rune-sword (1).svg",
+            "../assets/images/icons/rune-sword.svg",
+            "../assets/images/icons/scarab-beetle.svg",
+            "../assets/images/icons/school-of-fish.svg",
+            "../assets/images/icons/scorpion.svg",
+            "../assets/images/icons/sea-serpent.svg",
+            "../assets/images/icons/sea-turtle.svg",
+            "../assets/images/icons/shambling-mound.svg",
+            "../assets/images/icons/shark (1).svg",
+            "../assets/images/icons/shark-jaws.svg",
+            "../assets/images/icons/shark.svg",
+            "../assets/images/icons/shieldcomb.svg",
+            "../assets/images/icons/smouldering-durtles.svg",
+            "../assets/images/icons/snitch-quidditch-ball (1).svg",
+            "../assets/images/icons/snitch-quidditch-ball.svg",
+            "../assets/images/icons/soul.svg",
+            "../assets/images/icons/spear.svg",
+            "../assets/images/icons/spiderman.svg",
+            "../assets/images/icons/stalagtite.svg",
+            "../assets/images/icons/stone-pile.svg",
+            "../assets/images/icons/sugar-cane.svg",
+            "../assets/images/icons/t-rex-skull.svg",
+            "../assets/images/icons/thor-fist.svg",
+            "../assets/images/icons/tick.svg",
+            "../assets/images/icons/vanguard.svg",
+            "../assets/images/icons/warlock-eye (1).svg",
+            "../assets/images/icons/warlock-eye.svg",
+            "../assets/images/icons/whirlwind.svg",
+            "../assets/images/icons/wulkanowy.svg"
+      ],
+      "ui": [
+            "../assets/images/ui/angel-wings.svg",
+            "../assets/images/ui/bag.svg",
+            "../assets/images/ui/lightning.svg",
+            "../assets/images/ui/meditation.svg",
+            "../assets/images/ui/setting.svg",
+            "../assets/images/ui/shop.svg",
+            "../assets/images/ui/solar-warlock.svg",
+            "../assets/images/ui/sword-light.svg",
+            "../assets/images/ui/sword.svg",
+            "../assets/images/ui/tui-tru-vat.svg"
+      ]
+};
 
+    const tabsRoot = document.getElementById('tabs');
     const grid = document.getElementById('icon-grid');
     const searchInput = document.getElementById('search');
     const countEl = document.getElementById('count');
@@ -63,7 +370,8 @@
     const nextBtn = document.getElementById('next-page');
     const toast = document.getElementById('toast');
 
-    let iconPaths = [];
+    const folderNames = Object.keys(SVG_BY_FOLDER);
+    let activeFolder = folderNames[0] || '';
     let filtered = [];
     let currentPage = 1;
 
@@ -94,6 +402,23 @@
       }
     }
 
+    function renderTabs() {
+      tabsRoot.innerHTML = '';
+      folderNames.forEach((folder) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `tab-btn${folder === activeFolder ? ' is-active' : ''}`;
+        button.textContent = `${folder} (${SVG_BY_FOLDER[folder].length})`;
+        button.addEventListener('click', () => {
+          activeFolder = folder;
+          currentPage = 1;
+          renderTabs();
+          applyFilter(searchInput.value);
+        });
+        tabsRoot.appendChild(button);
+      });
+    }
+
     function renderPage() {
       const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
       currentPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -112,7 +437,7 @@
         grid.appendChild(card);
       });
 
-      countEl.textContent = `Hiển thị ${filtered.length} icon SVG`;
+      countEl.textContent = `Thư mục ${activeFolder}: ${filtered.length} icon SVG`;
       pageStatus.textContent = `Trang ${currentPage}/${totalPages}`;
       prevBtn.disabled = currentPage === 1;
       nextBtn.disabled = currentPage === totalPages;
@@ -120,35 +445,28 @@
 
     function applyFilter(keyword = '') {
       const normalized = keyword.trim().toLowerCase();
-      filtered = normalized ? iconPaths.filter((path) => fileNameFromPath(path).toLowerCase().includes(normalized)) : iconPaths;
+      const base = SVG_BY_FOLDER[activeFolder] || [];
+      filtered = normalized ? base.filter((path) => fileNameFromPath(path).toLowerCase().includes(normalized)) : base;
       currentPage = 1;
       renderPage();
     }
 
-    async function loadIcons() {
-      try {
-        const inlineManifest = Array.isArray(window.__ICON_MANIFEST__) ? window.__ICON_MANIFEST__ : null;
-
-        if (inlineManifest) {
-          iconPaths = inlineManifest.map((name) => `${ICON_BASE_PATH}/${name}`);
-          applyFilter('');
-          return;
-        }
-
-        const response = await fetch(MANIFEST_URL, { cache: 'no-store' });
-        if (!response.ok) throw new Error('Không tải được manifest');
-        const files = await response.json();
-        iconPaths = files.map((name) => `${ICON_BASE_PATH}/${name}`);
-        applyFilter('');
-      } catch (error) {
-        grid.innerHTML = '<p>Không tải được danh sách icon. Hãy chạy build để tạo manifest.</p>';
+    function init() {
+      if (!folderNames.length) {
+        grid.innerHTML = '<p>Không tìm thấy thư mục ảnh SVG trong assets/images.</p>';
+        countEl.textContent = '0 icon';
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
       }
+      renderTabs();
+      applyFilter('');
     }
 
     searchInput.addEventListener('input', (event) => applyFilter(event.target.value));
     prevBtn.addEventListener('click', () => { currentPage -= 1; renderPage(); });
     nextBtn.addEventListener('click', () => { currentPage += 1; renderPage(); });
-    loadIcons();
+    init();
   </script>
 </body>
 </html>
