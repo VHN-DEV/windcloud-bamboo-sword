@@ -6106,7 +6106,7 @@ Object.assign(Input, {
             if (visual.pathCache && i === 1) {
                 ctx.fillStyle = cfg.secondaryColor || '#FFFFFF';
                 ctx.fill(visual.pathCache.cabezaWhite);
-                ctx.fillStyle = '#000000';
+                ctx.fillStyle = '#333333';
                 ctx.fill(visual.pathCache.cabezaBlack);
             } else if (visual.pathCache) {
                 const gradTop = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
