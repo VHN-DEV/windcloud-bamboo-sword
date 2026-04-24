@@ -10,6 +10,8 @@ If the default pack URL is blocked (e.g., HTTP 403), the script automatically
 falls back to downloading icons from the official game-icons GitHub repository zip.
 """
 
+#  python scripts/download_game_icons.py
+
 from __future__ import annotations
 
 import io
