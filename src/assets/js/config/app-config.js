@@ -1356,6 +1356,20 @@ const CONFIG = {
             inventoryActionLabel: "Lĩnh ngộ",
             toggleOnLabel: "Khai",
             toggleOffLabel: "Thu",
+            cursorStyle: {
+                SEGMENT_COUNT: 40, // Số đốt thân rồng. Tăng để rồng dài và mềm hơn, giảm để rồng ngắn gọn hơn.
+                SIZE_SCALE: 0.32, // Hệ số thu phóng tổng thể của đầu và thân rồng. Giá trị hiện tại đã giảm mạnh so với bản cũ.
+                SEGMENT_SPACING: 7.25, // Khoảng cách cơ sở giữa các đốt khi bám theo nhau.
+                SEGMENT_SPACING_TAPER: 0.14, // Mỗi đốt về sau sẽ giảm thêm từng này khoảng cách để đuôi gọn hơn.
+                MIN_SEGMENT_SPACING: 4.8, // Khoảng cách tối thiểu giữa các đốt để tránh chồng lên nhau quá mức.
+                HEAD_FOLLOW_MOVING: 0.5, // Độ bám của đầu rồng khi con trỏ đang di chuyển. Càng cao càng dính sát chấm tròn.
+                HEAD_FOLLOW_IDLE: 0.28, // Độ bám của đầu rồng khi con trỏ đứng yên.
+                TIGHTEN_STRENGTH_HEAD: 0.58, // Độ siết các đốt gần đầu rồng.
+                TIGHTEN_STRENGTH_TAIL: 0.5, // Độ siết các đốt về phía đuôi rồng.
+                IDLE_DRIFT_RADIUS: 6, // Biên độ lượn nhẹ khi đứng yên. Giảm nếu muốn rồng gần như đứng hẳn.
+                IDLE_DRIFT_WHILE_MOVING: 0.12, // Giữ lại bao nhiêu độ lượn khi đang rê chuột.
+                IDLE_DRIFT_GROWTH: 0.35 // Tốc độ tăng lại biên độ lượn theo từng khung hình khi đứng yên.
+            },
             description: "Bí pháp ngự long mô phỏng long ảnh bám theo tâm ấn như hiệu ứng Dragon Cursor. Sau khi lĩnh ngộ có thể khai/thu tức thì."
         },
         NGU_LINH_THUAT: {

@@ -6031,99 +6031,140 @@ Object.assign(Input, {
             return;
         }
 
-        if (!this.nguLongThuatVisual || !Array.isArray(this.nguLongThuatVisual.elems)) {
-            const widthSafe = Math.max(1, Number(ctx?.canvas?.width) || width || window.innerWidth || 1);
-            const heightSafe = Math.max(1, Number(ctx?.canvas?.height) || height || window.innerHeight || 1);
-            const segmentCount = 40;
+        const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
+        const cursorStyle = cfg.cursorStyle || {};
+        if (this.nguLongThuatSpriteCache === undefined) {
+            this.nguLongThuatSpriteCache = (typeof this.buildNguLongThuatSpriteCache === 'function')
+                ? this.buildNguLongThuatSpriteCache()
+                : null;
+        }
+
+        const widthSafe = Math.max(1, Number(ctx?.canvas?.width) || width || window.innerWidth || 1);
+        const heightSafe = Math.max(1, Number(ctx?.canvas?.height) || height || window.innerHeight || 1);
+        const fallbackScreenX = Number.isFinite(this.screenX) ? this.screenX : (widthSafe * 0.5);
+        const fallbackScreenY = Number.isFinite(this.screenY) ? this.screenY : (heightSafe * 0.5);
+        const segmentCount = Math.max(6, Math.floor(Number(cursorStyle.SEGMENT_COUNT) || 22));
+        const idleRadiusMax = Math.max(0, Number(cursorStyle.IDLE_DRIFT_RADIUS) || 6);
+        const idleDriftMovingFactor = clampNumber(Number(cursorStyle.IDLE_DRIFT_WHILE_MOVING) || 0.12, 0, 1);
+        const headFollowMoving = clampNumber(Number(cursorStyle.HEAD_FOLLOW_MOVING) || 0.5, 0.05, 1);
+        const headFollowIdle = clampNumber(Number(cursorStyle.HEAD_FOLLOW_IDLE) || 0.28, 0.05, 1);
+        const cameraScaleMultiplier = Math.max(0.85, Math.min(1, Number(scaleFactor) || 1));
+        const sizeMultiplier = Math.max(0.08, Number(cursorStyle.SIZE_SCALE) || 0.32) * cameraScaleMultiplier;
+        const baseSegmentSpacing = Math.max(1.5, Number(cursorStyle.SEGMENT_SPACING) || 7.25) * cameraScaleMultiplier;
+        const segmentSpacingTaper = Math.max(0, Number(cursorStyle.SEGMENT_SPACING_TAPER) || 0.14) * cameraScaleMultiplier;
+        const minSegmentSpacing = Math.max(1.5, Number(cursorStyle.MIN_SEGMENT_SPACING) || 4.8) * cameraScaleMultiplier;
+        const tightenStrengthHead = clampNumber(Number(cursorStyle.TIGHTEN_STRENGTH_HEAD) || 0.58, 0.01, 1);
+        const tightenStrengthTail = clampNumber(Number(cursorStyle.TIGHTEN_STRENGTH_TAIL) || 0.5, 0.01, 1);
+        const idleDriftGrowth = Math.max(0.01, Number(cursorStyle.IDLE_DRIFT_GROWTH) || 0.35);
+
+        if (!this.nguLongThuatVisual || !Array.isArray(this.nguLongThuatVisual.elems) || this.nguLongThuatVisual.elems.length !== segmentCount) {
             this.nguLongThuatVisual = {
                 width: widthSafe,
                 height: heightSafe,
-                pointer: { x: this.x, y: this.y },
-                elems: Array.from({ length: segmentCount }).map(() => ({ x: widthSafe / 2, y: 0 })),
+                pointer: { x: fallbackScreenX, y: fallbackScreenY },
+                elems: Array.from({ length: segmentCount }).map(() => ({ x: widthSafe * 0.5, y: 0 })),
                 frm: Math.random(),
                 rad: 0,
-                radm: Math.max(20, Math.min(widthSafe / 2, heightSafe / 2) - 20),
-                lastPointerX: this.x,
-                lastPointerY: this.y,
-                pathCache: (typeof Path2D === 'function')
-                    ? {
-                        cabezaWhite: new Path2D("M-28.9,-1.1L-28.55 -1.95Q-28.1 -3.1 -27.25 -2.95L-26.7 -2.95Q-27.7 -1.65 -28.9 -1.1M-18.35,-1.8Q-15.1 -10.3 -9.6 -6.05Q-15.1 -6.2 -18.35 -1.8M-18.35,1.1Q-15.1 5.45 -9.6 5.35Q-15.1 9.55 -18.35 1.1M-26.7,2.2L-27.25 2.25Q-28.1 2.4 -28.55 1.2L-28.9 0.35Q-27.7 0.9 -26.7 2.2"),
-                        cabezaBlack: new Path2D("M-21.05,-8.25Q-13.6 -15.95 -1.3 -12.1Q-7.85 -8.5 -5.85 -4.35Q-2.3 -4.85 10.5 0.15Q0 4.35 -5.85 3.65Q-7.85 7.75 -1.25 12.45Q-13.6 15.2 -21.05 7.5Q-29.55 4.05 -30.2 -0.35Q-29.55 -4.8 -21.05 -8.25M-26.7,-2.95L-27.25 -2.95Q-28.1 -3.1 -28.55 -1.95L-28.9 -1.1Q-27.7 -1.65 -26.7 -2.95M-9.6,-6.05Q-15.1 -10.3 -18.35 -1.8Q-15.1 -6.2 -9.6 -6.05M-9.6,5.35Q-15.1 5.45 -18.35 1.1Q-15.1 9.55 -9.6 5.35M-28.9,0.35L-28.55 1.2Q-28.1 2.4 -27.25 2.25L-26.7 2.2Q-27.7 0.9 -28.9 0.35"),
-                        espinaTop: new Path2D("M-18.8,0Q-17.85 -5.7 -12.3 -9.6Q-11.2 -5.35 -6.5 -8.25L-6.45 -8.2L-6.2 -8.3Q1.25 -16.25 6.65 -12.4Q0.05 -12.55 0 -5.95Q2.7 -2.4 7.75 -4.1Q18 -1.45 18.8 0L-18.8 0"),
-                        espinaBottom: new Path2D("M18.8,0Q18 1.45 7.75 4.1Q2.7 2.4 0 5.95Q0.05 12.55 6.65 12.4Q1.25 16.25 -6.2 8.35Q-6.35 8.25 -6.45 8.25L-6.5 8.25Q-11.2 5.35 -12.3 9.6Q-17.85 5.7 -18.8 0L18.8 0")
-                    }
-                    : null
+                radm: idleRadiusMax,
+                lastInputX: fallbackScreenX,
+                lastInputY: fallbackScreenY
             };
         }
 
-        const cfg = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
         const visual = this.nguLongThuatVisual;
-        const w = Math.max(1, Number(ctx?.canvas?.width) || width || window.innerWidth || 1);
-        const h = Math.max(1, Number(ctx?.canvas?.height) || height || window.innerHeight || 1);
-        if (visual.width !== w || visual.height !== h) {
-            visual.width = w;
-            visual.height = h;
-            visual.radm = Math.max(20, Math.min(w / 2, h / 2) - 20);
+        if (visual.width !== widthSafe || visual.height !== heightSafe) {
+            visual.width = widthSafe;
+            visual.height = heightSafe;
+            visual.radm = idleRadiusMax;
         }
 
-        const pointer = visual.pointer;
-        const movement = Math.hypot(this.x - visual.lastPointerX, this.y - visual.lastPointerY);
-        pointer.x = this.x;
-        pointer.y = this.y;
-        if (movement > 0.5) visual.rad = 0;
-        visual.lastPointerX = this.x;
-        visual.lastPointerY = this.y;
+        const pointerX = Number.isFinite(this.screenX)
+            ? this.screenX
+            : (Number.isFinite(visual.pointer?.x) ? visual.pointer.x : fallbackScreenX);
+        const pointerY = Number.isFinite(this.screenY)
+            ? this.screenY
+            : (Number.isFinite(visual.pointer?.y) ? visual.pointer.y : fallbackScreenY);
+        const inputMoved = Math.abs(pointerX - (visual.lastInputX ?? pointerX)) > 0.01
+            || Math.abs(pointerY - (visual.lastInputY ?? pointerY)) > 0.01;
+        if (inputMoved) {
+            visual.pointer.x = pointerX;
+            visual.pointer.y = pointerY;
+            visual.rad = 0;
+        }
+        visual.lastInputX = pointerX;
+        visual.lastInputY = pointerY;
 
         const elems = visual.elems;
         const e0 = elems[0];
-        const ax = (Math.cos(3 * visual.frm) * visual.rad * visual.width) / visual.height;
-        const ay = (Math.sin(4 * visual.frm) * visual.rad * visual.height) / visual.width;
-        e0.x += (ax + pointer.x - e0.x) / 10;
-        e0.y += (ay + pointer.y - e0.y) / 10;
+        const idleDriftFactor = inputMoved ? idleDriftMovingFactor : 1;
+        const ax = ((Math.cos(3 * visual.frm) * visual.rad * visual.width) / visual.height) * idleDriftFactor;
+        const ay = ((Math.sin(4 * visual.frm) * visual.rad * visual.height) / visual.width) * idleDriftFactor;
+        const headFollowStrength = inputMoved ? headFollowMoving : headFollowIdle;
+        const headTargetX = visual.pointer.x + ax;
+        const headTargetY = visual.pointer.y + ay;
+        e0.x += (headTargetX - e0.x) * headFollowStrength;
+        e0.y += (headTargetY - e0.y) * headFollowStrength;
 
         for (let i = 1; i < elems.length; i++) {
             const e = elems[i];
             const ep = elems[i - 1];
-            const a = Math.atan2(e.y - ep.y, e.x - ep.x);
-            e.x += (ep.x - e.x + (Math.cos(a) * (100 - i)) / 5) / 4;
-            e.y += (ep.y - e.y + (Math.sin(a) * (100 - i)) / 5) / 4;
+            const dx = ep.x - e.x;
+            const dy = ep.y - e.y;
+            const distance = Math.max(0.001, Math.hypot(dx, dy));
+            const targetDistance = Math.max(minSegmentSpacing, baseSegmentSpacing - (i * segmentSpacingTaper));
+            const tightenBlend = i / Math.max(1, elems.length - 1);
+            const tightenStrength = tightenStrengthHead + ((tightenStrengthTail - tightenStrengthHead) * tightenBlend);
+            const offset = (distance - targetDistance) / distance;
+            e.x += dx * offset * tightenStrength;
+            e.y += dy * offset * tightenStrength;
         }
 
+        const spriteCache = this.nguLongThuatSpriteCache;
+
         ctx.save();
+        if (typeof ctx.resetTransform === 'function') {
+            ctx.resetTransform();
+        } else {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+        ctx.imageSmoothingEnabled = true;
+
         for (let i = elems.length - 1; i >= 1; i--) {
             const e = elems[i];
             const ep = elems[i - 1];
             const a = Math.atan2(e.y - ep.y, e.x - ep.x);
-            const s = ((162 + 4 * (1 - i)) / 50) * scaleFactor;
+            const s = ((162 + (4 * (1 - i))) / 50) * sizeMultiplier;
             const tx = (ep.x + e.x) / 2;
             const ty = (ep.y + e.y) / 2;
 
             ctx.save();
             ctx.translate(tx, ty);
             ctx.rotate(a);
-            ctx.scale(s, s);
 
-            if (visual.pathCache && i === 1) {
-                ctx.fillStyle = cfg.secondaryColor || '#FFFFFF';
-                ctx.fill(visual.pathCache.cabezaWhite);
-                ctx.fillStyle = '#333333';
-                ctx.fill(visual.pathCache.cabezaBlack);
-            } else if (visual.pathCache) {
-                const gradTop = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
-                gradTop.addColorStop(0, '#CCCCCC');
-                gradTop.addColorStop(1, '#333333');
-                ctx.fillStyle = gradTop;
-                ctx.fill(visual.pathCache.espinaTop);
-
-                const gradBottom = ctx.createLinearGradient(-18.8, 0, 18.8, 0);
-                gradBottom.addColorStop(0, '#CCCCCC');
-                gradBottom.addColorStop(1, '#333333');
-                ctx.fillStyle = gradBottom;
-                ctx.fill(visual.pathCache.espinaBottom);
+            if (spriteCache && i === 1) {
+                const drawWidth = spriteCache.headWidth * s;
+                const drawHeight = spriteCache.headHeight * s;
+                ctx.drawImage(
+                    spriteCache.headCanvas,
+                    -drawWidth * 0.5,
+                    -drawHeight * 0.5,
+                    drawWidth,
+                    drawHeight
+                );
+            } else if (spriteCache) {
+                const drawWidth = spriteCache.bodyWidth * s;
+                const drawHeight = spriteCache.bodyHeight * s;
+                ctx.drawImage(
+                    spriteCache.bodyCanvas,
+                    -drawWidth * 0.5,
+                    -drawHeight * 0.5,
+                    drawWidth,
+                    drawHeight
+                );
             } else {
                 ctx.fillStyle = withAlpha(cfg.color || '#71f0d2', Math.max(0.1, 1 - (i / elems.length)));
                 ctx.beginPath();
-                ctx.arc(0, 0, Math.max(2.2, 7 - (i * 0.14)), 0, Math.PI * 2);
+                ctx.arc(0, 0, Math.max(1.8, 5.2 - (i * 0.1)), 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -6131,12 +6172,62 @@ Object.assign(Input, {
         }
         ctx.restore();
 
-        if (visual.rad < visual.radm) visual.rad += 1;
+        if (visual.rad < visual.radm) visual.rad = Math.min(visual.radm, visual.rad + idleDriftGrowth);
         visual.frm += 0.003;
-        if (visual.rad > 60) {
-            pointer.x += (visual.width / 2 - pointer.x) * 0.05;
-            pointer.y += (visual.height / 2 - pointer.y) * 0.05;
-        }
+    },
+
+    buildNguLongThuatSpriteCache() {
+        if (typeof document === 'undefined' || typeof Path2D !== 'function') return null;
+        const nguLongConfig = CONFIG.SECRET_ARTS?.NGU_LONG_THUAT || {};
+
+        const createSprite = (spriteWidth, spriteHeight, drawSprite) => {
+            const spriteCanvas = document.createElement('canvas');
+            spriteCanvas.width = spriteWidth;
+            spriteCanvas.height = spriteHeight;
+            const spriteCtx = spriteCanvas.getContext('2d');
+            if (!spriteCtx) return null;
+
+            spriteCtx.translate(spriteWidth * 0.5, spriteHeight * 0.5);
+            drawSprite(spriteCtx);
+
+            return {
+                canvas: spriteCanvas,
+                width: spriteWidth,
+                height: spriteHeight
+            };
+        };
+
+        const headWhite = new Path2D("M-28.9,-1.1L-28.55 -1.95Q-28.1 -3.1 -27.25 -2.95L-26.7 -2.95Q-27.7 -1.65 -28.9 -1.1M-18.35,-1.8Q-15.1 -10.3 -9.6 -6.05Q-15.1 -6.2 -18.35 -1.8M-18.35,1.1Q-15.1 5.45 -9.6 5.35Q-15.1 9.55 -18.35 1.1M-26.7,2.2L-27.25 2.25Q-28.1 2.4 -28.55 1.2L-28.9 0.35Q-27.7 0.9 -26.7 2.2");
+        const headBlack = new Path2D("M-21.05,-8.25Q-13.6 -15.95 -1.3 -12.1Q-7.85 -8.5 -5.85 -4.35Q-2.3 -4.85 10.5 0.15Q0 4.35 -5.85 3.65Q-7.85 7.75 -1.25 12.45Q-13.6 15.2 -21.05 7.5Q-29.55 4.05 -30.2 -0.35Q-29.55 -4.8 -21.05 -8.25M-26.7,-2.95L-27.25 -2.95Q-28.1 -3.1 -28.55 -1.95L-28.9 -1.1Q-27.7 -1.65 -26.7 -2.95M-9.6,-6.05Q-15.1 -10.3 -18.35 -1.8Q-15.1 -6.2 -9.6 -6.05M-9.6,5.35Q-15.1 5.45 -18.35 1.1Q-15.1 9.55 -9.6 5.35M-28.9,0.35L-28.55 1.2Q-28.1 2.4 -27.25 2.25L-26.7 2.2Q-27.7 0.9 -28.9 0.35");
+        const bodyTop = new Path2D("M-18.8,0Q-17.85 -5.7 -12.3 -9.6Q-11.2 -5.35 -6.5 -8.25L-6.45 -8.2L-6.2 -8.3Q1.25 -16.25 6.65 -12.4Q0.05 -12.55 0 -5.95Q2.7 -2.4 7.75 -4.1Q18 -1.45 18.8 0L-18.8 0");
+        const bodyBottom = new Path2D("M18.8,0Q18 1.45 7.75 4.1Q2.7 2.4 0 5.95Q0.05 12.55 6.65 12.4Q1.25 16.25 -6.2 8.35Q-6.35 8.25 -6.45 8.25L-6.5 8.25Q-11.2 5.35 -12.3 9.6Q-17.85 5.7 -18.8 0L18.8 0");
+
+        const headSprite = createSprite(76, 44, (spriteCtx) => {
+            spriteCtx.fillStyle = nguLongConfig.secondaryColor || '#ffffff';
+            spriteCtx.fill(headWhite);
+            spriteCtx.fillStyle = '#333333';
+            spriteCtx.fill(headBlack);
+        });
+
+        const bodySprite = createSprite(44, 34, (spriteCtx) => {
+            const gradient = spriteCtx.createLinearGradient(-18.8, 0, 18.8, 0);
+            gradient.addColorStop(0, '#cccccc');
+            gradient.addColorStop(1, '#333333');
+            spriteCtx.fillStyle = gradient;
+            spriteCtx.fill(bodyTop);
+            spriteCtx.fill(bodyBottom);
+        });
+
+        if (!headSprite || !bodySprite) return null;
+
+        return {
+            headCanvas: headSprite.canvas,
+            headWidth: headSprite.width,
+            headHeight: headSprite.height,
+            bodyCanvas: bodySprite.canvas,
+            bodyWidth: bodySprite.width,
+            bodyHeight: bodySprite.height
+        };
     },
 
     drawCursor(ctx, scaleFactor) {
