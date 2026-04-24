@@ -39,6 +39,23 @@
     .pagination button[disabled] { opacity: 0.4; cursor: not-allowed; }
     .toast { position: fixed; right: 16px; bottom: 16px; max-width: min(90vw, 460px); background: #06111d; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 140ms ease, transform 140ms ease; }
     .toast.is-visible { opacity: 1; transform: translateY(0); }
+    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(2, 7, 12, 0.72); padding: 20px; z-index: 30; }
+    .modal.is-open { display: flex; }
+    .modal-panel { width: min(980px, 100%); max-height: min(92vh, 900px); overflow: auto; border: 1px solid var(--border); border-radius: 14px; background: #0a1825; padding: 16px; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .modal-title { margin: 0; font-size: 20px; }
+    .modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .modal-btn { border: 1px solid var(--border); background: #12263a; color: var(--text); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+    .modal-content { display: grid; gap: 12px; grid-template-columns: 280px 1fr; }
+    .svg-preview-box { border: 1px solid var(--border); border-radius: 12px; padding: 14px; min-height: 220px; background: #f3f7fd; display: flex; align-items: center; justify-content: center; }
+    .svg-preview-box svg { width: 180px; height: 180px; object-fit: contain; }
+    .controls { border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .control-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .control-row input[type="color"] { width: 38px; height: 28px; border: none; background: transparent; cursor: pointer; }
+    .svg-code { width: 100%; min-height: 240px; border: 1px solid var(--border); border-radius: 10px; background: #07121d; color: #cae6ff; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+    @media (max-width: 840px) {
+      .modal-content { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -59,6 +76,34 @@
     </div>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="svg-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="svg-modal-title">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <h2 id="svg-modal-title" class="modal-title">SVG icon</h2>
+        <button id="svg-modal-close" class="modal-btn" type="button">Đóng</button>
+      </div>
+      <div class="modal-actions">
+        <button id="copy-svg-code-btn" class="modal-btn" type="button">Copy code SVG</button>
+        <button id="download-svg-btn" class="modal-btn" type="button">Download SVG</button>
+      </div>
+      <div class="modal-content">
+        <div class="svg-preview-box" id="svg-preview-box"></div>
+        <div>
+          <div class="controls">
+            <div class="control-row">
+              <label><input id="toggle-fill-color" type="checkbox"> Đổi fill</label>
+              <input id="fill-color-picker" type="color" value="#000000">
+            </div>
+            <div class="control-row">
+              <label><input id="toggle-stroke-color" type="checkbox"> Đổi stroke</label>
+              <input id="stroke-color-picker" type="color" value="#000000">
+            </div>
+          </div>
+          <textarea id="svg-code-output" class="svg-code" readonly></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
   <script>
     const PAGE_SIZE = 24;
     const IMAGE_BY_FOLDER = {
@@ -392,17 +437,89 @@
     const nextBtn = document.getElementById('next-page');
     const toast = document.getElementById('toast');
     const previewBgToggle = document.getElementById('preview-bg-toggle');
+    const svgModal = document.getElementById('svg-modal');
+    const svgModalClose = document.getElementById('svg-modal-close');
+    const svgPreviewBox = document.getElementById('svg-preview-box');
+    const svgCodeOutput = document.getElementById('svg-code-output');
+    const copySvgCodeBtn = document.getElementById('copy-svg-code-btn');
+    const downloadSvgBtn = document.getElementById('download-svg-btn');
+    const toggleFillColor = document.getElementById('toggle-fill-color');
+    const fillColorPicker = document.getElementById('fill-color-picker');
+    const toggleStrokeColor = document.getElementById('toggle-stroke-color');
+    const strokeColorPicker = document.getElementById('stroke-color-picker');
 
     const folderNames = Object.keys(IMAGE_BY_FOLDER);
     let activeFolder = folderNames[0] || '';
     let filtered = [];
     let currentPage = 1;
     let isLightPreview = false;
+    let currentSvgPath = '';
+    let originalSvgCode = '';
 
     function renderPreviewBgToggle() {
       document.documentElement.style.setProperty('--preview-bg', isLightPreview ? 'var(--preview-bg-light)' : 'rgba(4, 10, 16, 0.55)');
       previewBgToggle.textContent = `Nền sáng: ${isLightPreview ? 'true' : 'false'}`;
       previewBgToggle.classList.toggle('is-active', isLightPreview);
+    }
+
+    function getCustomizedSvgCode() {
+      if (!originalSvgCode) return '';
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(originalSvgCode, 'image/svg+xml');
+      const svg = doc.documentElement;
+      if (!svg || svg.tagName.toLowerCase() !== 'svg') return originalSvgCode;
+
+      const paintTargets = svg.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse, g, text, use');
+
+      if (toggleFillColor.checked) {
+        const fillColor = fillColorPicker.value;
+        svg.querySelectorAll('[fill]').forEach((el) => {
+          if ((el.getAttribute('fill') || '').toLowerCase() !== 'none') el.setAttribute('fill', fillColor);
+        });
+        paintTargets.forEach((el) => {
+          if (!el.hasAttribute('fill')) el.setAttribute('fill', fillColor);
+        });
+      }
+
+      if (toggleStrokeColor.checked) {
+        const strokeColor = strokeColorPicker.value;
+        svg.querySelectorAll('[stroke]').forEach((el) => {
+          if ((el.getAttribute('stroke') || '').toLowerCase() !== 'none') el.setAttribute('stroke', strokeColor);
+        });
+        paintTargets.forEach((el) => {
+          if (!el.hasAttribute('stroke')) return;
+          if ((el.getAttribute('stroke') || '').toLowerCase() === 'none') return;
+          el.setAttribute('stroke', strokeColor);
+        });
+      }
+
+      return new XMLSerializer().serializeToString(svg);
+    }
+
+    function renderSvgModal() {
+      const customized = getCustomizedSvgCode();
+      svgCodeOutput.value = customized;
+      svgPreviewBox.innerHTML = customized;
+    }
+
+    async function openSvgModal(path) {
+      try {
+        const response = await fetch(path, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Không tải được SVG');
+        originalSvgCode = await response.text();
+        currentSvgPath = path;
+        document.getElementById('svg-modal-title').textContent = fileNameFromPath(path);
+        toggleFillColor.checked = false;
+        toggleStrokeColor.checked = false;
+        renderSvgModal();
+        svgModal.classList.add('is-open');
+      } catch (error) {
+        showToast('Không mở được chi tiết SVG.');
+      }
+    }
+
+    function closeSvgModal() {
+      svgModal.classList.remove('is-open');
     }
 
     const fileNameFromPath = (path) => path.split('/').pop() || path;
@@ -414,22 +531,26 @@
       showToast.timer = setTimeout(() => toast.classList.remove('is-visible'), 1800);
     }
 
-    async function copyPath(path) {
+    async function copyText(text, successMessage) {
       try {
         if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(path);
+          await navigator.clipboard.writeText(text);
         } else {
           const temp = document.createElement('textarea');
-          temp.value = path;
+          temp.value = text;
           document.body.appendChild(temp);
           temp.select();
           document.execCommand('copy');
           temp.remove();
         }
-        showToast(`Đã copy: ${path}`);
+        showToast(successMessage);
       } catch (err) {
         showToast('Không thể copy. Hãy kiểm tra quyền clipboard.');
       }
+    }
+
+    function copyPath(path) {
+      return copyText(path, `Đã copy: ${path}`);
     }
 
     function renderTabs() {
@@ -462,7 +583,13 @@
         card.type = 'button';
         card.className = 'icon-card';
         card.title = `Copy đường dẫn: ${path}`;
-        card.addEventListener('click', () => copyPath(path));
+        card.addEventListener('click', () => {
+          if (path.toLowerCase().endsWith('.svg')) {
+            openSvgModal(path);
+            return;
+          }
+          copyPath(path);
+        });
         card.innerHTML = `<div class="icon-preview"><img loading="lazy" src="${path}" alt="${fileNameFromPath(path)}"></div><div class="icon-name">${fileNameFromPath(path)}</div>`;
         grid.appendChild(card);
       });
@@ -499,6 +626,32 @@
     previewBgToggle.addEventListener('click', () => {
       isLightPreview = !isLightPreview;
       renderPreviewBgToggle();
+    });
+    svgModalClose.addEventListener('click', closeSvgModal);
+    svgModal.addEventListener('click', (event) => {
+      if (event.target === svgModal) closeSvgModal();
+    });
+    [toggleFillColor, fillColorPicker, toggleStrokeColor, strokeColorPicker].forEach((el) => {
+      el.addEventListener('input', () => renderSvgModal());
+    });
+    copySvgCodeBtn.addEventListener('click', async () => {
+      const code = getCustomizedSvgCode();
+      if (!code) return;
+      await copyText(code, 'Đã copy code SVG.');
+    });
+    downloadSvgBtn.addEventListener('click', () => {
+      const code = getCustomizedSvgCode();
+      if (!code) return;
+      const blob = new Blob([code], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const name = fileNameFromPath(currentSvgPath || 'icon.svg').replace(/\.svg$/i, '');
+      a.href = url;
+      a.download = `${name}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
     });
     renderPreviewBgToggle();
     init();
