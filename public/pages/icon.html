@@ -40,19 +40,20 @@
     .pagination button[disabled] { opacity: 0.4; cursor: not-allowed; }
     .toast { position: fixed; right: 16px; bottom: 16px; max-width: min(90vw, 460px); background: #06111d; border: 1px solid var(--accent); border-radius: 10px; padding: 10px 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 140ms ease, transform 140ms ease; }
     .toast.is-visible { opacity: 1; transform: translateY(0); }
-    .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(2, 7, 12, 0.72); padding: 20px; z-index: 30; }
+    .modal { position: fixed; inset: 0; display: none; align-items: flex-end; justify-content: center; background: rgba(2, 7, 12, 0.58); padding: 0; z-index: 30; }
     .modal.is-open { display: flex; }
-    .modal-panel { width: min(1120px, 100%); max-height: min(92vh, 900px); overflow: auto; border: 1px solid #d8dde4; border-radius: 14px; background: #f5f7fa; color: #111827; padding: 12px; }
-    .modal-layout { display: grid; grid-template-columns: 280px 1fr; gap: 14px; }
+    .modal-panel { width: min(980px, calc(100% - 20px)); max-height: min(68vh, 620px); overflow: auto; border: 1px solid #d8dde4; border-bottom: none; border-radius: 16px 16px 0 0; background: #f5f7fa; color: #111827; padding: 12px; transform: translateY(105%); transition: transform 220ms ease; }
+    .modal.is-open .modal-panel { transform: translateY(0); }
+    .modal-layout { display: grid; grid-template-columns: 260px 1fr; gap: 14px; }
     .modal-left { display: grid; gap: 12px; align-content: start; }
-    .preview-panel { border: 1px solid #d8dde4; border-radius: 12px; background: #eef1f5; padding: 14px; min-height: 250px; display: flex; align-items: center; justify-content: center; }
+    .preview-panel { border: 1px solid #d8dde4; border-radius: 12px; background: #eef1f5; padding: 14px; min-height: 250px; width: 250px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .preview-panel.is-dark { background: #0b1622; }
     .preview-panel img { max-width: 210px; max-height: 210px; object-fit: contain; }
     .size-panel { border: 1px solid #d8dde4; border-radius: 12px; background: #eef1f5; padding: 10px; display: flex; gap: 10px; justify-content: space-between; }
     .size-chip { text-align: center; color: #6b7280; font-size: 11px; }
     .size-chip img { display: block; margin: 0 auto 4px; object-fit: contain; }
     .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .modal-title { margin: 0; font-size: 32px; line-height: 1; font-weight: 700; }
+    .modal-title { margin: 0; font-size: 36px; line-height: 1; font-weight: 700; }
     .modal-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
     .modal-btn { border: 1px solid #d1d5db; background: #ffffff; color: #111827; border-radius: 10px; padding: 7px 11px; cursor: pointer; font-weight: 600; }
     .modal-btn.is-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
@@ -61,7 +62,14 @@
     .code-cmd { border: 1px solid #d8dde4; border-radius: 10px; background: #eef1f5; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin-bottom: 10px; }
     .controls { border: 1px solid #d8dde4; border-radius: 12px; padding: 12px; background: #fff; }
     .controls h3 { margin: 0 0 10px; font-size: 13px; color: #6b7280; letter-spacing: 0.04em; }
-    .control-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .control-card { border: 1px solid #d8dde4; border-radius: 10px; padding: 10px; background: #f8fafc; }
+    .control-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .bool-toggle { border: 1px solid #c7d2fe; border-radius: 999px; min-width: 64px; background: #fff; color: #334155; padding: 4px 10px; cursor: pointer; font-weight: 700; }
+    .bool-toggle.is-on { background: #2563eb; color: #fff; border-color: #2563eb; }
+    .color-wrap { display: flex; align-items: center; gap: 8px; }
+    .color-wrap.is-hidden { display: none; }
+    .color-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #374151; }
     .control-row input[type="color"] { width: 38px; height: 28px; border: none; background: transparent; cursor: pointer; }
     .svg-code { width: 100%; min-height: 170px; border: 1px solid #d8dde4; border-radius: 10px; background: #f8fafc; color: #1f2937; padding: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
     @media (max-width: 840px) {
@@ -97,11 +105,15 @@
         <div>
           <div class="modal-head">
             <h2 id="svg-modal-title" class="modal-title">SVG icon</h2>
-            <button id="svg-modal-close" class="modal-btn" type="button">Đóng</button>
+            <div style="display:flex; gap:8px;">
+              <button id="copy-svg-name-btn" class="modal-btn" type="button">Copy name</button>
+              <button id="svg-modal-close" class="modal-btn" type="button">Đóng</button>
+            </div>
           </div>
           <div class="modal-actions">
-            <button id="copy-svg-code-btn" class="modal-btn is-primary" type="button">SVG</button>
-            <button id="download-svg-btn" class="modal-btn" type="button">Download</button>
+            <button id="copy-svg-code-btn" class="modal-btn is-primary" type="button">Copy SVG</button>
+            <button id="download-svg-btn" class="modal-btn" type="button">Download SVG</button>
+            <button id="download-png-btn" class="modal-btn" type="button">Download PNG</button>
           </div>
           <div class="helper-tabs"><span>pnpm</span><span>npm</span><span>yarn</span><span>bun</span></div>
           <div class="code-cmd">pnpm dlx shadcn@latest add icon-json</div>
@@ -109,15 +121,26 @@
           <div class="controls">
             <h3>CUSTOMIZE COLORS</h3>
             <div class="control-row">
-              <label><input id="toggle-fill-color" type="checkbox"> Fill</label>
-              <input id="fill-color-picker" type="color" value="#000000">
-            </div>
-            <div class="control-row">
-              <label><input id="toggle-stroke-color" type="checkbox"> Stroke</label>
-              <input id="stroke-color-picker" type="color" value="#000000">
-            </div>
-            <div class="control-row">
-              <label><input id="toggle-modal-preview-bg" type="checkbox"> Nền sáng popup</label>
+              <div class="control-card">
+                <div class="control-top">
+                  <strong>Fill</strong>
+                  <button id="fill-toggle-btn" class="bool-toggle" type="button">false</button>
+                </div>
+                <div id="fill-color-wrap" class="color-wrap is-hidden">
+                  <input id="fill-color-picker" type="color" value="#1f2937">
+                  <span id="fill-color-code" class="color-code">#1f2937</span>
+                </div>
+              </div>
+              <div class="control-card">
+                <div class="control-top">
+                  <strong>Stroke</strong>
+                  <button id="stroke-toggle-btn" class="bool-toggle" type="button">false</button>
+                </div>
+                <div id="stroke-color-wrap" class="color-wrap is-hidden">
+                  <input id="stroke-color-picker" type="color" value="#1f2937">
+                  <span id="stroke-color-code" class="color-code">#1f2937</span>
+                </div>
+              </div>
             </div>
           </div>
           <textarea id="svg-code-output" class="svg-code" readonly></textarea>
@@ -145,12 +168,17 @@
     const svgPreviewBox = document.getElementById('svg-preview-box');
     const svgCodeOutput = document.getElementById('svg-code-output');
     const copySvgCodeBtn = document.getElementById('copy-svg-code-btn');
+    const copySvgNameBtn = document.getElementById('copy-svg-name-btn');
     const downloadSvgBtn = document.getElementById('download-svg-btn');
-    const toggleFillColor = document.getElementById('toggle-fill-color');
+    const downloadPngBtn = document.getElementById('download-png-btn');
+    const fillToggleBtn = document.getElementById('fill-toggle-btn');
     const fillColorPicker = document.getElementById('fill-color-picker');
-    const toggleStrokeColor = document.getElementById('toggle-stroke-color');
+    const fillColorWrap = document.getElementById('fill-color-wrap');
+    const fillColorCode = document.getElementById('fill-color-code');
+    const strokeToggleBtn = document.getElementById('stroke-toggle-btn');
     const strokeColorPicker = document.getElementById('stroke-color-picker');
-    const toggleModalPreviewBg = document.getElementById('toggle-modal-preview-bg');
+    const strokeColorWrap = document.getElementById('stroke-color-wrap');
+    const strokeColorCode = document.getElementById('stroke-color-code');
     const sizePanel = document.getElementById('size-panel');
 
     let folderNames = Object.keys(IMAGE_BY_FOLDER);
@@ -162,12 +190,25 @@
     let originalSvgCode = '';
     let previewBlobUrl = '';
     let isLightPopupPreview = true;
+    let isFillEnabled = false;
+    let isStrokeEnabled = false;
     const isFileProtocol = window.location.protocol === 'file:';
 
     function renderPreviewBgToggle() {
       document.documentElement.style.setProperty('--preview-bg', isLightPreview ? 'var(--preview-bg-light)' : 'rgba(4, 10, 16, 0.55)');
       previewBgToggle.textContent = `Nền sáng: ${isLightPreview ? 'true' : 'false'}`;
       previewBgToggle.classList.toggle('is-active', isLightPreview);
+    }
+
+    function renderColorToggleUI() {
+      fillToggleBtn.textContent = isFillEnabled ? 'true' : 'false';
+      strokeToggleBtn.textContent = isStrokeEnabled ? 'true' : 'false';
+      fillToggleBtn.classList.toggle('is-on', isFillEnabled);
+      strokeToggleBtn.classList.toggle('is-on', isStrokeEnabled);
+      fillColorWrap.classList.toggle('is-hidden', !isFillEnabled);
+      strokeColorWrap.classList.toggle('is-hidden', !isStrokeEnabled);
+      fillColorCode.textContent = fillColorPicker.value;
+      strokeColorCode.textContent = strokeColorPicker.value;
     }
 
     function getCustomizedSvgCode() {
@@ -179,7 +220,7 @@
 
       const paintTargets = svg.querySelectorAll('path, circle, rect, polygon, polyline, line, ellipse, g, text, use');
 
-      if (toggleFillColor.checked) {
+      if (isFillEnabled) {
         const fillColor = fillColorPicker.value;
         svg.querySelectorAll('[fill]').forEach((el) => {
           if ((el.getAttribute('fill') || '').toLowerCase() !== 'none') el.setAttribute('fill', fillColor);
@@ -189,7 +230,7 @@
         });
       }
 
-      if (toggleStrokeColor.checked) {
+      if (isStrokeEnabled) {
         const strokeColor = strokeColorPicker.value;
         svg.querySelectorAll('[stroke]').forEach((el) => {
           if ((el.getAttribute('stroke') || '').toLowerCase() !== 'none') el.setAttribute('stroke', strokeColor);
@@ -232,9 +273,9 @@
     async function openSvgModal(path) {
       currentSvgPath = path;
       document.getElementById('svg-modal-title').textContent = fileNameFromPath(path);
-      toggleFillColor.checked = false;
-      toggleStrokeColor.checked = false;
-      toggleModalPreviewBg.checked = isLightPopupPreview;
+      isFillEnabled = false;
+      isStrokeEnabled = false;
+      renderColorToggleUI();
 
       if (isFileProtocol) {
         originalSvgCode = '';
@@ -391,14 +432,32 @@
     svgModal.addEventListener('click', (event) => {
       if (event.target === svgModal) closeSvgModal();
     });
-    [toggleFillColor, fillColorPicker, toggleStrokeColor, strokeColorPicker].forEach((el) => {
-      el.addEventListener('input', () => renderSvgModal());
-    });
-    toggleModalPreviewBg.addEventListener('change', () => {
-      isLightPopupPreview = toggleModalPreviewBg.checked;
+    fillToggleBtn.addEventListener('click', () => {
+      isFillEnabled = !isFillEnabled;
+      renderColorToggleUI();
       renderSvgModal();
     });
-    toggleModalPreviewBg.checked = true;
+    strokeToggleBtn.addEventListener('click', () => {
+      isStrokeEnabled = !isStrokeEnabled;
+      renderColorToggleUI();
+      renderSvgModal();
+    });
+    fillColorPicker.addEventListener('input', () => {
+      fillColorCode.textContent = fillColorPicker.value;
+      renderSvgModal();
+    });
+    strokeColorPicker.addEventListener('input', () => {
+      strokeColorCode.textContent = strokeColorPicker.value;
+      renderSvgModal();
+    });
+    svgPreviewBox.addEventListener('click', () => {
+      isLightPopupPreview = !isLightPopupPreview;
+      renderSvgModal();
+    });
+    copySvgNameBtn.addEventListener('click', async () => {
+      const name = (fileNameFromPath(currentSvgPath || 'icon.svg')).replace(/\.svg$/i, '');
+      await copyText(name, `Đã copy name: ${name}`);
+    });
     copySvgCodeBtn.addEventListener('click', async () => {
       const code = getCustomizedSvgCode();
       if (!code) {
@@ -431,6 +490,41 @@
       a.remove();
       URL.revokeObjectURL(url);
     });
+    downloadPngBtn.addEventListener('click', () => {
+      const code = getCustomizedSvgCode();
+      if (!code) return;
+      const name = fileNameFromPath(currentSvgPath || 'icon.svg').replace(/\.svg$/i, '');
+      const svgBlob = new Blob([code], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        if (!isLightPopupPreview) {
+          ctx.fillStyle = '#0b1622';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const pngUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = pngUrl;
+          a.download = `${name}.png`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(pngUrl);
+          URL.revokeObjectURL(svgUrl);
+        }, 'image/png');
+      };
+      img.onerror = () => URL.revokeObjectURL(svgUrl);
+      img.src = svgUrl;
+    });
+    renderColorToggleUI();
     renderPreviewBgToggle();
     init();
   </script>
