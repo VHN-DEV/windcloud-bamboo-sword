@@ -39,11 +39,11 @@
 </head>
 <body>
   <main class="container">
-    <h1>ICONS</h1>
-    <p>Mỗi tab tương ứng 1 thư mục trong <code>assets/images</code>. Click icon để copy đường dẫn SVG.</p>
+    <h1>IMAGE GALLERY</h1>
+    <p>Mỗi tab tương ứng 1 thư mục trong <code>assets/images</code>. Hiển thị tất cả ảnh (svg, png, jpg, webp, gif, avif, ico). Click ảnh để copy đường dẫn.</p>
     <nav id="tabs" class="tabs" aria-label="Thư mục ảnh"></nav>
     <div class="toolbar">
-      <input id="search" type="search" placeholder="Tìm theo tên file..." aria-label="Tìm icon">
+      <input id="search" type="search" placeholder="Tìm theo tên file..." aria-label="Tìm ảnh">
       <span id="count"></span>
     </div>
     <section id="icon-grid" class="grid" aria-live="polite"></section>
@@ -56,7 +56,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script>
     const PAGE_SIZE = 24;
-    const SVG_BY_FOLDER = {
+    const IMAGE_BY_FOLDER = {
       "aberrations": [
             "../assets/images/aberrations/bang-tam.svg",
             "../assets/images/aberrations/huyen-diem-nga.svg",
@@ -201,16 +201,21 @@
       "arcane-arts": [
             "../assets/images/arcane-arts/bug.svg",
             "../assets/images/arcane-arts/cigale.svg",
+            "../assets/images/arcane-arts/cu-pham-linh-thach.png",
             "../assets/images/arcane-arts/flashpoint-dark.svg",
             "../assets/images/arcane-arts/flashpoint.svg",
             "../assets/images/arcane-arts/gooey-sword.svg",
+            "../assets/images/arcane-arts/ha-pham-linh-thach.png",
             "../assets/images/arcane-arts/lamprey-mouth.svg",
             "../assets/images/arcane-arts/lightning-dissipation.svg",
-            "../assets/images/arcane-arts/monster-super-league.svg"
+            "../assets/images/arcane-arts/monster-super-league.svg",
+            "../assets/images/arcane-arts/thuong-pham-linh-thach.png",
+            "../assets/images/arcane-arts/trung-pham-linh-thach.png"
       ],
       "artifacts": [
             "../assets/images/artifacts/am-duong-dai-ngu-hanh-cuc-son.svg",
             "../assets/images/artifacts/bac-cuc-nguyen-quang-cuc-son-icon.svg",
+            "../assets/images/artifacts/bac-cuc-nguyen-quang-cuc-son.png",
             "../assets/images/artifacts/bat-linh-xich.svg",
             "../assets/images/artifacts/binh-son-an.svg",
             "../assets/images/artifacts/can-lam-bang-diem.svg",
@@ -267,7 +272,16 @@
             "../assets/images/icons/darkmoon.svg",
             "../assets/images/icons/dead-wood.svg",
             "../assets/images/icons/devil-mask.svg",
+            "../assets/images/icons/dragon (1).png",
+            "../assets/images/icons/dragon (2).png",
+            "../assets/images/icons/dragon (3).png",
+            "../assets/images/icons/dragon (4).png",
+            "../assets/images/icons/dragon (5).png",
+            "../assets/images/icons/dragon (6).png",
+            "../assets/images/icons/dragon (7).png",
+            "../assets/images/icons/dragon (8).png",
             "../assets/images/icons/dragon-tamer.svg",
+            "../assets/images/icons/dragon.png",
             "../assets/images/icons/dragoncity.svg",
             "../assets/images/icons/dragonframe.svg",
             "../assets/images/icons/dragonml.svg",
@@ -275,6 +289,7 @@
             "../assets/images/icons/earwig.svg",
             "../assets/images/icons/emoji-bug.svg",
             "../assets/images/icons/entangled-typhoon.svg",
+            "../assets/images/icons/fantasy.png",
             "../assets/images/icons/fireflake.svg",
             "../assets/images/icons/fragmented-sword (1).svg",
             "../assets/images/icons/fragmented-sword.svg",
@@ -303,6 +318,7 @@
             "../assets/images/icons/magisk-delta.svg",
             "../assets/images/icons/mantras.svg",
             "../assets/images/icons/maze-saw.svg",
+            "../assets/images/icons/medieval.png",
             "../assets/images/icons/minerals.svg",
             "../assets/images/icons/misc-battlenet.svg",
             "../assets/images/icons/monster-super-league.svg",
@@ -370,7 +386,7 @@
     const nextBtn = document.getElementById('next-page');
     const toast = document.getElementById('toast');
 
-    const folderNames = Object.keys(SVG_BY_FOLDER);
+    const folderNames = Object.keys(IMAGE_BY_FOLDER);
     let activeFolder = folderNames[0] || '';
     let filtered = [];
     let currentPage = 1;
@@ -408,7 +424,7 @@
         const button = document.createElement('button');
         button.type = 'button';
         button.className = `tab-btn${folder === activeFolder ? ' is-active' : ''}`;
-        button.textContent = `${folder} (${SVG_BY_FOLDER[folder].length})`;
+        button.textContent = `${folder} (${IMAGE_BY_FOLDER[folder].length})`;
         button.addEventListener('click', () => {
           activeFolder = folder;
           currentPage = 1;
@@ -437,7 +453,7 @@
         grid.appendChild(card);
       });
 
-      countEl.textContent = `Thư mục ${activeFolder}: ${filtered.length} icon SVG`;
+      countEl.textContent = `Thư mục ${activeFolder}: ${filtered.length} ảnh`;
       pageStatus.textContent = `Trang ${currentPage}/${totalPages}`;
       prevBtn.disabled = currentPage === 1;
       nextBtn.disabled = currentPage === totalPages;
@@ -445,7 +461,7 @@
 
     function applyFilter(keyword = '') {
       const normalized = keyword.trim().toLowerCase();
-      const base = SVG_BY_FOLDER[activeFolder] || [];
+      const base = IMAGE_BY_FOLDER[activeFolder] || [];
       filtered = normalized ? base.filter((path) => fileNameFromPath(path).toLowerCase().includes(normalized)) : base;
       currentPage = 1;
       renderPage();
@@ -453,8 +469,8 @@
 
     function init() {
       if (!folderNames.length) {
-        grid.innerHTML = '<p>Không tìm thấy thư mục ảnh SVG trong assets/images.</p>';
-        countEl.textContent = '0 icon';
+        grid.innerHTML = '<p>Không tìm thấy thư mục ảnh trong assets/images.</p>';
+        countEl.textContent = '0 ảnh';
         prevBtn.disabled = true;
         nextBtn.disabled = true;
         return;
