@@ -53,6 +53,34 @@ function removeEmptyDirs(rootDir) {
   });
 }
 
+function collectImagesManifestByFolder(rootDir) {
+  const allowedExtensions = new Set(['.svg', '.png', '.jpg', '.jpeg', '.webp', '.gif', '.avif', '.ico']);
+  const manifest = {};
+
+  if (!fs.existsSync(rootDir)) {
+    return manifest;
+  }
+
+  const folders = fs.readdirSync(rootDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort((a, b) => a.localeCompare(b));
+
+  folders.forEach((folderName) => {
+    const folderPath = path.join(rootDir, folderName);
+    const files = fs.readdirSync(folderPath, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((fileName) => allowedExtensions.has(path.extname(fileName).toLowerCase()))
+      .sort((a, b) => a.localeCompare(b))
+      .map((fileName) => `../assets/images/${folderName}/${fileName}`);
+
+    manifest[folderName] = files;
+  });
+
+  return manifest;
+}
+
 // 0. Dọn các file thừa trong public/assets trước mỗi lần build
 gulp.task('prune-stale-assets', function (done) {
   const srcRoot = path.join(__dirname, 'src/assets');
@@ -82,6 +110,11 @@ gulp.task('prune-stale-assets', function (done) {
     const current = collectRelativeFiles(destDir);
 
     current.forEach((relativePath) => {
+      // Giữ lại thư mục game-icon trong public để hỗ trợ tải icon bên ngoài pipeline src/assets.
+      if (destDir.endsWith(path.join('public', 'assets', 'images')) && relativePath.startsWith(`game-icon${path.sep}`)) {
+        return;
+      }
+
       if (expected.has(relativePath)) {
         return;
       }
@@ -204,6 +237,27 @@ gulp.task('build-icons-manifest', function (done) {
   done();
 });
 
+// 3b. Tạo manifest động cho toàn bộ thư mục ảnh (dùng cho public/pages/icon.html)
+gulp.task('build-images-manifest', function (done) {
+  const sourceRoot = path.join(__dirname, 'public/assets/images');
+  const manifest = collectImagesManifestByFolder(sourceRoot);
+
+  const assetsOutputDir = path.join(__dirname, 'public/assets/images');
+  const pagesOutputDir = path.join(__dirname, 'public/pages');
+
+  fs.mkdirSync(assetsOutputDir, { recursive: true });
+  fs.mkdirSync(pagesOutputDir, { recursive: true });
+
+  const jsonText = `${JSON.stringify(manifest, null, 2)}\n`;
+  const jsText = `window.__IMAGE_MANIFEST__ = ${JSON.stringify(manifest, null, 2)};\n`;
+
+  fs.writeFileSync(path.join(assetsOutputDir, 'images-manifest.json'), jsonText, 'utf8');
+  fs.writeFileSync(path.join(assetsOutputDir, 'images-manifest.js'), jsText, 'utf8');
+  fs.writeFileSync(path.join(pagesOutputDir, 'images-manifest.json'), jsonText, 'utf8');
+  fs.writeFileSync(path.join(pagesOutputDir, 'images-manifest.js'), jsText, 'utf8');
+  done();
+});
+
 // 3. Copy hình ảnh sang public
 gulp.task('copy-images', function () {
   return gulp.src('src/assets/images/**/*', { encoding: false })
@@ -222,7 +276,7 @@ gulp.task('copy-fonts', function () {
 // Task chạy build đầy đủ (xóa file cũ + build lại)
 gulp.task('build', gulp.series(
   'prune-stale-assets',
-  gulp.parallel('build-css', 'build-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest'))
+  gulp.parallel('build-css', 'build-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest', 'build-images-manifest'))
 ));
 
 // Task chạy mặc định
@@ -234,7 +288,7 @@ gulp.task('watch', function () {
   gulp.watch('src/assets/js/**/*.js', gulp.series('build-js'));
   gulp.watch(
     'src/assets/images/**/*',
-    gulp.series('copy-images', 'build-icons-manifest')
+    gulp.series('copy-images', 'build-icons-manifest', 'build-images-manifest')
   );
   gulp.watch(
     'src/assets/fonts/**/*.{otf,ttf,woff,woff2}',
