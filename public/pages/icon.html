@@ -137,6 +137,7 @@
     let isLightPreview = false;
     let currentSvgPath = '';
     let originalSvgCode = '';
+    let previewBlobUrl = '';
     const isFileProtocol = window.location.protocol === 'file:';
 
     function renderPreviewBgToggle() {
@@ -181,13 +182,19 @@
 
     function renderSvgModal() {
       const customized = getCustomizedSvgCode();
+      if (previewBlobUrl) {
+        URL.revokeObjectURL(previewBlobUrl);
+        previewBlobUrl = '';
+      }
       if (!customized) {
         svgCodeOutput.value = '';
         svgPreviewBox.innerHTML = '';
         return;
       }
       svgCodeOutput.value = customized;
-      svgPreviewBox.innerHTML = customized;
+      const blob = new Blob([customized], { type: 'image/svg+xml;charset=utf-8' });
+      previewBlobUrl = URL.createObjectURL(blob);
+      svgPreviewBox.innerHTML = `<img src="${previewBlobUrl}" alt="SVG preview" style="max-width:180px;max-height:180px;object-fit:contain;">`;
     }
 
     async function openSvgModal(path) {
@@ -216,6 +223,10 @@
     }
 
     function closeSvgModal() {
+      if (previewBlobUrl) {
+        URL.revokeObjectURL(previewBlobUrl);
+        previewBlobUrl = '';
+      }
       svgModal.classList.remove('is-open');
     }
 
