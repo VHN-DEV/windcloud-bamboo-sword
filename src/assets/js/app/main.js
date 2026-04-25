@@ -1,6 +1,10 @@
 (function bootstrapMain() {
+    if (typeof canvas === 'undefined' || !canvas || typeof ctx === 'undefined' || !ctx) {
+        return;
+    }
+
     if (typeof bootGame !== 'function') {
-        console.error('[main.js] bootGame() chưa sẵn sàng. Hãy kiểm tra thứ tự load script.');
+        console.error('[main.js] bootGame() chua san sang. Hay kiem tra thu tu load script.');
         return;
     }
 

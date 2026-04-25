@@ -96,6 +96,11 @@ gulp.task('prune-stale-assets', function (done) {
       srcDir: path.join(srcRoot, 'fonts'),
       destDir: path.join(publicRoot, 'fonts'),
       ignoreSrc: (relativePath) => path.basename(relativePath).startsWith('._')
+    },
+    {
+      srcDir: path.join(srcRoot, 'js', 'pages'),
+      destDir: path.join(publicRoot, 'js', 'pages'),
+      ignoreSrc: () => false
     }
   ];
 
@@ -154,6 +159,15 @@ gulp.task('prune-stale-assets', function (done) {
 
       fs.rmSync(path.join(dir, entry.name), { force: true });
     });
+  });
+
+  [
+    path.join(__dirname, 'public/pages/images-manifest.js'),
+    path.join(__dirname, 'public/pages/images-manifest.json')
+  ].forEach((filePath) => {
+    if (fs.existsSync(filePath)) {
+      fs.rmSync(filePath, { force: true });
+    }
   });
 
   done();
@@ -217,6 +231,18 @@ gulp.task('build-js', function () {
     .pipe(gulp.dest('public/assets/js'));
 });
 
+gulp.task('build-page-js', function () {
+  return gulp.src([
+    'src/assets/js/pages/**/*.js',
+    '!src/assets/js/pages/images-manifest.js',
+  ], {
+    allowEmpty: true,
+    base: 'src/assets/js/pages'
+  })
+    .pipe(terser())
+    .pipe(gulp.dest('public/assets/js/pages'));
+});
+
 
 // 3. Tạo manifest động cho icon SVG
 gulp.task('build-icons-manifest', function (done) {
@@ -243,18 +269,18 @@ gulp.task('build-images-manifest', function (done) {
   const manifest = collectImagesManifestByFolder(sourceRoot);
 
   const assetsOutputDir = path.join(__dirname, 'public/assets/images');
-  const pagesOutputDir = path.join(__dirname, 'public/pages');
+  const pageScriptsOutputDir = path.join(__dirname, 'public/assets/js/pages');
 
   fs.mkdirSync(assetsOutputDir, { recursive: true });
-  fs.mkdirSync(pagesOutputDir, { recursive: true });
+  fs.mkdirSync(pageScriptsOutputDir, { recursive: true });
 
   const jsonText = `${JSON.stringify(manifest, null, 2)}\n`;
   const jsText = `window.__IMAGE_MANIFEST__ = ${JSON.stringify(manifest, null, 2)};\n`;
 
   fs.writeFileSync(path.join(assetsOutputDir, 'images-manifest.json'), jsonText, 'utf8');
   fs.writeFileSync(path.join(assetsOutputDir, 'images-manifest.js'), jsText, 'utf8');
-  fs.writeFileSync(path.join(pagesOutputDir, 'images-manifest.json'), jsonText, 'utf8');
-  fs.writeFileSync(path.join(pagesOutputDir, 'images-manifest.js'), jsText, 'utf8');
+  fs.writeFileSync(path.join(pageScriptsOutputDir, 'images-manifest.json'), jsonText, 'utf8');
+  fs.writeFileSync(path.join(pageScriptsOutputDir, 'images-manifest.js'), jsText, 'utf8');
   done();
 });
 
@@ -276,7 +302,7 @@ gulp.task('copy-fonts', function () {
 // Task chạy build đầy đủ (xóa file cũ + build lại)
 gulp.task('build', gulp.series(
   'prune-stale-assets',
-  gulp.parallel('build-css', 'build-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest', 'build-images-manifest'))
+  gulp.parallel('build-css', 'build-js', 'build-page-js', 'copy-fonts', gulp.series('copy-images', 'build-icons-manifest', 'build-images-manifest'))
 ));
 
 // Task chạy mặc định
@@ -285,7 +311,8 @@ gulp.task('default', gulp.series('build'));
 // Task theo dõi thay đổi
 gulp.task('watch', function () {
   gulp.watch('src/assets/css/**/*.scss', gulp.series('build-css'));
-  gulp.watch('src/assets/js/**/*.js', gulp.series('build-js'));
+  gulp.watch(['src/assets/js/**/*.js', '!src/assets/js/pages/**/*.js'], gulp.series('build-js'));
+  gulp.watch('src/assets/js/pages/**/*.js', gulp.series('build-page-js'));
   gulp.watch(
     'src/assets/images/**/*',
     gulp.series('copy-images', 'build-icons-manifest', 'build-images-manifest')

@@ -1,7 +1,7 @@
 const random = (min, max) => Math.random() * (max - min) + min;
 const canvas = document.getElementById("c");
 const enemyIcons = {};
-const ctx = canvas.getContext("2d", { alpha: true });
+const ctx = canvas ? canvas.getContext("2d", { alpha: true }) : null;
 const IS_TOUCH_ENVIRONMENT = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
 let scaleFactor = 1;
@@ -74,11 +74,14 @@ function showNotify(text, color) {
 }
 
 function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-    scaleFactor = width / CONFIG.CORE.BASE_WIDTH;
+    if (canvas) {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        scaleFactor = width / CONFIG.CORE.BASE_WIDTH;
+    }
+
     if (typeof window.starField?.resize === 'function') {
-        window.starField.resize(width, height);
+        window.starField.resize(width || window.innerWidth, height || window.innerHeight);
     }
 
     if (document.body) {
